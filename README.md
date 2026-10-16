@@ -1,13 +1,17 @@
 # Wa chochemer?
 
-Kleiner statischer Prototyp für das Chochchischtli-Rezeptarchiv und den Bring!-Rezeptimport.
+Schweizerdeutsche Rezeptplattform im Aufbau. Momentan ein öffentliches Testrezept mit funktionierendem Bring! Button und korrekter Portionenskalierung.
 
-## GitHub Pages
+## Daten
 
-1. Unter **Settings → Pages → Build and deployment** die Quelle **Deploy from a branch** wählen, Branch **main**, Ordner **/ (root)**.
-2. Nach Veröffentlichung https://zefad3v.github.io/wachochemer/ im iPhone-Safari öffnen.
-3. Safari-Erweiterung **Rezept übertragen** auswählen und Zutaten und Mengen prüfen.
+* `data/recipes/poulet-fajitas.json`: Rezept als strukturierter Datensatz.
+* `data/ingredients.json`: zentraler Zutatenstamm mit IDs.
+* `locales/gsw-CH.json`: vorbereitete schweizerdeutsche Oberflächentexte.
+* `docs/architecture.md`: Architektur und aktuelle Grenzen.
+* `docs/roadmap.md`: weitere Schritte.
 
-## Umfang
+**Aktueller Stand:** `index.html` ist noch statisch und liest die JSON-Dateien nicht automatisch. Der nächste technische Schritt ist ein Generator aus den JSON-Quelldaten. Die funktionierende Bring! Integration wurde nicht verändert.
 
-Ein Testrezept mit `schema.org/Recipe` JSON-LD. Noch keine Bring!-API-Anbindung, Einkaufsliste, Datenbank oder Rezeptverwaltung. Der Import ist noch nicht praktisch bestätigt.
+## Webseite
+
+GitHub Pages mit Branch `main` und Ordner `/ (root)`: https://zefad3v.github.io/wachochemer/
