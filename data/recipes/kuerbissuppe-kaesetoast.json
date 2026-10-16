@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "kuerbissuppe-kaesetoast",
+  "slug": "kuerbissuppe-kaesetoast",
+  "locale": "de-CH",
+  "title": "Kürbissuppe mit Käsetoast",
+  "description": "Sämige Hokkaido-Kürbissuppe mit knusprigem Gruyère-Toast. Wärmend, unkompliziert und familienfreundlich.",
+  "category": "lunch",
+  "cuisine": "Schweizer Familienküche",
+  "baseServings": 3,
+  "householdNote": "Grundmenge für 2 Erwachsene und 1 Kind",
+  "prepMinutes": 10,
+  "cookMinutes": 20,
+  "ingredients": [
+    {
+      "ingredientId": "hokkaido_pumpkin",
+      "quantity": 800,
+      "unit": "g"
+    },
+    {
+      "ingredientId": "potato",
+      "quantity": 200,
+      "unit": "g"
+    },
+    {
+      "ingredientId": "onion",
+      "quantity": 1,
+      "unit": "piece"
+    },
+    {
+      "ingredientId": "rapeseed_oil",
+      "quantity": 1,
+      "unit": "tbsp"
+    },
+    {
+      "ingredientId": "vegetable_stock",
+      "quantity": 700,
+      "unit": "ml"
+    },
+    {
+      "ingredientId": "half_cream",
+      "quantity": 100,
+      "unit": "ml"
+    },
+    {
+      "ingredientId": "salt",
+      "quantity": null,
+      "unit": "to_taste"
+    },
+    {
+      "ingredientId": "black_pepper",
+      "quantity": null,
+      "unit": "to_taste"
+    },
+    {
+      "ingredientId": "nutmeg",
+      "quantity": null,
+      "unit": "to_taste"
+    },
+    {
+      "ingredientId": "toast_bread_slice",
+      "quantity": 6,
+      "unit": "piece"
+    },
+    {
+      "ingredientId": "gruyere_cheese",
+      "quantity": 120,
+      "unit": "g"
+    }
+  ],
+  "instructions": {
+    "de-CH": [
+      "Hokkaidokürbis gründlich waschen, Kerne entfernen und mitsamt Schale in Würfel schneiden. Kartoffeln schälen und würfeln. Zwiebel fein hacken.",
+      "Rapsöl in einem grossen Topf erhitzen und die Zwiebel glasig dünsten. Kürbis und Kartoffeln zugeben und kurz mitdünsten.",
+      "Mit Gemüsebouillon ablöschen und etwa 20 Minuten köcheln lassen, bis das Gemüse weich ist.",
+      "Suppe fein pürieren, Halbrahm einrühren und mit Salz, Pfeffer und etwas Muskat abschmecken.",
+      "Toastbrotscheiben mit Gruyère bestreuen und im Backofen unter Aufsicht überbacken, bis der Käse geschmolzen und leicht gebräunt ist. Mit der Suppe servieren."
+    ]
+  }
+}
