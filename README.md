@@ -1,17 +1,29 @@
 # Wa chochemer?
 
-Schweizerdeutsche Rezeptplattform im Aufbau. Momentan ein öffentliches Testrezept mit funktionierendem Bring! Button und korrekter Portionenskalierung.
+Eine Schweizer Rezeptplattform im Aufbau. Rezepte, Zutaten und Oberflächentexte werden strukturiert verwaltet. Das erste Testrezept ist **Milde Poulet-Fajitas** mit Bring! Integration.
 
-## Daten
+## Projektstruktur
 
-* `data/recipes/poulet-fajitas.json`: Rezept als strukturierter Datensatz.
-* `data/ingredients.json`: zentraler Zutatenstamm mit IDs.
-* `locales/gsw-CH.json`: vorbereitete schweizerdeutsche Oberflächentexte.
-* `docs/architecture.md`: Architektur und aktuelle Grenzen.
-* `docs/roadmap.md`: weitere Schritte.
+* `data/ingredients.json`: zentraler Zutatenstamm, eindeutige IDs und Bezeichnungen.
+* `data/recipes/*.json`: Rezepte und Mengen als strukturierte Quelldaten.
+* `locales/gsw-CH.json`: schweizerdeutsche Oberflächenbegriffe.
+* `scripts/build.mjs`: statischer Generator für HTML und Schema.org/Recipe.
+* `index.html`: vorläufige Startseite, aus JSON generiert.
+* `rezepte/<slug>/index.html`: generierte Detailseiten.
+* `.github/workflows/generate.yml`: automatische Generierung auf GitHub.
+* `docs/architecture.md` und `docs/roadmap.md`: Entscheidungen und weitere Schritte.
 
-**Aktueller Stand:** `index.html` ist noch statisch und liest die JSON-Dateien nicht automatisch. Der nächste technische Schritt ist ein Generator aus den JSON-Quelldaten. Die funktionierende Bring! Integration wurde nicht verändert.
+## Neues Rezept hinzufügen
+
+1. Bei Bedarf fehlende Zutaten mit stabiler ID in `data/ingredients.json` ergänzen.
+2. Eine Rezeptdatei in `data/recipes/` anlegen und auf Zutaten-IDs verweisen.
+3. Lokal `node scripts/build.mjs` ausführen oder auf die GitHub Action warten.
+4. HTML und Bring! Import prüfen. Für alle Rezepte gibt es eine URL unter `rezepte/<slug>/`.
+
+Keine npm-Installation nötig, Node.js 22 wird in der GitHub Action verwendet.
 
 ## Webseite
 
-GitHub Pages mit Branch `main` und Ordner `/ (root)`: https://zefad3v.github.io/wachochemer/
+https://zefad3v.github.io/wachochemer/
+
+Der GitHub-Workflow für die künftige automatische Generierung ist eingerichtet, sein erfolgreicher erster Lauf muss noch bestätigt werden. Details in `docs/architecture.md`.
