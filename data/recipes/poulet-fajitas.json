@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "poulet-fajitas",
+  "slug": "poulet-fajitas",
+  "locale": "de-CH",
+  "title": "Milde Poulet-Fajitas",
+  "description": "Saftiges Poulet mit Peperoni und Mais. Alle können ihre Tortillas selbst füllen.",
+  "category": "dinner",
+  "cuisine": "Tex-Mex",
+  "baseServings": 3,
+  "householdNote": "Grundmenge für 2 Erwachsene und 1 Kind",
+  "prepMinutes": 15,
+  "cookMinutes": 20,
+  "ingredients": [
+    {
+      "ingredientId": "chicken_breast",
+      "quantity": 400,
+      "unit": "g"
+    },
+    {
+      "ingredientId": "wheat_tortilla_small",
+      "quantity": 6,
+      "unit": "piece"
+    },
+    {
+      "ingredientId": "bell_pepper",
+      "quantity": 2,
+      "unit": "piece"
+    },
+    {
+      "ingredientId": "onion",
+      "quantity": 1,
+      "unit": "piece"
+    },
+    {
+      "ingredientId": "sweetcorn",
+      "quantity": 150,
+      "unit": "g"
+    },
+    {
+      "ingredientId": "rapeseed_oil",
+      "quantity": 2,
+      "unit": "tbsp"
+    },
+    {
+      "ingredientId": "paprika_mild",
+      "quantity": 1,
+      "unit": "tsp"
+    },
+    {
+      "ingredientId": "ground_cumin",
+      "quantity": 0.5,
+      "unit": "tsp",
+      "optional": true
+    },
+    {
+      "ingredientId": "plain_yogurt",
+      "quantity": 100,
+      "unit": "g"
+    },
+    {
+      "ingredientId": "tomato",
+      "quantity": 1,
+      "unit": "piece"
+    },
+    {
+      "ingredientId": "salt",
+      "quantity": null,
+      "unit": "to_taste"
+    }
+  ],
+  "instructions": {
+    "de-CH": [
+      "Poulet in Streifen schneiden. Peperoni und Zwiebel fein schneiden, Tomate würfeln.",
+      "Poulet mit 1 EL Öl in einer grossen Pfanne vollständig durchbraten. Herausnehmen.",
+      "Restliches Öl zugeben, Peperoni und Zwiebel etwa 7 Minuten weich braten. Mais und Poulet zufügen, mit Paprika, optional Kreuzkümmel und wenig Salz würzen. Alles erhitzen.",
+      "Tortillas nach Packungsangabe erwärmen. Mit Pouletgemüse, Tomaten und Naturjoghurt servieren. Für Kinder die Zutaten bei Bedarf separat anbieten."
+    ]
+  }
+}
