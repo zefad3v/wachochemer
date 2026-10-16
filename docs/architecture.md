@@ -1,28 +1,30 @@
-# Architekturentscheidungen
+# Architektur
 
-## Prinzipien
+## Entscheidungen
 
-* Aktuelle Oberfläche: Schweizerdeutsch (gsw-CH). Rezeptinhalte: Deutsch (CH).
-* Sprachumschaltung und weitere Sprachen sind vorbereitet, jedoch **noch nicht implementiert**.
-* Rezepte und Zutaten werden über stabile IDs referenziert. Datenformat JSON mit `schemaVersion`.
-* Rezeptmengen sind numerisch und an `baseServings` gebunden; Mengenwerte sind sprachunabhängig.
-* Zutatenkatalog ist der zentrale Ort für Bezeichnungen (aktuell nur `de-CH`), zukünftige Locale-Werte sind ergänzbar.
-* `optional` markiert optionale Zutaten, ohne die Bring! Funktionalität vorauszusetzen.
-* Spätere DB-Migration soll dieselben IDs und Referenzen behalten.
+* Die Oberfläche verwendet derzeit schweizerdeutsche Bezeichnungen. Rezeptinhalte bleiben auf Deutsch (CH).
+* Mehrsprachigkeit ist durch `locales/`, stabile Zutaten-IDs und sprachbezogene Namen vorbereitet, aber noch nicht implementiert.
+* Der Zutatenstamm liegt in `data/ingredients.json`.
+* Rezepte liegen in `data/recipes/*.json`. Mengen sind Zahlen mit festen Einheiten. IDs und `schemaVersion` erleichtern eine spätere Datenbankmigration.
+* Die JSON-Daten sind jetzt die **einzige Quelle** für angezeigte Rezeptinformationen sowie Schema.org/Recipe.
 
-## Struktur
+## Generator
 
-* `data/ingredients.json`: Zutatenstamm.
-* `data/recipes/*.json`: strukturierte Rezepte.
-* `locales/gsw-CH.json`: künftige Übersetzungen der Navigation.
-* `index.html`: aktuell veröffentlichte statische Testseite mit eingebetteten Schema.org-Daten und funktionierendem Bring! Widget.
+`node scripts/build.mjs` erzeugt `index.html` und für jedes Rezept eine Detailseite unter `rezepte/<slug>/index.html`. Es werden keine npm-Abhängigkeiten benötigt.
 
-## Wichtiger Übergangsschritt
+Die GitHub Action `.github/workflows/generate.yml` soll bei Änderungen an Rezepten, Zutaten, Sprache oder Generator auf `main` automatisch neu generieren und die fertigen Dateien committen. Für den Push benötigt GitHub Actions Schreibberechtigung (`contents: write` und passende Repository-Einstellungen). Dieser automatische Lauf ist noch separat zu verifizieren.
 
-Die Webseite liest die JSON-Dateien **noch nicht automatisch**. Beim Ändern eines Rezepts muss bis zur Einführung eines Generators auch die HTML-Seite nachgeführt werden. Als nächstes einen statischen Build-Schritt hinzufügen, der HTML, JSON-LD und sichtbare Zutaten aus den JSON-Dateien generiert. Das Bring! Widget mit `data-bring-base-quantity="3"` bleibt bis zum erneuten Praxistest unverändert.
+## Bring!
 
-## Noch offen
+* Das offizielle Bring! Widget bleibt vorhanden.
+* `data-bring-base-quantity` und `data-bring-requested-quantity` werden aus `baseServings` erzeugt.
+* Der HTML-Generator gibt die Zutaten in `schema.org/Recipe` als Text aus.
+* Optionale Zutaten erhalten den Hinweis `(optional)`.
+* Die automatische Bring! Übertragung muss nach dieser Umstellung nochmals auf einem Mobilgerät getestet werden.
 
-* Mehrsprachige Zubereitungstexte, Pluralformen und lokalisierte Einheiten.
-* Zutatenvarianten, Synonyme und Massenkonvertierung.
-* Benutzerkonten, Wochenplanung und DB.
+## Grenzen und nächste Schritte
+
+* Die Startseite ist derzeit die erste Rezeptdetailseite, keine Archivübersicht.
+* Die Benennung mancher Einheiten und Pluralformen ist derzeit pragmatisch. Für mehr Rezepte benötigen wir Tests mit Mengen, Zutatenvarianten und Übersetzungen.
+* Die Rezepte sind öffentlich. Persönliche Wochenpläne und Familienprofile gehören später in einen separaten privaten Datenbereich.
+* Die Browseroberfläche und das Design werden im nächsten Schritt überarbeitet.
