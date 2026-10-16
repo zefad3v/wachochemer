@@ -1,0 +1,33 @@
+name: Generate recipe pages
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/**'
+      - 'locales/**'
+      - 'scripts/build.mjs'
+      - '.github/workflows/generate.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate pages
+        run: node scripts/build.mjs
+      - name: Commit generated files if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html rezepte/
+          if ! git diff --cached --quiet; then
+            git commit -m "Generate recipe pages from JSON"
+            git push
+          fi
