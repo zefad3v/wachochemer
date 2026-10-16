@@ -77,6 +77,62 @@
         "de-CH": "Salz"
       },
       "defaultUnit": "to_taste"
+    },
+    {
+      "id": "hokkaido_pumpkin",
+      "names": {
+        "de-CH": "Hokkaidokürbis"
+      },
+      "defaultUnit": "g"
+    },
+    {
+      "id": "potato",
+      "names": {
+        "de-CH": "Kartoffeln"
+      },
+      "defaultUnit": "g"
+    },
+    {
+      "id": "vegetable_stock",
+      "names": {
+        "de-CH": "Gemüsebouillon"
+      },
+      "defaultUnit": "ml"
+    },
+    {
+      "id": "half_cream",
+      "names": {
+        "de-CH": "Halbrahm"
+      },
+      "defaultUnit": "ml"
+    },
+    {
+      "id": "toast_bread_slice",
+      "names": {
+        "de-CH": "Scheiben Toastbrot"
+      },
+      "defaultUnit": "piece"
+    },
+    {
+      "id": "gruyere_cheese",
+      "names": {
+        "de-CH": "Gruyère"
+      },
+      "defaultUnit": "g"
+    },
+    {
+      "id": "black_pepper",
+      "names": {
+        "de-CH": "Pfeffer"
+      },
+      "defaultUnit": "to_taste"
+    },
+    {
+      "id": "nutmeg",
+      "names": {
+        "de-CH": "Muskat"
+      },
+      "defaultUnit": "to_taste"
     }
   ]
 }
