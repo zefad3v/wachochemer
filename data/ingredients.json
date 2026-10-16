@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "ingredients": [
+    {
+      "id": "chicken_breast",
+      "names": {
+        "de-CH": "Pouletbrust"
+      },
+      "defaultUnit": "g"
+    },
+    {
+      "id": "wheat_tortilla_small",
+      "names": {
+        "de-CH": "kleine Weizentortilla"
+      },
+      "defaultUnit": "piece"
+    },
+    {
+      "id": "bell_pepper",
+      "names": {
+        "de-CH": "Peperoni"
+      },
+      "defaultUnit": "piece"
+    },
+    {
+      "id": "onion",
+      "names": {
+        "de-CH": "Zwiebel"
+      },
+      "defaultUnit": "piece"
+    },
+    {
+      "id": "sweetcorn",
+      "names": {
+        "de-CH": "Mais, abgetropft"
+      },
+      "defaultUnit": "g"
+    },
+    {
+      "id": "rapeseed_oil",
+      "names": {
+        "de-CH": "Rapsöl"
+      },
+      "defaultUnit": "tbsp"
+    },
+    {
+      "id": "paprika_mild",
+      "names": {
+        "de-CH": "mildes Paprikapulver"
+      },
+      "defaultUnit": "tsp"
+    },
+    {
+      "id": "ground_cumin",
+      "names": {
+        "de-CH": "Kreuzkümmel"
+      },
+      "defaultUnit": "tsp"
+    },
+    {
+      "id": "plain_yogurt",
+      "names": {
+        "de-CH": "Naturjoghurt"
+      },
+      "defaultUnit": "g"
+    },
+    {
+      "id": "tomato",
+      "names": {
+        "de-CH": "Tomate"
+      },
+      "defaultUnit": "piece"
+    },
+    {
+      "id": "salt",
+      "names": {
+        "de-CH": "Salz"
+      },
+      "defaultUnit": "to_taste"
+    }
+  ]
+}
