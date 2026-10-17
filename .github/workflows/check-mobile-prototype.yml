@@ -1,0 +1,42 @@
+name: Check mobile design prototype
+on:
+  push:
+    branches:
+      - feat/mobile-revolver-prototype
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check JavaScript syntax
+        run: node --check prototype/app.js
+      - name: Verify references and source data
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const page=readFileSync('prototype/index.html','utf8');
+          const app=readFileSync('prototype/app.js','utf8');
+          const catalog=JSON.parse(readFileSync('data/ingredients.json','utf8'));
+          const ingredients=new Set(catalog.ingredients.map(x=>x.id));
+          const real=['poulet-fajitas','kuerbissuppe-kaesetoast'];
+          for(const id of real){
+            const recipe=JSON.parse(readFileSync('data/recipes/'+id+'.json','utf8'));
+            assert.equal(recipe.id,id);
+            assert(recipe.ingredients.length>0);
+            for(const entry of recipe.ingredients)assert(ingredients.has(entry.ingredientId),'Missing ingredient '+entry.ingredientId);
+          }
+          for(const path of ['./styles.css','./app.js'])assert(page.includes(path));
+          for(const view of ['week','archive','shopping','settings'])assert(page.includes('screen-'+view));
+          assert(app.includes('showModal()'));
+          assert(app.includes('bring-action'));
+          console.log('Prototype structure and recipe references validated');
+          NODE
+      - name: Confirm published generator remains intact
+        run: node --check scripts/build.mjs
