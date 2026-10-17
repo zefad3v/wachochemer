@@ -1,0 +1,45 @@
+# Wa chochemer? · Mobiler Designprototyp
+
+Diese Vorschau lebt absichtlich auf **feat/mobile-revolver-prototype**. Die öffentliche GitHub-Pages-Version auf **main** wird nicht verändert.
+
+## Was funktioniert
+
+* Vertikaler, räumlich gestaffelter Wochenrevolver auf Smartphones (Wischen, Tippen, Tasten, Mausrad).
+* Desktop ab 1040 px: ausgewähltes Gericht links ohne Kachel, horizontaler Revolver rechts.
+* Bottom Navigation mit dezenter Glasoptik, Schweizerdeutsch nur für Oberflächenbegriffe.
+* Chochchischtli mit Suche, Filter, Favoriten; Rezeptdetails mit hochdeutschem Rezepttext.
+* Iichaufslischte als **lokale Demoansicht** mit Zusammenfassung der echten Zutaten aus den zwei bestehenden Rezepten.
+* Iistellige mit Wuchebeginn, lokal im Browser gespeichert.
+* Die vorhandenen JSON-Rezepte und der Zutatenstamm werden geladen, nicht in die UI dupliziert.
+* Kompaktes Bring!-Symbol auf **erfassten** Rezepten führt zur bisherigen öffentlichen Rezeptseite mit funktionierendem Widget.
+* Tastaturbedienung, Fokusmarkierungen und reduzierte Bewegung bei passender Geräteeinstellung.
+
+## Design und Grenzen
+
+* Das ist ein **interaktiver Designprototyp**, kein produktives Wochenplanungssystem.
+* Die sieben Tagesgerichte dienen der Gestaltung. Nur **Kürbissuppe mit Käsetoast** und **Milde Poulet-Fajitas** sind im echten Rezeptstamm erfasst. Die übrigen fünf sind als Designbeispiele markiert.
+* Die Einkaufsliste ist nicht mit Bring! synchronisiert und wird nicht automatisch übertragen. Das Bring!-Symbol öffnet stattdessen das bestehende Rezept mit dem bewährten Import-Widget.
+* Kochbilder sind vorläufige externe **Unsplash-Demofotos** und keine eigenen Rezeptfotos. Einzelne Fotos können vom konkreten Rezept abweichen; vor Produktion durch passende lizenzgeprüfte Aufnahmen ersetzen.
+* Es gibt noch keine Accounts, personalisierten Essenspläne oder gemeinsame Synchronisierung.
+* Die Verwendung lokaler Daten ist nur eine Prototypfunktion. Eine Datenbank ist nicht nötig.
+* Browseransicht via file:// kann das Laden der JSON-Dateien verhindern, weshalb in diesem Fall eine ausdrücklich reduzierte Demo-Fallbackansicht erscheint.
+
+## Lokal testen
+
+Im Repository-Wurzelverzeichnis einen statischen Server starten:
+
+    python3 -m http.server 8000
+
+Dann http://localhost:8000/prototype/ öffnen.
+
+## Online-Preview ohne Änderung der Live-Seite
+
+Der Branch kann über ein **externes HTML-Preview** (raw.githack.com) angesehen werden. Dies ist ein unabhängiger Drittanbieter, kein GitHub Pages. Für eine stabile Vorschau eignet sich ein Link mit dem konkreten Commit-SHA. Das Preview kann vor der ersten Öffnung eine Sicherheitsbestätigung verlangen.
+
+Nicht automatisch nach main mergen. Vor dem Mergen die Navigation und den Bring!-Übergang auf dem iPhone testen.
+
+## Dateien
+
+* prototype/index.html: Struktur der vier Ansichten.
+* prototype/styles.css: Dark Olive Design, klare Kartenkanten, dezente Glass-Navigation und responsive Layouts.
+* prototype/app.js: Interaktionen und Anbindung an bestehende JSON-Daten.
