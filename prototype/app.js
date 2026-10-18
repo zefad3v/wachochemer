@@ -67,6 +67,7 @@ function weekDays(){
 function activeItem(){return weekDays()[state.current].item}
 function showTab(tab){
  state.tab=tab;
+ document.body.classList.toggle("week-mode",tab==="week");
  document.querySelectorAll(".screen").forEach(el=>el.classList.toggle("active",el.id==="screen-"+tab));
  document.querySelectorAll("[data-tab]").forEach(el=>{
    const yes=el.dataset.tab===tab;
