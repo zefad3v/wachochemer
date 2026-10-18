@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#19231b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Wa chochemer? Mobiler Designprototyp für Wucheplan, Chochchischtli und Iichaufslischte.">
+  <title>Wa chochemer? · Mobiler Prototyp</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" type="module"></script>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand-block">
+      <span class="eyebrow">ÜSERI FAMILIECHUCHI</span>
+      <div class="brand">Wa chochemer<span class="brand-mark">?</span></div>
+    </div>
+    <nav class="desktop-nav" aria-label="Hauptnavigation">
+      <button type="button" data-tab="week" class="nav-btn active">Wucheplan</button>
+      <button type="button" data-tab="archive" class="nav-btn">Chochchischtli</button>
+      <button type="button" data-tab="shopping" class="nav-btn">Iichaufslischte</button>
+    </nav>
+    <button type="button" data-tab="settings" class="header-settings" aria-label="Iistellige" title="Iistellige">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M9.9 3h4.2l.7 2.2 1.4.8 2.3-.5 2.1 3.6-1.6 1.7v1.6l1.6 1.7-2.1 3.6-2.3-.5-1.4.8-.7 2.2H9.9l-.7-2.2-1.4-.8-2.3.5-2.1-3.6L5 12.4v-1.6L3.4 9.1l2.1-3.6 2.3.5 1.4-.8z"/></svg>
+    </button>
+  </header>
+  <main id="main">
+    <section class="screen active" id="screen-week" aria-labelledby="week-title">
+      <div class="screen-heading">
+        <div>
+          <span class="eyebrow muted">WOCHE FÜR WOCHE. EINFACH.</span>
+          <h1 id="week-title">Üse Wucheplan</h1>
+        </div>
+        <div class="week-controls" aria-label="Wochenwechsel">
+          <button type="button" class="icon-btn" id="week-prev" aria-label="Vorherige Woche">‹</button>
+          <span id="week-range" aria-live="polite"></span>
+          <button type="button" class="icon-btn" id="week-next" aria-label="Nächste Woche">›</button>
+        </div>
+      </div>
+      <div class="week-experience">
+        <div id="ambient" class="ambient" aria-hidden="true"></div>
+        <section id="desktop-spotlight" class="desktop-spotlight" aria-label="Ausgewähltes Gericht"></section>
+        <div class="wheel-shell">
+          <div id="wheel" class="wheel" role="region" aria-roledescription="Karussell" aria-label="Sieben Tagesgerichte. Wische vertikal oder nutze die Tasten."></div>
+          <div class="wheel-rail" aria-hidden="true"><span id="wheel-position"></span></div>
+        </div>
+        <div class="day-controls">
+          <button type="button" id="day-prev" class="circle-control" aria-label="Vorheriger Tag">↑</button>
+          <span id="day-indicator" aria-live="polite">1 / 7</span>
+          <button type="button" id="day-next" class="circle-control" aria-label="Nächster Tag">↓</button>
+        </div>
+      </div>
+      <p class="hint">Wisch uf oder ab, um dä Tag z'wächsle. Tippe uf s Bild fürs Rezept.</p>
+    </section>
+    <section class="screen" id="screen-archive" aria-labelledby="archive-title">
+      <div class="section-title"><span class="eyebrow">FÜR JEDÄ TAG</span><h1 id="archive-title">Chochchischtli</h1><p>Alli Rezepte a eim Ort. Klari Bilder, eifachi Suche.</p></div>
+      <label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="recipe-search" placeholder="Rezepte sueche…" autocomplete="off" aria-label="Rezepte suchen"></label>
+      <div class="filter-row" id="recipe-filters" aria-label="Rezeptfilter"></div>
+      <div class="recipe-grid" id="recipe-grid"></div>
+    </section>
+    <section class="screen" id="screen-shopping" aria-labelledby="shopping-title">
+      <div class="section-title"><span class="eyebrow">ALLES UF EINEN BLICK</span><h1 id="shopping-title">Iichaufslischte</h1><p>Zutate vo üsem aktuelle Demo-Wucheplan.</p></div>
+      <div class="notice"><strong>Bring! isch scho integriert.</strong><span>Für de Test chasch d Zutate pro echtem Rezept mit em Bring!-Button uf de veröffentlichte Rezeptsite überneh. E gesamte Wuchexport isch no nöd implementiert.</span></div>
+      <div id="shopping-progress" class="shopping-progress"></div>
+      <div id="shopping-items" class="shopping-items"></div>
+    </section>
+    <section class="screen" id="screen-settings" aria-labelledby="settings-title">
+      <div class="section-title"><span class="eyebrow">NUR EINMAL IISTELLE</span><h1 id="settings-title">Iistellige</h1><p>Dini persönleche Wuche, ohni Schalter im Wucheplan.</p></div>
+      <div class="settings-card">
+        <label for="start-day"><strong>Wuchebeginn</strong><span>Vo wellem Tag söll dini Wuche starte?</span></label>
+        <select id="start-day"><option value="1">Mäntig</option><option value="2">Zischtig</option><option value="3">Mittwuch</option><option value="4">Dunschtig</option><option value="5">Friitig</option><option value="6">Samschtig</option><option value="0">Sunntig</option></select>
+      </div>
+      <p class="settings-note">D Iistellig wird nume i dim Browser gspeicheret. Familienprofil, Sprachwächsel und dini eigene Rezepte chömed spöter.</p>
+    </section>
+  </main>
+  <nav class="bottom-nav" aria-label="Hauptnavigation">
+    <button data-tab="week" type="button" class="bottom-link active" aria-label="Wucheplan"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 10h18m-12 4h6m-6 4h4"/></svg><span>Wucheplan</span></button>
+    <button data-tab="archive" type="button" class="bottom-link" aria-label="Chochchischtli"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.8 6-1.8 9 0 3-1.8 6-1.8 9 0v14c-3-1.8-6-1.8-9 0-3-1.8-6-1.8-9 0zM12 5.5v14"/></svg><span>Chochchischtli</span></button>
+    <button data-tab="shopping" type="button" class="bottom-link" aria-label="Iichaufslischte"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-2 12H6L4 9zm4 0 4-7 4 7m-8 4v4m4-4v4m4-4v4"/></svg><span>Iichauf</span></button>
+  </nav>
+  <dialog id="recipe-dialog" class="recipe-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-scroll">
+      <div class="dialog-hero" id="dialog-hero">
+        <button type="button" id="dialog-close" class="back-btn" aria-label="Rezept schliessen">←</button>
+        <button type="button" id="dialog-favourite" class="fav-btn" aria-label="Favorit umschalten">♡</button>
+      </div>
+      <div class="dialog-body">
+        <span class="eyebrow" id="dialog-category"></span>
+        <h2 id="dialog-title"></h2>
+        <p id="dialog-description"></p>
+        <div class="detail-meta" id="dialog-meta"></div>
+        <div class="detail-actions" id="dialog-actions"></div>
+        <section class="detail-section" id="dialog-ingredients-section"><div class="ingredient-heading"><h3>Zutaten</h3><div id="dialog-portion-picker" class="portion-picker" role="group" aria-label="Portionenzahl"><button type="button" id="portion-minus" aria-label="Eine Portion weniger">−</button><output id="portion-count" aria-live="polite">3 Portionen</output><button type="button" id="portion-plus" aria-label="Eine Portion mehr">+</button></div></div><ul class="detail-ingredients" id="dialog-ingredients"></ul></section>
+        <section class="detail-section" id="dialog-instructions-section"><h3>Zubereitung</h3><ol id="dialog-instructions"></ol></section>
+      </div>
+    </div>
+  </dialog>
+</div>
+</body>
+</html>
