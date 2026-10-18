@@ -28,7 +28,7 @@ const FALLBACK_RECIPES={
 };
 const FALLBACK_NAMES={chicken_breast:"Pouletbrust",wheat_tortilla_small:"Weizentortillas",bell_pepper:"Peperoni",hokkaido_pumpkin:"Hokkaidokürbis",potato:"Kartoffeln",half_cream:"Halbrahm"};
 const state={
- tab:"week",current:0,weekOffset:0,startDay:4,
+ tab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
  recipes:{},names:{},favorites:new Set(),checked:new Set(),filter:"all",query:""
 };
 function readSaved(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
@@ -37,13 +37,16 @@ state.startDay=Number(readSaved("wachochemer:weekstart",4));
 if(!Number.isInteger(state.startDay)||state.startDay<0||state.startDay>6)state.startDay=4;
 state.favorites=new Set(readSaved("wachochemer:favorites",[]));
 state.checked=new Set(readSaved("wachochemer:shoppingChecked",[]));
+state.servings=readSaved("wachochemer:recipeServings",{});
 const byId=id=>document.getElementById(id);
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 function moneyLike(n){return Number(n).toLocaleString("de-CH",{maximumFractionDigits:2})}
-function formatIngredient(row){
+function formatIngredient(row,factor=1){
  const name=state.names[row.ingredientId]||row.ingredientId.replaceAll("_"," ");
  const unit=units[row.unit]??row.unit;
- const amount=row.quantity===null||row.unit==="to_taste" ? "Etwas" : moneyLike(row.quantity)+(unit?" "+unit:"");
+ const adjusted=row.quantity===null ? null : row.quantity*factor;
+ const quantity=adjusted===null ? null : (row.unit==="g"||row.unit==="ml"?Math.round(adjusted):Math.round(adjusted*100)/100);
+ const amount=row.quantity===null||row.unit==="to_taste" ? "Etwas" : moneyLike(quantity)+(unit?" "+unit:"");
  const plurals={wheat_tortilla_small:"kleine Weizentortillas",toast_bread_slice:"Scheiben Toastbrot"};
  return amount+" "+(plurals[row.ingredientId]||name)+(row.optional?" (optional)":"");
 }
@@ -89,6 +92,7 @@ function distance(i){
  if(d>3)d-=7;
  return d;
 }
+let lastWheelSwipeAt=0;
 function renderWheel(){
  const days=weekDays();
  byId("week-range").textContent=weekLabel();
@@ -117,7 +121,7 @@ function renderWheel(){
  element.style.transform="translate(-50%,-50%) "+(wide?"translateX("+delta+"px) rotateY("+(-d*7)+"deg)":"translateY("+delta+"px) rotateX("+(d*5)+"deg)")+" scale("+size+")";
  });
  wheel.querySelectorAll(".recipe-card").forEach(card=>{
-  card.addEventListener("click",()=>{const i=Number(card.dataset.day);if(i===state.current)openRecipe(days[i].item);else setDay(i)});
+  card.addEventListener("click",()=>{if(Date.now()-lastWheelSwipeAt<420)return;const i=Number(card.dataset.day);if(i===state.current)openRecipe(days[i].item);else setDay(i)});
  });
  const spot=byId("desktop-spotlight");
  const date=days[state.current].date;
@@ -127,6 +131,7 @@ function renderWheel(){
  byId("spot-recipe").addEventListener("click",()=>openRecipe(item));
 }
 function renderArchive(){
+ byId("recipe-grid").classList.toggle("search-results",Boolean(state.query.trim()));
  const all=demos.filter(d=>d.title.toLocaleLowerCase("de-CH").includes(state.query.toLocaleLowerCase("de-CH")))
  .filter(d=>state.filter==="all"||(state.filter==="real"?d.real:state.favorites.has(d.id)));
  byId("recipe-grid").innerHTML=all.length?all.map(item=>'<button type="button" class="archive-card" data-recipe="'+item.id+'">'+
@@ -156,6 +161,29 @@ function renderShopping(){
   save("wachochemer:shoppingChecked",[...state.checked]);renderShopping();
  }));
 }
+function currentServings(recipe){
+ const value=Number(state.servings[recipe.id]);
+ return Number.isInteger(value)&&value>=1&&value<=16?value:recipe.baseServings;
+}
+function renderPortions(recipe){
+ const count=currentServings(recipe),factor=count/recipe.baseServings;
+ byId("portion-count").textContent=count+" "+(count===1?"Portion":"Portionen");
+ byId("portion-minus").disabled=count<=1;
+ byId("portion-plus").disabled=count>=16;
+ byId("dialog-meta").innerHTML='<span>◷ '+(recipe.prepMinutes+recipe.cookMinutes)+' Min.</span><span>♙ '+count+' '+(count===1?'Portion':'Portionen')+'</span>';
+ const list=byId("dialog-ingredients");
+ const checked=new Set([...list.querySelectorAll('input:checked')].map(el=>Number(el.dataset.index)));
+ list.innerHTML=recipe.ingredients.map((row,i)=>'<li class="'+(checked.has(i)?'done':'')+'"><input type="checkbox" data-index="'+i+'" aria-label="'+escapeHtml(formatIngredient(row,factor))+'" id="ingredient-check-'+i+'"'+(checked.has(i)?' checked':'')+'><label for="ingredient-check-'+i+'">'+escapeHtml(formatIngredient(row,factor))+'</label></li>').join("");
+ list.querySelectorAll('input').forEach(input=>input.addEventListener("change",()=>input.parentElement.classList.toggle("done",input.checked)));
+}
+function adjustPortions(delta){
+ const id=state.activeRecipeId,recipe=state.recipes[id];
+ if(!recipe)return;
+ const next=Math.max(1,Math.min(16,currentServings(recipe)+delta));
+ state.servings[id]=next;
+ save("wachochemer:recipeServings",state.servings);
+ renderPortions(recipe);
+}
 function bringIcon(){
  return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M5 8h14l-1 13H6L5 8Zm4 0V6a3 3 0 0 1 6 0v2"/><path d="m9 14 2 2 4-4"/></svg>';
 }
@@ -163,6 +191,7 @@ let previouslyFocused;
 function openRecipe(item){
  if(!item)return;
  const recipe=state.recipes[item.id];
+ state.activeRecipeId=item.id;
  const dialog=byId("recipe-dialog");
  previouslyFocused=document.activeElement;
  byId("dialog-hero").style.backgroundImage="url('"+item.image+"')";
@@ -177,10 +206,10 @@ function openRecipe(item){
  if(recipe){
   const live="https://zefad3v.github.io/wachochemer/rezepte/"+encodeURIComponent(item.id)+"/";
   actions.innerHTML='<button class="main-action" type="button" id="jump-to-ingredients">Zutate aaluege</button>'+
-  '<a class="bring-action" href="'+live+'" target="_blank" rel="noopener noreferrer" aria-label="Bring! Import auf der veröffentlichten Rezeptseite öffnen" title="Bring! auf der veröffentlichten Rezeptseite öffnen">'+bringIcon()+'</a>';
+  '<a class="bring-action" href="'+live+'" target="_blank" rel="noopener noreferrer" aria-label="Bring! Import auf der veröffentlichten Rezeptseite öffnen" title="Bring! öffnet die Rezeptseite. Die gewählte Portionszahl dort nochmals einstellen.">'+bringIcon()+'</a>';
   byId("jump-to-ingredients").addEventListener("click",()=>byId("dialog-ingredients-section").scrollIntoView({behavior:"smooth",block:"start"}));
-  byId("dialog-ingredients").innerHTML=recipe.ingredients.map((row,i)=>'<li><input type="checkbox" aria-label="'+escapeHtml(formatIngredient(row))+'" id="ingredient-check-'+i+'"><label for="ingredient-check-'+i+'">'+escapeHtml(formatIngredient(row))+'</label></li>').join("");
-  byId("dialog-ingredients").querySelectorAll("input").forEach(input=>input.addEventListener("change",()=>input.parentElement.classList.toggle("done",input.checked)));
+  byId("dialog-ingredients").innerHTML="";
+  renderPortions(recipe);
   const steps=recipe.instructions?.["de-CH"]||[];
   byId("dialog-instructions").innerHTML=steps.map(step=>'<li>'+escapeHtml(step)+'</li>').join("");
   byId("dialog-ingredients-section").hidden=false;
@@ -231,13 +260,26 @@ function init(){
  byId("day-next").addEventListener("click",()=>setDay(state.current+1));
  const shell=byId("wheel");
  let startX=0,startY=0,tracking=false;
- shell.addEventListener("touchstart",e=>{startX=e.changedTouches[0].clientX;startY=e.changedTouches[0].clientY;tracking=true},{passive:true});
+ shell.addEventListener("touchstart",e=>{
+  if(e.touches.length!==1){tracking=false;return}
+  startX=e.touches[0].clientX;startY=e.touches[0].clientY;tracking=true;
+ },{passive:true});
+ shell.addEventListener("touchmove",e=>{
+  if(!tracking||e.touches.length!==1)return;
+  const dy=e.touches[0].clientY-startY,dx=e.touches[0].clientX-startX;
+  if(Math.abs(dy)>7&&Math.abs(dy)>Math.abs(dx))e.preventDefault();
+ },{passive:false});
  shell.addEventListener("touchend",e=>{
   if(!tracking)return;tracking=false;
   const dy=e.changedTouches[0].clientY-startY;
   const dx=e.changedTouches[0].clientX-startX;
-  if(Math.abs(dy)>45&&Math.abs(dy)>Math.abs(dx)){setDay(state.current+(dy<0?1:-1));e.preventDefault()}
+  if(Math.abs(dy)>35&&Math.abs(dy)>Math.abs(dx)){
+    lastWheelSwipeAt=Date.now();
+    e.preventDefault();
+    setDay(state.current+(dy<0?1:-1));
+  }
  },{passive:false});
+ shell.addEventListener("touchcancel",()=>{tracking=false});
  let wheelCooldown=0;
  shell.addEventListener("wheel",e=>{if(state.tab!=="week")return;e.preventDefault();const now=Date.now();if(now-wheelCooldown<400)return;wheelCooldown=now;setDay(state.current+(e.deltaY>0?1:-1))},{passive:false});
  window.addEventListener("keydown",e=>{
@@ -254,6 +296,8 @@ function init(){
  byId("recipe-filters").addEventListener("click",e=>{const target=e.target.closest("[data-filter]");if(!target)return;state.filter=target.dataset.filter;renderArchive()});
  byId("start-day").value=String(state.startDay);
  byId("start-day").addEventListener("change",e=>{state.startDay=Number(e.target.value);save("wachochemer:weekstart",state.startDay);state.current=0;state.weekOffset=0;renderWheel()});
+ byId("portion-minus").addEventListener("click",()=>adjustPortions(-1));
+ byId("portion-plus").addEventListener("click",()=>adjustPortions(1));
  byId("dialog-close").addEventListener("click",closeRecipe);
  byId("recipe-dialog").addEventListener("click",e=>{if(e.target===byId("recipe-dialog"))closeRecipe()});
  byId("dialog-favourite").addEventListener("click",()=>{
