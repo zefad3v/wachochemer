@@ -43,3 +43,13 @@ Nicht automatisch nach main mergen. Vor dem Mergen die Navigation und den Bring!
 * prototype/index.html: Struktur der vier Ansichten.
 * prototype/styles.css: Dark Olive Design, klare Kartenkanten, dezente Glass-Navigation und responsive Layouts.
 * prototype/app.js: Interaktionen und Anbindung an bestehende JSON-Daten.
+
+## Mobile Review vom 18. Oktober 2026
+
+* **Safari-Wischen:** Der Bereich des vertikalen Revolvers fängt vertikale Touch-Gesten ab. Die Wochenansicht blockiert das Scrollen der darunterliegenden Seite. Die Steuerung per Pfeilbutton verwendet `touch-action: manipulation`, ohne den Browser-Zoom global abzuschalten.
+* **iOS-Suche:** Das Suchfeld verwendet mindestens 16 px Schrift, um den automatischen Safari-Fokuszoom zu vermeiden. Während einer Suche werden Ergebnisse als breite, besser lesbare Zeilen angezeigt.
+* **Rezeptportionen:** In der Rezeptdetailansicht können Portionen zwischen 1 und 16 angepasst werden. Die gewählte Anzahl wird lokal gespeichert. Die Mengen der Demo-Einkaufsliste werden bei den erfassten Rezepten entsprechend angepasst. Der Bring!-Button führt weiterhin zur bestehenden Rezeptseite; dort muss die gewünschte Portionszahl gegebenenfalls erneut gewählt werden.
+* **Kompakte Header:** Kleinere Kopfzeilen lassen dem Rezeptrevolver mehr Bildschirmhöhe.
+* **Adaptives Dock:** Die aktive Navigation erhält eine grössere horizontale Beschriftung, die übrigen Navigationselemente bleiben kompakt und sichtbar. Die Glaswirkung ist bewusst dezent.
+
+**Offen:** Alle Safari-Effekte müssen nach dem Code-Update auf einem echten iPhone erneut geprüft werden. Der GitHub-Workflow prüft Syntax und Datenreferenzen, nicht die tatsächliche iOS-Gestensteuerung.
