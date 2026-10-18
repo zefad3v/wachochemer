@@ -85,8 +85,15 @@ function showTab(tab){
 }
 function weekLabel(){
  const days=weekDays();
- const a=niceDate(days[0].date),b=niceDate(days[6].date);
- return a+" – "+b;
+ const first=days[0].date,last=days[6].date;
+ if(window.matchMedia("(max-width:1039px)").matches){
+  const month=date=>new Intl.DateTimeFormat("de-CH",{month:"short"}).format(date);
+  if(first.getMonth()===last.getMonth()&&first.getFullYear()===last.getFullYear()){
+   return first.getDate()+".–"+last.getDate()+". "+month(last);
+  }
+  return first.getDate()+". "+month(first)+" – "+last.getDate()+". "+month(last);
+ }
+ return niceDate(first)+" – "+niceDate(last);
 }
 function setWeekOffset(inc){
  state.weekOffset+=inc;state.current=0;renderWheel();
