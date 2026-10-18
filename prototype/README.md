@@ -53,3 +53,14 @@ Nicht automatisch nach main mergen. Vor dem Mergen die Navigation und den Bring!
 * **Adaptives Dock:** Die aktive Navigation erhält eine grössere horizontale Beschriftung, die übrigen Navigationselemente bleiben kompakt und sichtbar. Die Glaswirkung ist bewusst dezent.
 
 **Offen:** Alle Safari-Effekte müssen nach dem Code-Update auf einem echten iPhone erneut geprüft werden. Der GitHub-Workflow prüft Syntax und Datenreferenzen, nicht die tatsächliche iOS-Gestensteuerung.
+
+## Mobile Review V3 vom 18. Oktober 2026
+
+* Hauptnavigation: nur noch drei separat schwebende runde Icons für Wucheplan, Chochchischtli und Iichaufslischte. Keine permanente Beschriftung und kein gemeinsamer Balken. Zugängliche Namen bleiben über `aria-label` erhalten.
+* Einstellungen: Zahnrad in die obere Kopfzeile verschoben und aus der Hauptnavigation entfernt.
+* Header: Branding, Seitentitel und Datumsanzeige verkleinert, Datumsformat auf Mobilgeräten verkürzt.
+* Hintergrund: durchgehend einheitliches dunkles Oliv. Der Bildverlauf bleibt auf den Revolver begrenzt.
+* Tagwechsel: Pfeiltasten und Tageszähler seitlich neben die aktive Karte versetzt; die bisherige seitliche Fortschrittslinie entfällt.
+* Kein Überlappen zwischen Navigation und Tagessteuerung. Die Woche füllt den verfügbaren vertikalen Bildschirmbereich ohne gewöhnliches Seitenscrollen.
+* Der native Safari-Adressbalken ist nicht durch Seitencode versteckbar. Für eine spätere URL-freie Ansicht wäre ein auf dem Home-Bildschirm installiertes Web-App-Erlebnis denkbar.
+* Ein echtes iPhone-Review steht aus; automatisierte GitHub-Prüfungen umfassen Syntax/Datenreferenzen, nicht Pixel- oder Touchtests.
