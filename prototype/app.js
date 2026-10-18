@@ -41,11 +41,15 @@ state.servings=readSaved("wachochemer:recipeServings",{});
 const byId=id=>document.getElementById(id);
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 function moneyLike(n){return Number(n).toLocaleString("de-CH",{maximumFractionDigits:2})}
+function scaledQuantity(quantity,unit,factor){
+ if(quantity===null)return null;
+ const scaled=quantity*factor;
+ return unit==="g"||unit==="ml" ? Math.round(scaled) : Math.round(scaled*100)/100;
+}
 function formatIngredient(row,factor=1){
  const name=state.names[row.ingredientId]||row.ingredientId.replaceAll("_"," ");
  const unit=units[row.unit]??row.unit;
- const adjusted=row.quantity===null ? null : row.quantity*factor;
- const quantity=adjusted===null ? null : (row.unit==="g"||row.unit==="ml"?Math.round(adjusted):Math.round(adjusted*100)/100);
+ const quantity=scaledQuantity(row.quantity,row.unit,factor);
  const amount=row.quantity===null||row.unit==="to_taste" ? "Etwas" : moneyLike(quantity)+(unit?" "+unit:"");
  const plurals={wheat_tortilla_small:"kleine Weizentortillas",toast_bread_slice:"Scheiben Toastbrot"};
  return amount+" "+(plurals[row.ingredientId]||name)+(row.optional?" (optional)":"");
@@ -147,8 +151,9 @@ function renderShopping(){
   recipe.ingredients.forEach(row=>{
    if(row.optional)return;
    const key=row.ingredientId+"|"+row.unit;
-   if(!aggregate.has(key))aggregate.set(key,{...row});
-   else {const existing=aggregate.get(key);if(typeof row.quantity==="number"&&typeof existing.quantity==="number")existing.quantity+=row.quantity}
+   const quantity=scaledQuantity(row.quantity,row.unit,currentServings(recipe)/recipe.baseServings);
+   if(!aggregate.has(key))aggregate.set(key,{...row,quantity});
+   else {const existing=aggregate.get(key);if(typeof quantity==="number"&&typeof existing.quantity==="number")existing.quantity+=quantity}
   });
  });
  const items=[...aggregate].map(([key,row])=>({key,row}));
