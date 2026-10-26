@@ -163,3 +163,52 @@ body{background:#19231b}
 @media(min-width:1040px){
  .header-settings{margin-left:15px}
 }
+
+/* Mobile V4: full-viewport imagery behind headers and navigation. */
+.ambient-backdrop,.week-bottom-frost{display:none}
+@media(max-width:1039px){
+ .screen.active#screen-week{isolation:isolate}
+ .ambient-backdrop{
+   display:block;position:fixed;inset:-20px;z-index:-1;pointer-events:none;
+   background-size:cover;background-position:center center;
+   filter:blur(8px) saturate(.88) brightness(.52);
+   transform:scale(1.04);transition:background-image .2s;
+ }
+ .week-bottom-frost{
+   display:block;position:fixed;z-index:3;pointer-events:none;
+   left:0;right:0;bottom:0;height:calc(105px + env(safe-area-inset-bottom));
+   background:linear-gradient(180deg,rgba(17,27,19,0),rgba(17,27,19,.36) 68%,rgba(17,27,19,.43));
+   backdrop-filter:blur(17px) saturate(115%);
+   -webkit-backdrop-filter:blur(17px) saturate(115%);
+   -webkit-mask-image:linear-gradient(to bottom,transparent,black 36%);
+   mask-image:linear-gradient(to bottom,transparent,black 36%);
+ }
+ .topbar{height:48px;min-height:48px;justify-content:center;padding:7px 52px 5px}
+ body.week-mode .topbar{
+   background:rgba(23,32,24,.24);
+   backdrop-filter:blur(16px) saturate(118%);
+   -webkit-backdrop-filter:blur(16px) saturate(118%);
+ }
+ .topbar .brand{font-size:22px}
+ .topbar .header-settings{
+   position:absolute;top:4px;right:calc(9px + env(safe-area-inset-right));
+   height:40px;width:40px;display:grid;place-items:center;padding:9px;
+   background:transparent;border:0;border-radius:50%;color:var(--cream)
+ }
+ .topbar .header-settings svg{width:21px;height:21px}
+ .topbar .header-settings.active{border:0;background:rgba(224,234,207,.13)}
+ .screen.active#screen-week .screen-heading{
+   position:relative;z-index:4;margin-left:-13px;margin-right:-13px;
+   padding:4px 15px 9px;background:rgba(23,32,24,.16);
+   backdrop-filter:blur(10px) saturate(110%);
+   -webkit-backdrop-filter:blur(10px) saturate(110%);
+ }
+ .screen.active#screen-week .week-experience{
+   position:relative;z-index:1;border-radius:0;background:transparent
+ }
+ .screen.active#screen-week .week-experience::before{display:none}
+ .screen.active#screen-week .ambient{display:none}
+ .screen.active#screen-week .day-controls span{
+   font-size:12px;font-weight:700;letter-spacing:.05em;min-width:24px;text-align:center
+ }
+}
