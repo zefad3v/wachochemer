@@ -21,6 +21,7 @@ const demos = [
  {id:"spiegelei-demo",weekday:3,title:"Spiegelei mit Brot",description:"Einfach, schnell und kindergerecht.",minutes:15,image:images.eggs,real:false}
 ];
 const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig","Samschtig"];
+const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
 const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
 const FALLBACK_RECIPES={
  "poulet-fajitas":{baseServings:3,prepMinutes:15,cookMinutes:20,ingredients:[{ingredientId:"chicken_breast",quantity:400,unit:"g"},{ingredientId:"wheat_tortilla_small",quantity:6,unit:"piece"},{ingredientId:"bell_pepper",quantity:2,unit:"piece"}],instructions:{"de-CH":["Das vollständige Rezept findest du auf der veröffentlichten Rezeptseite."]}},
@@ -108,11 +109,14 @@ let lastWheelSwipeAt=0;
 function renderWheel(){
  const days=weekDays();
  byId("week-range").textContent=weekLabel();
- byId("day-indicator").textContent=(state.current+1)+" / 7";
+ const selectedDate=days[state.current].date;
+ byId("day-indicator").textContent=weekdayShort[selectedDate.getDay()];
+ byId("day-indicator").setAttribute("aria-label",weekdays[selectedDate.getDay()]+", "+niceDate(selectedDate));
  byId("wheel-position").style.top=(state.current/6*100)+"%";
  byId("wheel-position").style.setProperty("--progress",(state.current/6*100)+"%");
  const item=activeItem();
  byId("ambient").style.backgroundImage="url('"+item.image+"')";
+ byId("ambient-backdrop").style.backgroundImage="url('"+item.image+"')";
  const wheel=byId("wheel");
  wheel.innerHTML=days.map(({item,date},i)=>{
  const isCurrent=i===state.current;
