@@ -36,6 +36,12 @@ Dann http://localhost:8000/prototype/ öffnen.
 
 Der Branch kann über ein **externes HTML-Preview** (raw.githack.com) angesehen werden. Dies ist ein unabhängiger Drittanbieter, kein GitHub Pages. Für eine stabile Vorschau eignet sich ein Link mit dem konkreten Commit-SHA. Das Preview kann vor der ersten Öffnung eine Sicherheitsbestätigung verlangen.
 
+**Dynamischer Testlink (folgt dem Branch, mit kurzer Zwischenspeicherung):** https://raw.githack.com/zefad3v/wachochemer/feat/mobile-revolver-prototype/prototype/index.html
+
+**V4 exakt vom 26.10.2026 (unveränderlicher Stand):** https://raw.githack.com/zefad3v/wachochemer/164cc2646d6ff6b851ce82ad5a8ba9e0a30b4cdb/prototype/index.html
+
+Ein Refresh kann bei der Version mit Commit-SHA keine neuen Änderungen liefern. Bei jeder neuen Version muss dafür eine neue Commit-URL verwendet oder der dynamische Branch-Link geöffnet werden. Der Drittanbieter kann eine Sicherheitsbestätigung anzeigen und eignet sich nicht für den produktiven Betrieb.
+
 Nicht automatisch nach main mergen. Vor dem Mergen die Navigation und den Bring!-Übergang auf dem iPhone testen.
 
 ## Dateien
