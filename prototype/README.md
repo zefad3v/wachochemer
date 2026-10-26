@@ -64,3 +64,13 @@ Nicht automatisch nach main mergen. Vor dem Mergen die Navigation und den Bring!
 * Kein Überlappen zwischen Navigation und Tagessteuerung. Die Woche füllt den verfügbaren vertikalen Bildschirmbereich ohne gewöhnliches Seitenscrollen.
 * Der native Safari-Adressbalken ist nicht durch Seitencode versteckbar. Für eine spätere URL-freie Ansicht wäre ein auf dem Home-Bildschirm installiertes Web-App-Erlebnis denkbar.
 * Ein echtes iPhone-Review steht aus; automatisierte GitHub-Prüfungen umfassen Syntax/Datenreferenzen, nicht Pixel- oder Touchtests.
+
+## Mobile Review V4 vom 26. Oktober 2026
+
+* Die Einstellungen sind auf Mobilgeräten als **reines Zahnrad ohne sichtbaren Button-Rahmen** rechts oben verankert. Die Branding-Zeile ist zentriert.
+* Die Tagessteuerung zeigt **MO, DI, MI, DO, FR, SA, SO** für den ausgewählten Tag statt «1 / 7».
+* Das aktive Rezeptbild wird als abgedunkelter, dezent weichgezeichneter Hintergrund bis an die **Ränder des Web-App-Viewports** gezogen. Die Rezeptkarte bleibt scharf.
+* Kopfbereich, Wochensteuerung und untere Navigation liegen auf transparenten bzw. weichgezeichneten Flächen. Keine umfassende Liquid-Glass-UI; Lesbarkeit und zuverlässige Touch-Bedienung haben Vorrang.
+* **Technische Grenze:** Die URL-Leiste von Safari ist nicht Bestandteil des Webseiten-Viewports und kann nicht per CSS gestaltet oder weichgezeichnet werden. Für die spätere Nutzung ist eine installierbare PWA im eigenständigen Fenster vorzusehen.
+* **Test ausstehend:** Auf echtem iPhone in Safari und als zum Home-Bildschirm hinzugefügte Web-App testen, insbesondere Safe Areas, Bildausschnitt, Gesten, Lesbarkeit und Navigation. Keine Änderung an der öffentlichen Website.
+* **Priorität danach:** UI einfrieren und am echten Rezept-, Wochenplan-, Resten- und Einkaufslistenverhalten arbeiten. Aktionenabgleich mit Grossverteilern ist separat als spätere Funktion in den Haupt-Dokumenten erfasst.
