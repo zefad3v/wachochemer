@@ -80,3 +80,12 @@ Nicht automatisch nach main mergen. Vor dem Mergen die Navigation und den Bring!
 * **Technische Grenze:** Die URL-Leiste von Safari ist nicht Bestandteil des Webseiten-Viewports und kann nicht per CSS gestaltet oder weichgezeichnet werden. Für die spätere Nutzung ist eine installierbare PWA im eigenständigen Fenster vorzusehen.
 * **Test ausstehend:** Auf echtem iPhone in Safari und als zum Home-Bildschirm hinzugefügte Web-App testen, insbesondere Safe Areas, Bildausschnitt, Gesten, Lesbarkeit und Navigation. Keine Änderung an der öffentlichen Website.
 * **Priorität danach:** UI einfrieren und am echten Rezept-, Wochenplan-, Resten- und Einkaufslistenverhalten arbeiten. Aktionenabgleich mit Grossverteilern ist separat als spätere Funktion in den Haupt-Dokumenten erfasst.
+
+## Mobile Review V5 vom 28. Oktober 2026
+
+* **Kopfbereich:** Der Glas- und Unschärfe-Effekt im Branding und in der Wochenüberschrift wurde entfernt. Keine sichtbaren Trenner oder farbigen Glasbalken; der bildfüllende Hintergrund soll durchlaufen.
+* **Header-Konsistenz:** «Üse Wucheplan» verwendet auf Mobile dieselbe Titelgrösse (33px) und linke Ausrichtung wie «Chochchischtli» und «Iichaufslischte». Die Wochenwahl liegt darunter separat rechts, damit es auf schmalen Geräten keine Überlappung gibt.
+* **Rezeptrevolver:** Die Hauptkarte wurde höher (maximal 67% der verfügbaren Revolverhöhe / 485px), um deutlicher hochformatig statt nahezu quadratisch zu wirken.
+* **Unterer Übergang:** Die V4-Unschärfe-Blende am unteren Bildschirmrand wurde entfernt; der gleiche Fotohintergrund soll bis hinter die drei Navigationssymbole durchlaufen, ohne harte horizontale Kante.
+* **Grenze:** Die native Safari-Adressleiste unterhalb des Webinhalts ist nicht per CSS gestaltbar. Erst die installierte PWA vermeidet diese Browserleiste.
+* **Abnahme offen:** Ein Screenshot auf echtem iPhone muss überprüfen, ob in Safari tatsächlich keine Farb-/Glaskante und kein visueller Bruch mehr sichtbar ist. Falls die V5 im Browser anders rendert, gezielt CSS-Stacking und Safe Area prüfen, nicht ungefragt das Layout neu gestalten.
