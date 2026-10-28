@@ -164,51 +164,77 @@ body{background:#19231b}
  .header-settings{margin-left:15px}
 }
 
-/* Mobile V4: full-viewport imagery behind headers and navigation. */
-.ambient-backdrop,.week-bottom-frost{display:none}
+/* Mobile V5: edge-to-edge photo, clean headings and consistent title hierarchy.
+   The image remains the only full-viewport effect. The header is not glass. */
+.ambient-backdrop{display:none}
 @media(max-width:1039px){
- .screen.active#screen-week{isolation:isolate}
- .ambient-backdrop{
-   display:block;position:fixed;inset:-20px;z-index:-1;pointer-events:none;
-   background-size:cover;background-position:center center;
-   filter:blur(8px) saturate(.88) brightness(.52);
-   transform:scale(1.04);transition:background-image .2s;
- }
- .week-bottom-frost{
-   display:block;position:fixed;z-index:3;pointer-events:none;
-   left:0;right:0;bottom:0;height:calc(105px + env(safe-area-inset-bottom));
-   background:linear-gradient(180deg,rgba(17,27,19,0),rgba(17,27,19,.36) 68%,rgba(17,27,19,.43));
-   backdrop-filter:blur(17px) saturate(115%);
-   -webkit-backdrop-filter:blur(17px) saturate(115%);
-   -webkit-mask-image:linear-gradient(to bottom,transparent,black 36%);
-   mask-image:linear-gradient(to bottom,transparent,black 36%);
- }
- .topbar{height:48px;min-height:48px;justify-content:center;padding:7px 52px 5px}
- body.week-mode .topbar{
-   background:rgba(23,32,24,.24);
-   backdrop-filter:blur(16px) saturate(118%);
-   -webkit-backdrop-filter:blur(16px) saturate(118%);
- }
- .topbar .brand{font-size:22px}
- .topbar .header-settings{
-   position:absolute;top:4px;right:calc(9px + env(safe-area-inset-right));
-   height:40px;width:40px;display:grid;place-items:center;padding:9px;
-   background:transparent;border:0;border-radius:50%;color:var(--cream)
- }
- .topbar .header-settings svg{width:21px;height:21px}
- .topbar .header-settings.active{border:0;background:rgba(224,234,207,.13)}
- .screen.active#screen-week .screen-heading{
-   position:relative;z-index:4;margin-left:-13px;margin-right:-13px;
-   padding:4px 15px 9px;background:rgba(23,32,24,.16);
-   backdrop-filter:blur(10px) saturate(110%);
-   -webkit-backdrop-filter:blur(10px) saturate(110%);
- }
- .screen.active#screen-week .week-experience{
-   position:relative;z-index:1;border-radius:0;background:transparent
- }
- .screen.active#screen-week .week-experience::before{display:none}
- .screen.active#screen-week .ambient{display:none}
- .screen.active#screen-week .day-controls span{
-   font-size:12px;font-weight:700;letter-spacing:.05em;min-width:24px;text-align:center
- }
+  .screen.active#screen-week{isolation:isolate}
+  .screen.active#screen-week .ambient-backdrop{
+    display:block;position:fixed;inset:-24px;z-index:-1;pointer-events:none;
+    background-size:cover;background-position:center center;
+    filter:blur(9px) saturate(.88) brightness(.52);
+    transform:scale(1.05);transition:background-image .2s;
+  }
+
+  /* The page, including the area behind bottom navigation, is one continuous image.
+     Safari's native address/status chrome is outside the page and cannot be styled. */
+  .topbar{
+    height:48px;min-height:48px;justify-content:center;
+    padding:7px 52px 5px;background:transparent;
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+    border:0;box-shadow:none;
+  }
+  body.week-mode .topbar{
+    background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
+  }
+  .topbar .brand{font-size:22px}
+  .topbar .header-settings{
+    position:absolute;top:4px;right:calc(9px + env(safe-area-inset-right));
+    height:40px;width:40px;display:grid;place-items:center;padding:9px;
+    background:transparent;border:0;border-radius:50%;color:var(--cream);
+  }
+  .topbar .header-settings svg{width:21px;height:21px}
+  .topbar .header-settings.active{
+    border:0;background:rgba(224,234,207,.13)
+  }
+
+  /* Same font size and left alignment as Chochchischtli / Iichaufslischte.
+     Week navigation gets its own line to prevent overlapping on narrow phones. */
+  .screen.active#screen-week .screen-heading{
+    position:relative;z-index:4;display:grid;
+    grid-template-columns:minmax(0,1fr);row-gap:4px;
+    align-items:start;min-height:0;margin:0;
+    padding:14px 7px 10px;
+    background:transparent;border:0;box-shadow:none;
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+  }
+  .screen.active#screen-week .screen-heading h1{
+    font-size:33px;line-height:1.04;white-space:normal;margin:0;
+    text-shadow:0 2px 10px rgba(0,0,0,.28);
+  }
+  .screen.active#screen-week .week-controls{
+    justify-self:end;align-self:center;gap:6px;font-size:11px;
+    text-shadow:0 1px 4px rgba(0,0,0,.35);
+  }
+  .screen.active#screen-week .week-controls .icon-btn{
+    width:30px;height:30px;
+  }
+
+  .screen.active#screen-week .week-experience{
+    position:relative;z-index:1;border-radius:0;
+    background:transparent;
+  }
+  .screen.active#screen-week .week-experience::before{display:none}
+  .screen.active#screen-week .ambient{display:none}
+  .screen.active#screen-week .recipe-card{
+    height:min(67%,485px);
+  }
+  .screen.active#screen-week .day-controls span{
+    font-size:12px;font-weight:700;letter-spacing:.05em;
+    min-width:24px;text-align:center;
+  }
+}
+@media(max-width:355px){
+  .screen.active#screen-week .screen-heading h1,
+  .section-title h1{font-size:31px}
 }
