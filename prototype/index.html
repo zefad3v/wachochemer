@@ -13,6 +13,7 @@
 </head>
 <body>
 <div id="app">
+  <div id="ambient-backdrop" class="ambient-backdrop" aria-hidden="true"></div>
   <header class="topbar">
     <div class="brand-block">
       <span class="eyebrow">ÜSERI FAMILIECHUCHI</span>
@@ -29,8 +30,6 @@
   </header>
   <main id="main">
     <section class="screen active" id="screen-week" aria-labelledby="week-title">
-      <div id="ambient-backdrop" class="ambient-backdrop" aria-hidden="true"></div>
-      <div class="week-bottom-frost" aria-hidden="true"></div>
       <div class="screen-heading">
         <div>
           <span class="eyebrow muted">WOCHE FÜR WOCHE. EINFACH.</span>
@@ -65,7 +64,6 @@
     </section>
     <section class="screen" id="screen-shopping" aria-labelledby="shopping-title">
       <div class="section-title"><span class="eyebrow">ALLES UF EINEN BLICK</span><h1 id="shopping-title">Iichaufslischte</h1><p>Zutate vo üsem aktuelle Demo-Wucheplan.</p></div>
-      <div class="notice"><strong>Bring! isch scho integriert.</strong><span>Für de Test chasch d Zutate pro echtem Rezept mit em Bring!-Button uf de veröffentlichte Rezeptsite überneh. E gesamte Wuchexport isch no nöd implementiert.</span></div>
       <div id="shopping-progress" class="shopping-progress"></div>
       <div id="shopping-items" class="shopping-items"></div>
     </section>
@@ -91,7 +89,7 @@
       </div>
       <div class="dialog-body">
         <span class="eyebrow" id="dialog-category"></span>
-        <h2 id="dialog-title"></h2>
+        <h2 id="dialog-title" tabindex="-1"></h2>
         <p id="dialog-description"></p>
         <div class="detail-meta" id="dialog-meta"></div>
         <div class="detail-actions" id="dialog-actions"></div>
