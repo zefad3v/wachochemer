@@ -100,3 +100,12 @@ Nicht automatisch nach main mergen. Vor dem Mergen die Navigation und den Bring!
 * Bei fehlgeschlagenem Laden erscheint eine Fehlermeldung statt ausgedachter Ersatz-Rezeptzutaten.
 * Im Wochenplan bleibt die bisherige visuelle Demo-Einkaufsliste bestehen. Der echte wöchentliche Warenkorb folgt erst mit M3 bis M5.
 * Die Vorschau ist ein gestapelter Entwicklungsbranch `feat/m2-real-recipe-archive` auf Basis von PR #1. Weder PR #1 noch M2 werden ohne Abnahme in `main` übernommen.
+
+## Mobile V7: Revolver-Kartenrundung (31. Oktober 2026)
+
+* Bei den unmittelbar angrenzenden Rezeptkarten oben und unten wird die Verschiebung nun an die tatsächlich verfügbare Höhe des Revolvers angepasst, damit ihre Ecken nicht an der geraden Containerkante abgeschnitten werden.
+* Alle sichtbaren Karten verwenden dieselbe Kontur wie die ausgewählte Karte. Der kleinere Massstab der Vorschaukarten wird für sichtbare Eckenrundung und Rahmenstärke kompensiert. Die räumliche X-Achsen-Drehung auf Mobile entfällt, damit die Kontur gleichmässig aussieht.
+* Nur die beiden unmittelbaren Nachbarn werden auf dem Smartphone angezeigt; weiter entfernte Karten bilden keine zusätzlichen abgeschnittenen Streifen.
+* Das Rezeptbild im Hintergrund bleibt wie zuvor leicht weichgezeichnet; kein weiteres Redesign der Kopf-/Fussbereiche.
+* Für das spätere Homebildschirm-Icon: iOS unterstützt eine eigene 180×180-PNG-Datei per `<link rel="apple-touch-icon">`. Gestaltung und PWA-Manifest sind für M7 vorgemerkt. Ein bestehendes Homebildschirm-Icon muss nach Austausch nötigenfalls neu hinzugefügt werden.
+* Safari- und Homebildschirm-Test auf dem echten iPhone steht noch aus. Die CI-Tests prüfen die Geometrie-Regeln, können das visuelle Rendering aber nicht vollständig ersetzen.
