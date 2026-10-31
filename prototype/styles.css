@@ -30,7 +30,7 @@ button{-webkit-user-select:none;user-select:none}
 .recipe-grid.search-results .archive-caption strong{font-size:19px;min-height:0}
 .recipe-grid.search-results .archive-caption small{margin-top:0}
 .wheel-shell,.wheel,.recipe-card{touch-action:pan-x pinch-zoom;overscroll-behavior:contain}
-.recipe-card,.circle-control,.icon-btn{touch-action:manipulation}
+.circle-control,.icon-btn{touch-action:manipulation}
 .wheel-shell,.wheel{-webkit-user-select:none;user-select:none}
 .ingredient-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
 .ingredient-heading h3{margin:0}
@@ -302,5 +302,25 @@ body{background:#19231b}
  #screen-week .recipe-card.current{
    border-color:rgba(250,247,231,.86);
    border-style:solid;
+ }
+}
+
+/* V8: vertical swipes belong to the recipe revolver, not browser scrolling.
+   A previous generic button rule set touch-action:manipulation on recipe cards
+   and allowed iOS to cancel the swipe before touchend fired. */
+@media(max-width:1039px){
+ #screen-week .wheel-shell,
+ #screen-week .wheel,
+ #screen-week .recipe-card,
+ #screen-week .recipe-card img,
+ #screen-week .card-content,
+ #screen-week .card-content *{
+   touch-action:pan-x pinch-zoom;
+   -webkit-user-select:none;
+   user-select:none;
+ }
+ #screen-week .wheel-shell,
+ #screen-week .wheel{
+   overscroll-behavior:contain;
  }
 }
