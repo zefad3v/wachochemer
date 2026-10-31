@@ -1,6 +1,6 @@
 # KI-Umsetzungsroadmap für Wa chochemer?
 
-Stand: 26. Oktober 2026. Status: verbindliche Arbeitsreihenfolge für die nächste Entwicklungsphase, kein Freipass für grosse automatische Umbauten.
+Stand: 31. Oktober 2026. M1 abgeschlossen und nach erfolgreichen CI-Prüfungen in main integriert (PR #2). Status: verbindliche Arbeitsreihenfolge für die nächste Entwicklungsphase, kein Freipass für grosse automatische Umbauten.
 
 ## 0. Grundsatz und Entscheidungsstand
 
@@ -28,8 +28,8 @@ P0 = Voraussetzung für eine benutzbare erste Version. P1 = unmittelbar danach. 
 
 | ID | Priorität | Paket | Inhalt und Abnahmekriterium | Abhängigkeit |
 | --- | --- | --- | --- | --- |
-| M0 | P0 | Prototyp und Merge-Gate | Aktuelle V4 auf iPhone testen: Einstellungen rechts oben, Wochentag, bildfüllender Hintergrund, vertikales Wischen, Buttons, Suchfeld, Rezeptdialog, Safe Areas. Kritische Fehler beheben; PR #1 erst danach gezielt integrieren. | keine |
-| M1 | P0 | Datenmodell und Tests | Zutaten, Rezepte, Wochenzuordnung und Haushaltskonfiguration fachlich trennen; Schema-Versionen und Validierung festlegen. Tests für fehlerhafte Referenzen und Mengen. | M0, bestehende Quelldaten |
+| M0 | P0 | Prototyp und Merge-Gate | Aktuelle V5 auf iPhone testen: Einstellungen rechts oben, Wochentag, bildfüllender Hintergrund, vertikales Wischen, Buttons, Suchfeld, Rezeptdialog, Safe Areas. Kritische Fehler beheben; PR #1 erst danach gezielt integrieren. | keine |
+| M1 | **Erledigt** | Datenmodell und Tests | Framework-unabhängige Datenvalidierung, Donnerstag-bis-Mittwoch-Kalender, Portionsskalierung und Haushalts-/Mahlzeitenverträge implementiert. 8 Tests bestanden; 3 Rezepte und 27 Zutaten validiert; Generator-Test erfolgreich. Nachweis: [M1-Abnahme](m1-domain-model.md), [PR #2](https://github.com/zefad3v/wachochemer/pull/2). | Abgeschlossen, M0 iPhone-Review weiterhin offen |
 | M2 | P0 | Echtes Rezeptarchiv | Alle vorhandenen Rezept-JSONs durchsuchen, anzeigen und öffnen. Demo-Rezepte nicht als echte auswählbare Rezepte zeigen. Zutaten und Anleitungen immer aus der einen Quelle. | M1 |
 | M3 | P0 | Editierbarer Wochenplan | Für ein Datum Rezept auswählen, ersetzen oder entfernen; vorige/nächste Woche; lokal persistent, nach Reload identisch. Sichtbare Kennzeichnung leerer Tage. | M1, M2 |
 | M4 | P0 | Portions- und Restenlogik | Erwachsene/Kinder und Folgetag-Resten nachvollziehbar berechnen; pro Tag überschreibbar. Unit-Tests für Familienregeln und Mengen. | M1, M3 |
@@ -108,7 +108,7 @@ Für **jedes** Paket:
 * PR #1 vor Merge gegen aktuelle `main` prüfen, da im Hauptzweig seit der Branch-Erstellung weitere Rezeptdaten ergänzt wurden.
 * Ergebnis: belastbares Merge-Gate und dokumentierte Abweichungen.
 
-**Ticket M1 / Domainmodell und Testbasis**
+**Ticket M1 / Domainmodell und Testbasis (abgeschlossen)**
 * Bestehendes Zutaten-/Rezeptschema erfassen; minimale Schnittstellen für Datum, Mahlzeit, Portionen, Resten und Einkaufsposition definieren.
 * Unit-Tests für Datum Donnerstag/Mittwoch, Mengen, optionale Zutaten, unbekannte Zutaten-IDs und Einheiten.
 * Keine Cloud und kein UI-Redesign.
