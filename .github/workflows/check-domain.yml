@@ -30,5 +30,8 @@ jobs:
         run: node --test tests/*.test.mjs
       - name: Validate source recipes
         run: node scripts/check-data.mjs
-      - name: Verify existing generator syntax
-        run: node --check scripts/build.mjs
+      - name: Build recipe pages and verify checked-in outputs
+        run: |
+          node --check scripts/build.mjs
+          node scripts/build.mjs
+          git diff --exit-code -- index.html rezepte/
