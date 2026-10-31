@@ -238,3 +238,19 @@ body{background:#19231b}
   .screen.active#screen-week .screen-heading h1,
   .section-title h1{font-size:31px}
 }
+
+
+/* M2: neutral treatment for real recipes without licensed image assets. */
+.archive-image-placeholder{
+  display:grid;place-items:center;width:100%;aspect-ratio:1/1;
+  padding:14px;text-align:center;color:#d3dbc7;font-size:12px;
+  background:linear-gradient(145deg,#3c4d39,#202c24);
+}
+.recipe-grid.search-results .archive-image-placeholder{
+  width:clamp(108px,34vw,152px);min-width:clamp(108px,34vw,152px);
+  aspect-ratio:1;align-self:stretch;
+}
+@media(min-width:1040px){
+ .recipe-grid .archive-image-placeholder{aspect-ratio:4/3}
+ .recipe-grid.search-results .archive-image-placeholder{width:clamp(108px,20vw,152px)}
+}
