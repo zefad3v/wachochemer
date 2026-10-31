@@ -1,6 +1,6 @@
 # M2: Echtes Chochchischtli
 
-**Status:** Implementiert auf `feat/m2-real-recipe-archive` (PR #3), gestapelt auf dem noch offenen UI-PR #1. Automatische Tests bestanden. iPhone-Review und Integration nach `main` ausstehend.
+**Status:** Implementiert auf `feat/m2-real-recipe-archive` (PR #3), gestapelt auf dem noch offenen UI-PR #1. 14 automatisierte Tests bestanden. iPhone-Retest und Integration nach `main` ausstehend. Neue Review-Mängel und Korrekturen: [`docs/iphone-review-2026-10-31.md`](iphone-review-2026-10-31.md).
 
 ## Lieferumfang
 
@@ -30,11 +30,11 @@ Das dritte Rezept und acht zusätzliche Zutaten wurden aus dem seit Erstellung v
 
 ## Technische Prüfung
 
-GitHub Actions: **Check real recipe archive (M2)**, Run `41216561717`, 9 von 9 Tests erfolgreich, 0 Fehler. Enthalten: vollständiger JSON-Index, keine Demo-IDs, exakte Quelldaten, Suche, Favoriten, ungültige/manipulierte Indexeinträge, Ladefehler, unbekannte Zutaten. Syntaxchecks für App und Generator sowie reproduzierbare Generierung bestanden.
+GitHub Actions: **Check real recipe archive (M2)**, finaler Run `41224366856`, **14 von 14 Tests erfolgreich, 0 Fehler** (neun Rezept- und fünf UI-Strukturtests). Enthalten: vollständiger JSON-Index, keine Demo-IDs, exakte Quelldaten, Suche, Favoriten, ungültige/manipulierte Indexeinträge, Ladefehler, unbekannte Zutaten. Syntaxchecks für App und Generator sowie reproduzierbare Generierung bestanden.
 
 ## Noch offen
 
-* Auf echtem iPhone: Archiv mit drei Rezepten öffnen; Apfel-Omeletten, Suche und Favoriten prüfen; Rezeptdialog mit Portionen und Bring!-Link prüfen.
+* Auf echtem iPhone: Archiv mit drei Rezepten öffnen; Apfel-Omeletten, Suche und Favoriten prüfen; Rezeptdialog mit Portionen und Bring!-Link prüfen. Speziell B1 bis B5 aus dem jüngsten iPhone-Review nachprüfen. Die automatischen UI-Strukturtests sind kein Ersatz für Safari-/PWA-Abnahme.
 * PR #1 wird erst nach separatem UI-Review gemergt; PR #3 wird danach gegen den aktuellen `main`-Stand geprüft und integriert.
 * Falls `main` inzwischen weitere Rezepte erhält, vor Integration das generierte Indexfile neu erstellen und die M2-Tests wiederholen.
 
