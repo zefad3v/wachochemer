@@ -248,6 +248,9 @@ function openRecipe(item){
  }
  dialog.showModal();
  dialog.querySelector(".dialog-scroll").scrollTop=0;
+ // Focus the recipe title rather than the first dialog button, which iOS outlines.
+ // This also closes the keyboard when a recipe is opened from search.
+ byId("dialog-title").focus({preventScroll:true});
 }
 function closeRecipe(){byId("recipe-dialog").close();previouslyFocused?.focus()}
 async function fetchJson(path){
