@@ -1,6 +1,6 @@
 # M1: Domänenmodell und Tests
 
-Status: Code und Tests abgenommen; Merge in main noch ausstehend.
+Status: **abgeschlossen und in main integriert** (31. Oktober 2026, PR #2, Squash-Commit 5fb17463e4b8c10acfde0b38b841ddf76fb11001).
 
 ## Inhalt
 
@@ -27,8 +27,8 @@ node scripts/check-data.mjs
 node --check scripts/build.mjs
 ```
 
-GitHub Actions Run 41125550866: alle 8 Tests bestanden, 3 Rezepte und 27 Zutaten validiert, Generator-Syntax bestanden. Der CI-Workflow wurde anschliessend um einen echten Generatorlauf mit Prüfung auf unveränderte Ausgaben ergänzt; dessen erneuter Lauf ist vor dem Merge abzuwarten. Ein echter iPhone-Test (M0) ist davon unabhängig und weiterhin offen.
+GitHub Actions Run 41125550866: alle 8 Tests bestanden, 3 Rezepte und 27 Zutaten validiert, Generator-Syntax bestanden. Der ergänzte Generatorlauf inklusive Prüfung auf unveränderte Ausgaben bestand ebenfalls (Run 41200862298). Der finale PR-Head bestand die Prüfung erneut (Run 41200876685). Ein echter iPhone-Test (M0) ist davon unabhängig und weiterhin offen.
 
 ## Nächster Schritt
 
-Zuerst den CI-Status dieses PR prüfen, dann fachlich reviewen. Nach Freigabe M2: alle realen Rezeptdateien für das Chochchischtli über ein generiertes Manifest verfügbar machen, statt Demo-Rezepte als echte Daten zu behandeln. PR #1 (UI-Prototyp) nicht automatisch mergen.
+Nach erfolgreicher Abnahme ist M1 abgeschlossen. Weiter mit M2: alle realen Rezeptdateien für das Chochchischtli über ein generiertes Manifest verfügbar machen, statt Demo-Rezepte als echte Daten zu behandeln. PR #1 (UI-Prototyp) nicht automatisch mergen.
