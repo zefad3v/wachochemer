@@ -1,0 +1,37 @@
+name: Validate recipe domain model
+on:
+  pull_request:
+    paths:
+      - 'src/domain/**'
+      - 'tests/**'
+      - 'scripts/check-data.mjs'
+      - 'data/**'
+      - '.github/workflows/check-domain.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/domain/**'
+      - 'tests/**'
+      - 'scripts/check-data.mjs'
+      - 'data/**'
+      - '.github/workflows/check-domain.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test domain logic
+        run: node --test tests/*.test.mjs
+      - name: Validate source recipes
+        run: node scripts/check-data.mjs
+      - name: Build recipe pages and verify checked-in outputs
+        run: |
+          node --check scripts/build.mjs
+          node scripts/build.mjs
+          git diff --exit-code -- index.html rezepte/
