@@ -1,6 +1,6 @@
 # M1: Domänenmodell und Tests
 
-Status: implementiert im separaten Branch; GitHub Actions und Integration auf main noch nicht abgenommen.
+Status: Code und Tests abgenommen; Merge in main noch ausstehend.
 
 ## Inhalt
 
@@ -27,7 +27,7 @@ node scripts/check-data.mjs
 node --check scripts/build.mjs
 ```
 
-Die Basis-Domänenregeln wurden zuvor lokal mit Node.js 22 getestet. Die exakt auf GitHub hochgeladenen Dateien benötigen noch einen bestätigten CI-Durchlauf. Ein echter iPhone-Test (M0) ist davon unabhängig und weiterhin offen.
+GitHub Actions Run 41125550866: alle 8 Tests bestanden, 3 Rezepte und 27 Zutaten validiert, Generator-Syntax bestanden. Der CI-Workflow wurde anschliessend um einen echten Generatorlauf mit Prüfung auf unveränderte Ausgaben ergänzt; dessen erneuter Lauf ist vor dem Merge abzuwarten. Ein echter iPhone-Test (M0) ist davon unabhängig und weiterhin offen.
 
 ## Nächster Schritt
 
