@@ -128,11 +128,30 @@ function renderWheel(){
  '<span class="card-content"><span class="card-day">'+day+" · "+niceDate(date)+'</span><span class="card-bottom"><span class="card-title">'+label+'</span><span class="card-meta">'+meta+(item.real?'':' · Demo')+'</span></span></span></button>';
  }).join("");
  const wide=window.matchMedia("(min-width: 1040px)").matches;
+ // Show only the immediate neighbours on phones. Move each preview just far
+ // enough to peek out, but never let its rounded contour hit the wheel crop.
+ const wheelHeight=wheel.clientHeight;
  Array.from(wheel.children).forEach((element,i)=>{
- const d=distance(i),a=Math.abs(d);
- const delta=wide?(d*138):(d===0?0:Math.sign(d)*(a===1?169:a===2?274:367));
- const size=wide?1-a*.12:1-a*.11;
- element.style.transform="translate(-50%,-50%) "+(wide?"translateX("+delta+"px) rotateY("+(-d*7)+"deg)":"translateY("+delta+"px) rotateX("+(d*5)+"deg)")+" scale("+size+")";
+  const d=distance(i),a=Math.abs(d);
+  const size=wide?1-a*.12:1-a*.11;
+  const cardHeight=element.offsetHeight;
+  const visibleHeight=cardHeight*size;
+  const maxPreviewShift=Math.max(0,(wheelHeight-visibleHeight)/2-14);
+  const desiredShift=a===1?169:a===2?274:367;
+  const delta=wide?d*138:(d===0?0:Math.sign(d)*Math.min(desiredShift,maxPreviewShift));
+  if(!wide){
+   // Scaling must not visually shrink the border radius or stroke.
+   element.style.borderRadius=(19/size).toFixed(2)+"px";
+   element.style.borderWidth=(1/size).toFixed(2)+"px";
+   element.style.opacity=a>1?"0":".99";
+   element.style.pointerEvents=a>1?"none":"auto";
+  }else{
+   element.style.borderRadius="";
+   element.style.borderWidth="";
+  }
+  element.style.transform="translate(-50%,-50%) "+(wide
+    ?"translateX("+delta+"px) rotateY("+(-d*7)+"deg)"
+    :"translateY("+delta+"px)")+" scale("+size+")";
  });
  wheel.querySelectorAll(".recipe-card").forEach(card=>{
   card.addEventListener("click",()=>{if(Date.now()-lastWheelSwipeAt<420)return;const i=Number(card.dataset.day);if(i===state.current)openRecipe(days[i].item);else setDay(i)});
