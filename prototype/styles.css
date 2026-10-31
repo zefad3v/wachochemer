@@ -254,3 +254,42 @@ body{background:#19231b}
  .recipe-grid .archive-image-placeholder{aspect-ratio:4/3}
  .recipe-grid.search-results .archive-image-placeholder{width:clamp(108px,20vw,152px)}
 }
+
+
+/* Mobile V6: stable flex positioning, safe areas and true edge-to-edge backdrop.
+   Keep the weekday/revolver visuals unchanged. */
+@media(max-width:1039px){
+ #app{position:relative;isolation:isolate}
+ #main{position:relative;z-index:1}
+ /* A flex child with margin:auto is vertically centred when search results shrink;
+    it must stay at the top, even with the iOS keyboard open. */
+ #main>.screen.active:not(#screen-week){
+   align-self:stretch;width:100%;margin:0 auto;
+ }
+ #app>.topbar{
+   width:100%;max-width:none;flex:none;position:relative;z-index:20;
+   height:calc(50px + env(safe-area-inset-top));
+   min-height:calc(50px + env(safe-area-inset-top));
+   padding:calc(7px + env(safe-area-inset-top)) calc(54px + env(safe-area-inset-right)) 6px calc(54px + env(safe-area-inset-left));
+   justify-content:center;box-shadow:none;border:0;
+   background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
+ }
+ #app>.topbar .header-settings{
+   position:absolute;top:calc(3px + env(safe-area-inset-top));
+   right:calc(3px + env(safe-area-inset-right));
+   width:44px;height:44px;min-height:44px;min-width:44px;
+   display:grid;place-items:center;padding:10px;border:0;
+   background:transparent;
+ }
+ /* Backdrop belongs to the app, not to the clipped week section: no
+    hard edge behind the bottom dock or the Home Indicator. */
+ body.week-mode #app>.ambient-backdrop{
+   display:block;position:fixed;inset:-36px;z-index:0;pointer-events:none;
+   background-size:cover;background-position:center;
+   filter:blur(9px) saturate(.88) brightness(.54);
+   transform:scale(1.06);
+ }
+ #app>.ambient-backdrop{display:none}
+ body.week-mode #app>.bottom-nav{z-index:50}
+ .recipe-dialog #dialog-title:focus{outline:none}
+}
