@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "recipes": [
+    {
+      "id": "apfel-omeletten",
+      "slug": "apfel-omeletten"
+    },
+    {
+      "id": "kuerbissuppe-kaesetoast",
+      "slug": "kuerbissuppe-kaesetoast"
+    },
+    {
+      "id": "poulet-fajitas",
+      "slug": "poulet-fajitas"
+    }
+  ]
+}
