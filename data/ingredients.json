@@ -133,6 +133,62 @@
         "de-CH": "Muskat"
       },
       "defaultUnit": "to_taste"
+    },
+    {
+      "id": "wheat_flour",
+      "names": {
+        "de-CH": "Weissmehl"
+      },
+      "defaultUnit": "g"
+    },
+    {
+      "id": "egg",
+      "names": {
+        "de-CH": "Eier"
+      },
+      "defaultUnit": "piece"
+    },
+    {
+      "id": "milk",
+      "names": {
+        "de-CH": "Milch"
+      },
+      "defaultUnit": "ml"
+    },
+    {
+      "id": "apple",
+      "names": {
+        "de-CH": "Äpfel"
+      },
+      "defaultUnit": "piece"
+    },
+    {
+      "id": "butter",
+      "names": {
+        "de-CH": "Butter"
+      },
+      "defaultUnit": "g"
+    },
+    {
+      "id": "lowfat_quark",
+      "names": {
+        "de-CH": "Magerquark"
+      },
+      "defaultUnit": "g"
+    },
+    {
+      "id": "cinnamon",
+      "names": {
+        "de-CH": "Zimt"
+      },
+      "defaultUnit": "tsp"
+    },
+    {
+      "id": "honey",
+      "names": {
+        "de-CH": "Honig"
+      },
+      "defaultUnit": "tsp"
     }
   ]
 }

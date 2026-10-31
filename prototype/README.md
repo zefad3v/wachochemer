@@ -7,7 +7,7 @@ Diese Vorschau lebt absichtlich auf **feat/mobile-revolver-prototype**. Die öff
 * Vertikaler, räumlich gestaffelter Wochenrevolver auf Smartphones (Wischen, Tippen, Tasten, Mausrad).
 * Desktop ab 1040 px: ausgewähltes Gericht links ohne Kachel, horizontaler Revolver rechts.
 * Bottom Navigation mit dezenter Glasoptik, Schweizerdeutsch nur für Oberflächenbegriffe.
-* Chochchischtli mit Suche, Filter, Favoriten; Rezeptdetails mit hochdeutschem Rezepttext.
+* **M2 Chochchischtli:** Alle echten Rezepte aus dem generierten `data/recipe-index.json` laden, durchsuchen, als Favoriten speichern und mit originalen Anleitungen und Zutaten anzeigen. Kein fest eingebauter Rezeptkatalog.
 * Iichaufslischte als **lokale Demoansicht** mit Zusammenfassung der echten Zutaten aus den zwei bestehenden Rezepten.
 * Iistellige mit Wuchebeginn, lokal im Browser gespeichert.
 * Die vorhandenen JSON-Rezepte und der Zutatenstamm werden geladen, nicht in die UI dupliziert.
@@ -16,8 +16,8 @@ Diese Vorschau lebt absichtlich auf **feat/mobile-revolver-prototype**. Die öff
 
 ## Design und Grenzen
 
-* Das ist ein **interaktiver Designprototyp**, kein produktives Wochenplanungssystem.
-* Die sieben Tagesgerichte dienen der Gestaltung. Nur **Kürbissuppe mit Käsetoast** und **Milde Poulet-Fajitas** sind im echten Rezeptstamm erfasst. Die übrigen fünf sind als Designbeispiele markiert.
+* Das ist ein **interaktiver Designprototyp**, kein produktives Wochenplanungssystem. M2 erweitert nur das Rezeptarchiv, nicht die Wochenplanlogik.
+* Die sieben **Wochenplan-Karten** bleiben vorläufig Demonstrationszuordnungen. Zwei davon verweisen auf echte Rezepte, fünf sind ausdrücklich Demo. **Das Chochchischtli listet dagegen ausschliesslich echte Rezepte**, derzeit drei inklusive Apfel-Omeletten mit Quark.
 * Die Einkaufsliste ist nicht mit Bring! synchronisiert und wird nicht automatisch übertragen. Das Bring!-Symbol öffnet stattdessen das bestehende Rezept mit dem bewährten Import-Widget.
 * Kochbilder sind vorläufige externe **Unsplash-Demofotos** und keine eigenen Rezeptfotos. Einzelne Fotos können vom konkreten Rezept abweichen; vor Produktion durch passende lizenzgeprüfte Aufnahmen ersetzen.
 * Es gibt noch keine Accounts, personalisierten Essenspläne oder gemeinsame Synchronisierung.
@@ -89,3 +89,14 @@ Nicht automatisch nach main mergen. Vor dem Mergen die Navigation und den Bring!
 * **Unterer Übergang:** Die V4-Unschärfe-Blende am unteren Bildschirmrand wurde entfernt; der gleiche Fotohintergrund soll bis hinter die drei Navigationssymbole durchlaufen, ohne harte horizontale Kante.
 * **Grenze:** Die native Safari-Adressleiste unterhalb des Webinhalts ist nicht per CSS gestaltbar. Erst die installierte PWA vermeidet diese Browserleiste.
 * **Abnahme offen:** Ein Screenshot auf echtem iPhone muss überprüfen, ob in Safari tatsächlich keine Farb-/Glaskante und kein visueller Bruch mehr sichtbar ist. Falls die V5 im Browser anders rendert, gezielt CSS-Stacking und Safe Area prüfen, nicht ungefragt das Layout neu gestalten.
+
+## M2 Rezeptarchiv vom 31. Oktober 2026
+
+* **Keine erfundenen Rezeptdaten:** Das Rezeptverzeichnis enthält lediglich stabile IDs/Slugs. Titel, Beschreibung, Zubereitung, Zutaten und Portionen kommen ausschliesslich aus den echten Rezept-JSON-Dateien.
+* `scripts/build-recipe-index.mjs` erzeugt das Verzeichnis bei Änderungen am Rezeptstamm; die bestehende Build-Action wurde erweitert. Hinzu kommt eine eigenständige Test-Action.
+* Die echten Rezepte werden bei Bedarf parallel geladen, mit dem M1-Domänenmodell validiert und im Chochchischtli angezeigt.
+* Suchfunktion und Favoriten greifen nur auf echte Rezepte zu; Demo-Gerichte erscheinen weiterhin ausschliesslich im visuellen Wochenplan.
+* Für Apfel-Omeletten wird vorerst ein neutraler Platzhalter statt eines unzutreffenden oder unklar lizenzierten Rezeptbildes angezeigt.
+* Bei fehlgeschlagenem Laden erscheint eine Fehlermeldung statt ausgedachter Ersatz-Rezeptzutaten.
+* Im Wochenplan bleibt die bisherige visuelle Demo-Einkaufsliste bestehen. Der echte wöchentliche Warenkorb folgt erst mit M3 bis M5.
+* Die Vorschau ist ein gestapelter Entwicklungsbranch `feat/m2-real-recipe-archive` auf Basis von PR #1. Weder PR #1 noch M2 werden ohne Abnahme in `main` übernommen.

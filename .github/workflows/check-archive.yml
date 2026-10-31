@@ -1,0 +1,48 @@
+name: Check real recipe archive (M2)
+on:
+  pull_request:
+    paths:
+      - 'prototype/**'
+      - 'data/**'
+      - 'scripts/build-recipe-index.mjs'
+      - 'src/domain/**'
+      - 'tests/archive.test.mjs'
+      - '.github/workflows/check-archive.yml'
+  push:
+    branches:
+      - feat/m2-real-recipe-archive
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JS syntax
+        run: |
+          node --check prototype/app.js
+          node --check prototype/catalog.mjs
+          node --check scripts/build-recipe-index.mjs
+          node --check scripts/build.mjs
+      - name: Validate archive behavior and real recipes
+        run: node --test tests/archive.test.mjs
+      - name: Confirm generated directory is up to date
+        run: |
+          node scripts/build-recipe-index.mjs
+          git diff --exit-code -- data/recipe-index.json
+      - name: Check HTML references
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const html=readFileSync('prototype/index.html','utf8');
+          const app=readFileSync('prototype/app.js','utf8');
+          assert(html.includes('src="./app.js"'));
+          assert(html.includes('id="recipe-grid"'));
+          assert(app.includes('fetchArchiveData(fetchJson)'));
+          assert(!app.includes('FALLBACK_RECIPES'));
+          NODE
