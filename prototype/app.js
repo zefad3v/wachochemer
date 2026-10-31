@@ -312,17 +312,20 @@ function init(){
   startX=e.touches[0].clientX;startY=e.touches[0].clientY;tracking=true;
  },{passive:true});
  shell.addEventListener("touchmove",e=>{
-  if(!tracking||e.touches.length!==1)return;
+  if(!tracking||e.touches.length!==1||state.tab!=="week")return;
   const dy=e.touches[0].clientY-startY,dx=e.touches[0].clientX-startX;
-  if(Math.abs(dy)>7&&Math.abs(dy)>Math.abs(dx))e.preventDefault();
+  // Claim vertical drags early so iOS never cancels the ending gesture.
+  if(Math.abs(dy)>7&&Math.abs(dy)>Math.abs(dx)&&e.cancelable)e.preventDefault();
  },{passive:false});
  shell.addEventListener("touchend",e=>{
-  if(!tracking)return;tracking=false;
+  if(!tracking)return;
+  tracking=false;
+  if(state.tab!=="week"||e.changedTouches.length!==1)return;
   const dy=e.changedTouches[0].clientY-startY;
   const dx=e.changedTouches[0].clientX-startX;
   if(Math.abs(dy)>35&&Math.abs(dy)>Math.abs(dx)){
     lastWheelSwipeAt=Date.now();
-    e.preventDefault();
+    if(e.cancelable)e.preventDefault();
     setDay(state.current+(dy<0?1:-1));
   }
  },{passive:false});
