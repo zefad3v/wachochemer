@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "id": "apfel-omeletten",
+  "slug": "apfel-omeletten",
+  "locale": "de-CH",
+  "title": "Apfel-Omeletten mit Quark",
+  "description": "Feine Apfel-Omeletten mit mildem Zimtquark, für die ganze Familie.",
+  "category": "lunch",
+  "cuisine": "Schweizer Küche",
+  "baseServings": 3,
+  "householdNote": "Grundmenge für 2 Erwachsene und 1 Kind",
+  "prepMinutes": 10,
+  "cookMinutes": 20,
+  "ingredients": [
+    {
+      "ingredientId": "wheat_flour",
+      "quantity": 200,
+      "unit": "g"
+    },
+    {
+      "ingredientId": "egg",
+      "quantity": 3,
+      "unit": "piece"
+    },
+    {
+      "ingredientId": "milk",
+      "quantity": 350,
+      "unit": "ml"
+    },
+    {
+      "ingredientId": "apple",
+      "quantity": 2,
+      "unit": "piece"
+    },
+    {
+      "ingredientId": "salt",
+      "quantity": null,
+      "unit": "to_taste"
+    },
+    {
+      "ingredientId": "cinnamon",
+      "quantity": 1,
+      "unit": "tsp",
+      "optional": true
+    },
+    {
+      "ingredientId": "butter",
+      "quantity": 15,
+      "unit": "g"
+    },
+    {
+      "ingredientId": "lowfat_quark",
+      "quantity": 250,
+      "unit": "g"
+    },
+    {
+      "ingredientId": "honey",
+      "quantity": 1,
+      "unit": "tsp",
+      "optional": true
+    }
+  ],
+  "instructions": {
+    "de-CH": [
+      "Mehl, Eier, Milch und eine Prise Salz mit dem Schwingbesen zu einem glatten Teig verrühren.",
+      "Äpfel waschen, Kerngehäuse entfernen und fein bis grob raffeln. Unter den Teig mischen.",
+      "Etwas Butter in einer beschichteten Pfanne bei mittlerer Hitze erhitzen. Portionenweise etwa sechs Omeletten backen, pro Seite ungefähr 2 bis 3 Minuten beziehungsweise bis sie durchgebacken und goldbraun sind.",
+      "Magerquark mit etwas Zimt und optional Honig verrühren. Bei Bedarf mit wenig Milch cremiger machen.",
+      "Omeletten warm mit dem Quark servieren."
+    ]
+  }
+}
