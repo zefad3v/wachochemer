@@ -31,3 +31,15 @@ test('shopping area no longer claims weekly Bring integration',()=>{
  assert.match(html,/id="shopping-items"/);
  assert.match(html,/Demo-Wucheplan/);
 });
+
+
+test('mobile neighbouring recipe cards have the selected outline and visible rounded corners',()=>{
+ assert.match(css,/V7: preview contours/);
+ assert.match(css,/#screen-week \.recipe-card,\s*#screen-week \.recipe-card\.current\s*\{[^}]*border-color:rgba\(250,247,231,\.86\)/s);
+ assert.match(js,/maxPreviewShift=Math\.max\(0,\(wheelHeight-visibleHeight\)\/2-14\)/);
+ assert.match(js,/Math\.min\(desiredShift,maxPreviewShift\)/);
+ assert.match(js,/element\.style\.borderRadius=\(19\/size\)\.toFixed\(2\)\+"px"/);
+ assert.match(js,/element\.style\.borderWidth=\(1\/size\)\.toFixed\(2\)\+"px"/);
+ assert.match(js,/element\.style\.opacity=a>1\?"0":".99"/);
+ assert.doesNotMatch(js,/translateY\("\+delta\+"px\) rotateX/);
+});
