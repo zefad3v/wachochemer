@@ -1,4 +1,5 @@
 "use strict";
+import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 
 // Design prototype. Public recipes and ingredient IDs are read from the existing JSON files.
 // The remaining day cards are clearly labelled visual demos, not published recipes.
@@ -23,14 +24,11 @@ const demos = [
 const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig","Samschtig"];
 const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
 const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
-const FALLBACK_RECIPES={
- "poulet-fajitas":{baseServings:3,prepMinutes:15,cookMinutes:20,ingredients:[{ingredientId:"chicken_breast",quantity:400,unit:"g"},{ingredientId:"wheat_tortilla_small",quantity:6,unit:"piece"},{ingredientId:"bell_pepper",quantity:2,unit:"piece"}],instructions:{"de-CH":["Das vollständige Rezept findest du auf der veröffentlichten Rezeptseite."]}},
- "kuerbissuppe-kaesetoast":{baseServings:3,prepMinutes:10,cookMinutes:20,ingredients:[{ingredientId:"hokkaido_pumpkin",quantity:800,unit:"g"},{ingredientId:"potato",quantity:200,unit:"g"},{ingredientId:"half_cream",quantity:100,unit:"ml"}],instructions:{"de-CH":["Das vollständige Rezept findest du auf der veröffentlichten Rezeptseite."]}}
-};
-const FALLBACK_NAMES={chicken_breast:"Pouletbrust",wheat_tortilla_small:"Weizentortillas",bell_pepper:"Peperoni",hokkaido_pumpkin:"Hokkaidokürbis",potato:"Kartoffeln",half_cream:"Halbrahm"};
+// Do not invent cooking photography. Recipes without a verified image use a placeholder.
+const archiveImages={"kuerbissuppe-kaesetoast":images.pumpkin,"poulet-fajitas":images.fajitas};
 const state={
  tab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
- recipes:{},names:{},favorites:new Set(),checked:new Set(),filter:"all",query:""
+ recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:""
 };
 function readSaved(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
 function save(key,value){try{localStorage.setItem(key,JSON.stringify(value))}catch{}}
@@ -147,12 +145,24 @@ function renderWheel(){
  byId("spot-recipe").addEventListener("click",()=>openRecipe(item));
 }
 function renderArchive(){
- byId("recipe-grid").classList.toggle("search-results",Boolean(state.query.trim()));
- const all=demos.filter(d=>d.title.toLocaleLowerCase("de-CH").includes(state.query.toLocaleLowerCase("de-CH")))
- .filter(d=>state.filter==="all"||(state.filter==="real"?d.real:state.favorites.has(d.id)));
- byId("recipe-grid").innerHTML=all.length?all.map(item=>'<button type="button" class="archive-card" data-recipe="'+item.id+'">'+
- '<img src="'+item.image+'" alt="" loading="lazy"><span class="archive-caption"><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · '+(item.real?'Rezept':'Designbeispiel')+(state.favorites.has(item.id)?' ♡':'')+'</small></span></button>').join(""):'<p>Kei passende Rezepte gfunde.</p>';
- byId("recipe-grid").querySelectorAll(".archive-card").forEach(btn=>btn.addEventListener("click",()=>openRecipe(demos.find(d=>d.id===btn.dataset.recipe))));
+ const grid=byId("recipe-grid");
+ grid.classList.toggle("search-results",Boolean(state.query.trim()));
+ if(state.archiveStatus!=="ready"){
+  grid.innerHTML='<p role="status">'+(state.archiveStatus==="error"
+   ?"Rezepte chönd grad nöd glade werde. Bitte Verbindig prüefe und d Siite neu lade."
+   :"Rezepte werded glade…")+'</p>';
+  return;
+ }
+ const all=filterArchive(state.archiveEntries,{query:state.query,filter:state.filter,favorites:state.favorites});
+ grid.innerHTML=all.length?all.map(item=>'<button type="button" class="archive-card" data-recipe="'+escapeHtml(item.id)+'">'+
+  (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" loading="lazy">':
+    '<span class="archive-image-placeholder" aria-hidden="true"><span>Rezeptbild folgt</span></span>')+
+  '<span class="archive-caption"><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept'+
+  (state.favorites.has(item.id)?' ♡':'')+'</small></span></button>').join(""):'<p>Kei passende Rezepte gfunde.</p>';
+ grid.querySelectorAll(".archive-card").forEach(btn=>btn.addEventListener("click",()=>{
+  const item=state.archiveEntries.find(recipe=>recipe.id===btn.dataset.recipe);
+  if(item)openRecipe(item);
+ }));
  document.querySelectorAll(".filter-chip").forEach(btn=>btn.classList.toggle("active",btn.dataset.filter===state.filter));
 }
 function renderShopping(){
@@ -169,7 +179,7 @@ function renderShopping(){
  });
  const items=[...aggregate].map(([key,row])=>({key,row}));
  const done=items.filter(item=>state.checked.has(item.key)).length;
- byId("shopping-progress").textContent=done+" vo "+items.length+" Zutate abghakt · Demo mit 2 echten Rezepten";
+ byId("shopping-progress").textContent=done+" vo "+items.length+" Zutate abghakt · Demo mit "+demos.filter(d=>d.real).length+" echten Rezepten";
  byId("shopping-items").innerHTML='<div class="shopping-group"><h3>Üsi Zutate</h3>'+items.map(({key,row})=>
  '<label class="shopping-row'+(state.checked.has(key)?' checked':'')+'"><input type="checkbox" data-shopping="'+escapeHtml(key)+'"'+(state.checked.has(key)?' checked':'')+'><span class="shopping-name">'+escapeHtml(state.names[row.ingredientId]||row.ingredientId)+'</span><span class="shopping-amount">'+escapeHtml(row.quantity===null?"Nach Geschmack":moneyLike(row.quantity)+(units[row.unit]?" "+units[row.unit]:""))+'</span></label>'
  ).join("")+'</div>';
@@ -211,9 +221,9 @@ function openRecipe(item){
  state.activeRecipeId=item.id;
  const dialog=byId("recipe-dialog");
  previouslyFocused=document.activeElement;
- byId("dialog-hero").style.backgroundImage="url('"+item.image+"')";
- byId("dialog-category").textContent=recipe?"FAMILIENREZEPT":"DESIGNBEISPIEL";
- byId("dialog-title").textContent=item.title;
+ byId("dialog-hero").style.backgroundImage=item.image?"url('"+item.image+"')":"linear-gradient(135deg,#35442f,#19231b)";
+ byId("dialog-category").textContent=recipe?"FAMILIENREZEPT":item.real?"REZEPT NICHT VERFÜGBAR":"DESIGNBEISPIEL";
+ byId("dialog-title").textContent=recipe?.title||item.title;
  byId("dialog-description").textContent=recipe?.description||item.description;
  byId("dialog-meta").innerHTML='<span>◷ '+(recipe?recipe.prepMinutes+recipe.cookMinutes:item.minutes)+' Min.</span><span>♙ '+(recipe?.baseServings||3)+' Portione</span>';
  byId("dialog-favourite").textContent=state.favorites.has(item.id)?"♥":"♡";
@@ -221,7 +231,7 @@ function openRecipe(item){
  byId("dialog-favourite").dataset.id=item.id;
  const actions=byId("dialog-actions");
  if(recipe){
-  const live="https://zefad3v.github.io/wachochemer/rezepte/"+encodeURIComponent(item.id)+"/";
+  const live="https://zefad3v.github.io/wachochemer/rezepte/"+encodeURIComponent(recipe.slug)+"/";
   actions.innerHTML='<button class="main-action" type="button" id="jump-to-ingredients">Zutate aaluege</button>'+
   '<a class="bring-action" href="'+live+'" target="_blank" rel="noopener noreferrer" aria-label="Bring! Import auf der veröffentlichten Rezeptseite öffnen" title="Bring! öffnet die Rezeptseite. Die gewählte Portionszahl dort nochmals einstellen.">'+bringIcon()+'</a>';
   byId("jump-to-ingredients").addEventListener("click",()=>byId("dialog-ingredients-section").scrollIntoView({behavior:"smooth",block:"start"}));
@@ -232,7 +242,7 @@ function openRecipe(item){
   byId("dialog-ingredients-section").hidden=false;
   byId("dialog-instructions-section").hidden=false;
  }else{
-  actions.innerHTML='<div class="notice">Das isch es Designbeispiel. S vollständige Rezept isch no nöd im Chochchischtli erfasst.</div>';
+  actions.innerHTML='<div class="notice">'+(item.real?'Das Rezept isch zur Ziit nöd verfügbar. Bitte lade d Siite neu.':'Das isch es Designbeispiel. S vollständige Rezept isch no nöd im Chochchischtli erfasst.')+'</div>';
   byId("dialog-ingredients-section").hidden=true;
   byId("dialog-instructions-section").hidden=true;
  }
@@ -247,23 +257,21 @@ async function fetchJson(path){
 }
 async function loadRecipes(){
  try{
-  const [catalog,pumpkin,fajitas]=await Promise.all([
-   fetchJson("../data/ingredients.json"),
-   fetchJson("../data/recipes/kuerbissuppe-kaesetoast.json"),
-   fetchJson("../data/recipes/poulet-fajitas.json")
-  ]);
+  const {catalog,recipes}=await fetchArchiveData(fetchJson);
   state.names=Object.fromEntries(catalog.ingredients.map(x=>[x.id,x.names["de-CH"]]));
-  state.recipes[pumpkin.id]=pumpkin;state.recipes[fajitas.id]=fajitas;
+  state.recipes=Object.fromEntries(recipes.map(recipe=>[recipe.id,recipe]));
+  state.archiveEntries=archiveEntries(recipes,archiveImages);
+  state.archiveStatus="ready";
  }catch(err){
-  console.warn("Could not load local JSON, using reduced demo fallback",err);
-  state.recipes=FALLBACK_RECIPES;
-  state.names=FALLBACK_NAMES;
-  const warning=document.createElement("p");
-  warning.className="hint";
-  warning.textContent="Offline-Vorschau: Für die vollständigen Rezeptdaten die Webseite über HTTPS öffnen.";
-  byId("screen-week").append(warning);
+  console.warn("Could not load canonical recipe data",err);
+  state.archiveStatus="error";
+  state.archiveEntries=[];
+  state.recipes={};
+  state.names={};
  }
- renderWheel();if(state.tab==="shopping")renderShopping();
+ renderWheel();
+ if(state.tab==="shopping")renderShopping();
+ if(state.tab==="archive")renderArchive();
 }
 function init(){
  const days=weekDays();
@@ -308,7 +316,7 @@ function init(){
  let resizeTimer;
  window.addEventListener("resize",()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(renderWheel,150)});
  byId("recipe-search").addEventListener("input",e=>{state.query=e.target.value;renderArchive()});
- const filters=[["all","Alli"],["real","Erfasst"],["favorites","Favoritä"]];
+ const filters=[["all","Alli"],["favorites","Favoritä"]];
  byId("recipe-filters").innerHTML=filters.map(([id,label])=>'<button type="button" class="filter-chip'+(id===state.filter?' active':'')+'" data-filter="'+id+'">'+label+'</button>').join("");
  byId("recipe-filters").addEventListener("click",e=>{const target=e.target.closest("[data-filter]");if(!target)return;state.filter=target.dataset.filter;renderArchive()});
  byId("start-day").value=String(state.startDay);
