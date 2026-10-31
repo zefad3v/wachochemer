@@ -43,3 +43,18 @@ test('mobile neighbouring recipe cards have the selected outline and visible rou
  assert.match(js,/element\.style\.opacity=a>1\?"0":".99"/);
  assert.doesNotMatch(js,/translateY\("\+delta\+"px\) rotateX/);
 });
+
+
+test('iOS revolver keeps vertical swipes instead of handing them to page scrolling',()=>{
+ const v8=css.slice(css.indexOf('/* V8: vertical swipes'));
+ assert(v8.length>0,'V8 gesture override missing');
+ assert.match(v8,/#screen-week \.wheel-shell,[\s\S]*?#screen-week \.recipe-card[\s\S]*?touch-action:pan-x pinch-zoom/);
+ assert.doesNotMatch(css,/\.recipe-card,\.circle-control,\.icon-btn\{touch-action:manipulation\}/);
+ assert.match(js,/shell\.addEventListener\("touchstart"/);
+ assert.match(js,/shell\.addEventListener\("touchmove"[\s\S]*?e\.cancelable\)e\.preventDefault\(\);\s*\},\{passive:false\}\)/);
+ assert.match(js,/shell\.addEventListener\("touchend"[\s\S]*?setDay\(state\.current\+\(dy<0\?1:-1\)\)/);
+ assert.match(js,/shell\.addEventListener\("touchcancel"/);
+ assert.match(js,/shell\.addEventListener\("wheel"/);
+ assert.match(js,/byId\("day-prev"\)\.addEventListener/);
+ assert.match(js,/byId\("day-next"\)\.addEventListener/);
+});
