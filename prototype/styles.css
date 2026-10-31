@@ -293,3 +293,14 @@ body{background:#19231b}
  body.week-mode #app>.bottom-nav{z-index:50}
  .recipe-dialog #dialog-title:focus{outline:none}
 }
+
+
+/* V7: preview contours match the selected card. The JS compensates the
+   reduced preview scale so both have a visually identical corner radius. */
+@media(max-width:1039px){
+ #screen-week .recipe-card,
+ #screen-week .recipe-card.current{
+   border-color:rgba(250,247,231,.86);
+   border-style:solid;
+ }
+}
