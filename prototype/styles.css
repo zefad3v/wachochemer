@@ -324,3 +324,9 @@ body{background:#19231b}
    overscroll-behavior:contain;
  }
 }
+
+/* V9: avoid animation from the default centred position on fresh render.
+   Existing nodes still animate smoothly when their selected day changes. */
+.wheel.wheel-initial .recipe-card{
+ transition:none!important;
+}
