@@ -116,31 +116,46 @@ function renderWheel(){
  byId("ambient").style.backgroundImage="url('"+item.image+"')";
  byId("ambient-backdrop").style.backgroundImage="url('"+item.image+"')";
  const wheel=byId("wheel");
- wheel.innerHTML=days.map(({item,date},i)=>{
- const isCurrent=i===state.current;
- const d=distance(i),a=Math.abs(d);
- const z=10-a;
- const day=escapeHtml(weekdays[date.getDay()]);
- const label=escapeHtml(item.title);
- const meta=item.minutes+" Min. · "+(state.recipes[item.id]?.baseServings||3)+" Portione";
- return '<button type="button" class="recipe-card'+(isCurrent?' current':'')+'" data-day="'+i+'" aria-label="'+day+', '+label+(isCurrent?', Rezept öffnen':', Tag auswählen')+'" aria-current="'+(isCurrent?"true":"false")+'" style="z-index:'+z+';opacity:'+(a>2?0:.99-a*.16)+';pointer-events:'+(a>2?'none':'auto')+'">'+
- '<img src="'+item.image+'" alt="" loading="'+(a<2?"eager":"lazy")+'">'+
- '<span class="card-content"><span class="card-day">'+day+" · "+niceDate(date)+'</span><span class="card-bottom"><span class="card-title">'+label+'</span><span class="card-meta">'+meta+(item.real?'':' · Demo')+'</span></span></span></button>';
- }).join("");
+ const weekKey=days.map(day=>day.date.toDateString()).join("|");
+ // Preserve the same seven DOM elements across day changes. Recreating them on
+ // every swipe made their transforms animate from the unpositioned centre.
+ const rebuilding=wheel.dataset.weekKey!==weekKey||wheel.children.length!==7;
+ if(rebuilding){
+  wheel.classList.add("wheel-initial");
+  wheel.innerHTML=days.map(({item,date},i)=>{
+   const day=escapeHtml(weekdays[date.getDay()]);
+   const label=escapeHtml(item.title);
+   const meta=item.minutes+" Min. · "+(state.recipes[item.id]?.baseServings||3)+" Portione";
+   return '<button type="button" class="recipe-card" data-day="'+i+'" aria-label="'+day+', '+label+'" aria-current="false">'+
+    '<img src="'+item.image+'" alt="" loading="'+(Math.abs(i-state.current)<2?"eager":"lazy")+'">'+
+    '<span class="card-content"><span class="card-day">'+day+" · "+niceDate(date)+'</span><span class="card-bottom"><span class="card-title">'+label+'</span><span class="card-meta">'+meta+(item.real?'':' · Demo')+'</span></span></span></button>';
+  }).join("");
+  wheel.dataset.weekKey=weekKey;
+  wheel.querySelectorAll(".recipe-card").forEach(card=>{
+   card.addEventListener("click",()=>{
+    if(Date.now()-lastWheelSwipeAt<420)return;
+    const i=Number(card.dataset.day);
+    if(i===state.current)openRecipe(weekDays()[i].item);
+    else setDay(i);
+   });
+  });
+ }
  const wide=window.matchMedia("(min-width: 1040px)").matches;
- // Show only the immediate neighbours on phones. Move each preview just far
- // enough to peek out, but never let its rounded contour hit the wheel crop.
  const wheelHeight=wheel.clientHeight;
  Array.from(wheel.children).forEach((element,i)=>{
-  const d=distance(i),a=Math.abs(d);
+  const d=distance(i),a=Math.abs(d),isCurrent=i===state.current;
   const size=wide?1-a*.12:1-a*.11;
   const cardHeight=element.offsetHeight;
   const visibleHeight=cardHeight*size;
   const maxPreviewShift=Math.max(0,(wheelHeight-visibleHeight)/2-14);
   const desiredShift=a===1?169:a===2?274:367;
   const delta=wide?d*138:(d===0?0:Math.sign(d)*Math.min(desiredShift,maxPreviewShift));
+  element.classList.toggle("current",isCurrent);
+  element.setAttribute("aria-current",String(isCurrent));
+  element.setAttribute("aria-label",weekdays[days[i].date.getDay()]+", "+days[i].item.title+
+    (isCurrent?", Rezept öffnen":", Tag auswählen"));
+  element.style.zIndex=String(10-a);
   if(!wide){
-   // Scaling must not visually shrink the border radius or stroke.
    element.style.borderRadius=(19/size).toFixed(2)+"px";
    element.style.borderWidth=(1/size).toFixed(2)+"px";
    element.style.opacity=a>1?"0":".99";
@@ -148,14 +163,18 @@ function renderWheel(){
   }else{
    element.style.borderRadius="";
    element.style.borderWidth="";
+   element.style.opacity=a>2?"0":String(.99-a*.16);
+   element.style.pointerEvents=a>2?"none":"auto";
   }
   element.style.transform="translate(-50%,-50%) "+(wide
     ?"translateX("+delta+"px) rotateY("+(-d*7)+"deg)"
     :"translateY("+delta+"px)")+" scale("+size+")";
  });
- wheel.querySelectorAll(".recipe-card").forEach(card=>{
-  card.addEventListener("click",()=>{if(Date.now()-lastWheelSwipeAt<420)return;const i=Number(card.dataset.day);if(i===state.current)openRecipe(days[i].item);else setDay(i)});
- });
+ if(rebuilding){
+  // Initial positions must be painted without transitions; all subsequent
+  // swipes animate existing elements between their current positions.
+  requestAnimationFrame(()=>requestAnimationFrame(()=>wheel.classList.remove("wheel-initial")));
+ }
  const spot=byId("desktop-spotlight");
  const date=days[state.current].date;
  spot.innerHTML='<span class="spot-day">'+escapeHtml(weekdays[date.getDay()])+' · '+niceDate(date)+'</span>'+
