@@ -30,7 +30,7 @@ button{-webkit-user-select:none;user-select:none}
 .recipe-grid.search-results .archive-caption strong{font-size:19px;min-height:0}
 .recipe-grid.search-results .archive-caption small{margin-top:0}
 .wheel-shell,.wheel,.recipe-card{touch-action:pan-x pinch-zoom;overscroll-behavior:contain}
-.recipe-card,.circle-control,.icon-btn{touch-action:manipulation}
+.circle-control,.icon-btn{touch-action:manipulation}
 .wheel-shell,.wheel{-webkit-user-select:none;user-select:none}
 .ingredient-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
 .ingredient-heading h3{margin:0}
@@ -237,4 +237,96 @@ body{background:#19231b}
 @media(max-width:355px){
   .screen.active#screen-week .screen-heading h1,
   .section-title h1{font-size:31px}
+}
+
+
+/* M2: neutral treatment for real recipes without licensed image assets. */
+.archive-image-placeholder{
+  display:grid;place-items:center;width:100%;aspect-ratio:1/1;
+  padding:14px;text-align:center;color:#d3dbc7;font-size:12px;
+  background:linear-gradient(145deg,#3c4d39,#202c24);
+}
+.recipe-grid.search-results .archive-image-placeholder{
+  width:clamp(108px,34vw,152px);min-width:clamp(108px,34vw,152px);
+  aspect-ratio:1;align-self:stretch;
+}
+@media(min-width:1040px){
+ .recipe-grid .archive-image-placeholder{aspect-ratio:4/3}
+ .recipe-grid.search-results .archive-image-placeholder{width:clamp(108px,20vw,152px)}
+}
+
+
+/* Mobile V6: stable flex positioning, safe areas and true edge-to-edge backdrop.
+   Keep the weekday/revolver visuals unchanged. */
+@media(max-width:1039px){
+ #app{position:relative;isolation:isolate}
+ #main{position:relative;z-index:1}
+ /* A flex child with margin:auto is vertically centred when search results shrink;
+    it must stay at the top, even with the iOS keyboard open. */
+ #main>.screen.active:not(#screen-week){
+   align-self:stretch;width:100%;margin:0 auto;
+ }
+ #app>.topbar{
+   width:100%;max-width:none;flex:none;position:relative;z-index:20;
+   height:calc(50px + env(safe-area-inset-top));
+   min-height:calc(50px + env(safe-area-inset-top));
+   padding:calc(7px + env(safe-area-inset-top)) calc(54px + env(safe-area-inset-right)) 6px calc(54px + env(safe-area-inset-left));
+   justify-content:center;box-shadow:none;border:0;
+   background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
+ }
+ #app>.topbar .header-settings{
+   position:absolute;top:calc(3px + env(safe-area-inset-top));
+   right:calc(3px + env(safe-area-inset-right));
+   width:44px;height:44px;min-height:44px;min-width:44px;
+   display:grid;place-items:center;padding:10px;border:0;
+   background:transparent;
+ }
+ /* Backdrop belongs to the app, not to the clipped week section: no
+    hard edge behind the bottom dock or the Home Indicator. */
+ body.week-mode #app>.ambient-backdrop{
+   display:block;position:fixed;inset:-36px;z-index:0;pointer-events:none;
+   background-size:cover;background-position:center;
+   filter:blur(9px) saturate(.88) brightness(.54);
+   transform:scale(1.06);
+ }
+ #app>.ambient-backdrop{display:none}
+ body.week-mode #app>.bottom-nav{z-index:50}
+ .recipe-dialog #dialog-title:focus{outline:none}
+}
+
+
+/* V7: preview contours match the selected card. The JS compensates the
+   reduced preview scale so both have a visually identical corner radius. */
+@media(max-width:1039px){
+ #screen-week .recipe-card,
+ #screen-week .recipe-card.current{
+   border-color:rgba(250,247,231,.86);
+   border-style:solid;
+ }
+}
+
+/* V8: vertical swipes belong to the recipe revolver, not browser scrolling.
+   A previous generic button rule set touch-action:manipulation on recipe cards
+   and allowed iOS to cancel the swipe before touchend fired. */
+@media(max-width:1039px){
+ #screen-week .wheel-shell,
+ #screen-week .wheel,
+ #screen-week .recipe-card,
+ #screen-week .recipe-card img,
+ #screen-week .card-content,
+ #screen-week .card-content *{
+   touch-action:pan-x pinch-zoom;
+   -webkit-user-select:none;
+   user-select:none;
+ }
+ #screen-week .wheel-shell,
+ #screen-week .wheel{
+   overscroll-behavior:contain;
+ }
+}
+
+/* V9: avoid animation from the default centred position on fresh render.
+   Existing nodes still animate smoothly when their selected day changes. */
+.wheel.wheel-initial .recipe-card{
+ transition:none!important;
 }
