@@ -58,3 +58,17 @@ test('iOS revolver keeps vertical swipes instead of handing them to page scrolli
  assert.match(js,/byId\("day-prev"\)\.addEventListener/);
  assert.match(js,/byId\("day-next"\)\.addEventListener/);
 });
+
+
+test('revolver reuses the same card nodes across swipes, avoiding a visual jump',()=>{
+ const render=js.slice(js.indexOf('function renderWheel(){'),js.indexOf('function renderArchive(){'));
+ assert.match(render,/const rebuilding=wheel\.dataset\.weekKey!==weekKey\|\|wheel\.children\.length!==7/);
+ assert.match(render,/if\(rebuilding\)\{\s*wheel\.classList\.add\("wheel-initial"\);\s*wheel\.innerHTML=/);
+ assert.match(render,/wheel\.dataset\.weekKey=weekKey/);
+ assert.match(render,/Array\.from\(wheel\.children\)\.forEach/);
+ assert.match(render,/element\.style\.transform=/);
+ assert.match(render,/requestAnimationFrame\(\(\)=>requestAnimationFrame\(\(\)=>wheel\.classList\.remove\("wheel-initial"\)\)\)/);
+ assert.match(css,/\.wheel\.wheel-initial \.recipe-card\s*\{\s*transition:none!important;/);
+ // Rendering an already initialized week must not replace the wheel's nodes.
+ assert.equal((render.match(/wheel\.innerHTML=/g)||[]).length,1);
+});
