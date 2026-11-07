@@ -264,6 +264,7 @@ function saveMealEditor(event){
  event.preventDefault();
  const date=state.editingDate,meal=byId("meal-type").value;
  const key=mealKey(date,meal),kind=byId("meal-kind").value;
+ const previous=state.plan.entries[key];
  try{
   if(kind==="none")delete state.plan.entries[key];
   else{
@@ -281,6 +282,7 @@ function saveMealEditor(event){
   persistPlan();
   byId("meal-editor").close();
  }catch(err){
+  if(previous)state.plan.entries[key]=previous;else delete state.plan.entries[key];
   byId("meal-editor-error").hidden=false;
   byId("meal-editor-error").textContent=err.message;
  }
