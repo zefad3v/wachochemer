@@ -29,22 +29,20 @@ test('recipe title receives initial focus, not back button',()=>{
 test('shopping area no longer claims weekly Bring integration',()=>{
  assert.doesNotMatch(html,/Bring! isch scho integriert/);
  assert.match(html,/id="shopping-items"/);
- assert.match(html,/Demo-Wucheplan/);
+ assert.match(html,/id="shopping-from"/);
+ assert.match(html,/id="shopping-to"/);
 });
 
 
-test('mobile neighbouring recipe cards have the selected outline and visible rounded corners',()=>{
- assert.match(css,/V7: preview contours/);
- assert.match(css,/#screen-week \.recipe-card,\s*#screen-week \.recipe-card\.current\s*\{[^}]*border-color:rgba\(250,247,231,\.86\)/s);
- assert.match(js,/maxPreviewShift=Math\.max\(0,\(wheelHeight-visibleHeight\)\/2-14\)/);
- assert.match(js,/Math\.min\(desiredShift,maxPreviewShift\)/);
+test('seven cards are positioned on a 3D rotating arc with left tilt',()=>{
+ assert.match(css,/#screen-week \.wheel-shell\{perspective:1100px/);
+ assert.match(css,/#screen-week \.wheel\{transform-style:preserve-3d/);
+ assert.match(js,/const angle=d\*25\*Math\.PI\/180/);
+ assert.match(js,/const depth=\(Math\.cos\(angle\)-1\)\*310/);
+ assert.match(js,/rotateX\("\+\(-d\*14\)\+"deg\) rotateY\(-11deg\)/);
+ assert.match(js,/element\.style\.pointerEvents="auto"/);
  assert.match(js,/element\.style\.borderRadius=\(19\/size\)\.toFixed\(2\)\+"px"/);
- assert.match(js,/element\.style\.borderWidth=\(1\/size\)\.toFixed\(2\)\+"px"/);
- assert.match(js,/element\.style\.opacity=a>1\?"0":".99"/);
- assert.doesNotMatch(js,/translateY\("\+delta\+"px\) rotateX/);
 });
-
-
 test('iOS revolver keeps vertical swipes instead of handing them to page scrolling',()=>{
  const v8=css.slice(css.indexOf('/* V8: vertical swipes'));
  assert(v8.length>0,'V8 gesture override missing');
@@ -71,4 +69,15 @@ test('revolver reuses the same card nodes across swipes, avoiding a visual jump'
  assert.match(css,/\.wheel\.wheel-initial \.recipe-card\s*\{\s*transition:none!important;/);
  // Rendering an already initialized week must not replace the wheel's nodes.
  assert.equal((render.match(/wheel\.innerHTML=/g)||[]).length,1);
+});
+
+test('date based menu form and shopping range are visible and wired',()=>{
+ for(const id of ['meal-editor','meal-kind','meal-recipe','meal-servings','meal-type','shopping-from','shopping-to','shopping-add-form','edit-day'])assert(html.includes('id="'+id+'"'));
+ assert.match(js,/state\.plan=normalizePlan\(readSaved\("wachochemer:mealPlanV1"/);
+ assert.match(js,/function persistPlan\(\)/);
+ assert.match(js,/function saveMealEditor\(event\)/);
+ assert.match(js,/ingredientTotals\(state\.plan\.entries,state\.recipes,from,to\)/);
+ assert.match(js,/byId\("shopping-from"\)\.value=state\.shopping\.from/);
+ assert.match(js,/byId\("shopping-following"\)\.addEventListener/);
+ assert.match(js,/byId\("edit-day"\)\.addEventListener/);
 });
