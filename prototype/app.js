@@ -136,74 +136,63 @@ function renderWheel(){
  byId("wheel-position").style.top=(state.current/6*100)+"%";
  byId("wheel-position").style.setProperty("--progress",(state.current/6*100)+"%");
  const item=activeItem();
- byId("ambient").style.backgroundImage="url('"+item.image+"')";
- byId("ambient-backdrop").style.backgroundImage="url('"+item.image+"')";
+ const bg=item.image?"url('"+item.image+"')":"linear-gradient(140deg,#344832,#15251c)";
+ byId("ambient").style.backgroundImage=bg;
+ byId("ambient-backdrop").style.backgroundImage=bg;
  const wheel=byId("wheel");
- const weekKey=days.map(day=>day.date.toDateString()).join("|");
- // Preserve the same seven DOM elements across day changes. Recreating them on
- // every swipe made their transforms animate from the unpositioned centre.
+ const weekKey=days.map(day=>day.date.toDateString()).join("|")+"|"+state.planRevision;
  const rebuilding=wheel.dataset.weekKey!==weekKey||wheel.children.length!==7;
  if(rebuilding){
   wheel.classList.add("wheel-initial");
   wheel.innerHTML=days.map(({item,date},i)=>{
    const day=escapeHtml(weekdays[date.getDay()]);
    const label=escapeHtml(item.title);
-   const meta=item.minutes+" Min. · "+(state.recipes[item.id]?.baseServings||3)+" Portione";
-   return '<button type="button" class="recipe-card" data-day="'+i+'" aria-label="'+day+', '+label+'" aria-current="false">'+
-    '<img src="'+item.image+'" alt="" loading="'+(Math.abs(i-state.current)<2?"eager":"lazy")+'">'+
-    '<span class="card-content"><span class="card-day">'+day+" · "+niceDate(date)+'</span><span class="card-bottom"><span class="card-title">'+label+'</span><span class="card-meta">'+meta+(item.real?'':' · Demo')+'</span></span></span></button>';
+   const meta=item.planned?(item.mealLabel+" · "+(item.servings?item.servings+" Portione":item.real?item.minutes+" Min.":"Eigenes Menü")):"Menü plane";
+   return '<button type="button" class="recipe-card'+(!item.image?' no-photo':'')+'" data-day="'+i+'" aria-label="'+day+', '+label+'" aria-current="false">'+
+    (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" loading="'+(Math.abs(i-state.current)<2?"eager":"lazy")+'">':'<span class="card-no-photo" aria-hidden="true">✳</span>')+
+    '<span class="card-content"><span class="card-day">'+day+" · "+niceDate(date)+'</span><span class="card-bottom"><span class="card-title">'+label+'</span><span class="card-meta">'+escapeHtml(meta)+'</span></span></span></button>';
   }).join("");
   wheel.dataset.weekKey=weekKey;
   wheel.querySelectorAll(".recipe-card").forEach(card=>{
    card.addEventListener("click",()=>{
     if(Date.now()-lastWheelSwipeAt<420)return;
     const i=Number(card.dataset.day);
-    if(i===state.current)openRecipe(weekDays()[i].item);
-    else setDay(i);
+    if(i!==state.current){setDay(i);return}
+    const target=weekDays()[i];
+    if(target.item.real)openRecipe(target.item);
+    else openMealEditor(target.date,"dinner");
    });
   });
  }
  const wide=window.matchMedia("(min-width: 1040px)").matches;
- const wheelHeight=wheel.clientHeight;
+ const height=wheel.clientHeight;
+ const travel=Math.max(100,Math.min(290,height*.42));
  Array.from(wheel.children).forEach((element,i)=>{
   const d=distance(i),a=Math.abs(d),isCurrent=i===state.current;
-  const size=wide?1-a*.12:1-a*.11;
-  const cardHeight=element.offsetHeight;
-  const visibleHeight=cardHeight*size;
-  const maxPreviewShift=Math.max(0,(wheelHeight-visibleHeight)/2-14);
-  const desiredShift=a===1?169:a===2?274:367;
-  const delta=wide?d*138:(d===0?0:Math.sign(d)*Math.min(desiredShift,maxPreviewShift));
+  const angle=d*25*Math.PI/180;
+  const y=Math.sin(angle)*travel;
+  const depth=(Math.cos(angle)-1)*310;
+  const size=1-a*.075;
   element.classList.toggle("current",isCurrent);
   element.setAttribute("aria-current",String(isCurrent));
   element.setAttribute("aria-label",weekdays[days[i].date.getDay()]+", "+days[i].item.title+
-    (isCurrent?", Rezept öffnen":", Tag auswählen"));
+   (isCurrent?", Rezept öffnen oder Menü bearbeiten":", Tag auswählen"));
   element.style.zIndex=String(10-a);
-  if(!wide){
-   element.style.borderRadius=(19/size).toFixed(2)+"px";
-   element.style.borderWidth=(1/size).toFixed(2)+"px";
-   element.style.opacity=a>1?"0":".99";
-   element.style.pointerEvents=a>1?"none":"auto";
-  }else{
-   element.style.borderRadius="";
-   element.style.borderWidth="";
-   element.style.opacity=a>2?"0":String(.99-a*.16);
-   element.style.pointerEvents=a>2?"none":"auto";
-  }
-  element.style.transform="translate(-50%,-50%) "+(wide
-    ?"translateX("+delta+"px) rotateY("+(-d*7)+"deg)"
-    :"translateY("+delta+"px)")+" scale("+size+")";
+  element.style.opacity=String(.99-a*.16);
+  element.style.pointerEvents="auto";
+  element.style.borderRadius=(19/size).toFixed(2)+"px";
+  element.style.borderWidth=(1/size).toFixed(2)+"px";
+  element.style.transform=wide
+   ?"translate(-50%,-50%) translate3d("+(d*118)+"px,0,"+depth+"px) rotateY("+(-10-d*8)+"deg) scale("+size+")"
+   :"translate(-50%,-50%) translate3d(-12px,"+y.toFixed(1)+"px,"+depth.toFixed(1)+"px) rotateX("+(-d*14)+"deg) rotateY(-11deg) scale("+size+")";
  });
- if(rebuilding){
-  // Initial positions must be painted without transitions; all subsequent
-  // swipes animate existing elements between their current positions.
-  requestAnimationFrame(()=>requestAnimationFrame(()=>wheel.classList.remove("wheel-initial")));
- }
+ if(rebuilding)requestAnimationFrame(()=>requestAnimationFrame(()=>wheel.classList.remove("wheel-initial")));
  const spot=byId("desktop-spotlight");
  const date=days[state.current].date;
  spot.innerHTML='<span class="spot-day">'+escapeHtml(weekdays[date.getDay()])+' · '+niceDate(date)+'</span>'+
- '<h2>'+escapeHtml(item.title)+'</h2><p>'+escapeHtml(item.description)+'</p><div class="detail-meta"><span>◷ '+item.minutes+' Min.</span><span>♙ '+(state.recipes[item.id]?.baseServings||3)+' Portione</span>'+(item.real?'':'<span>Demo</span>')+'</div>'+
- '<div class="detail-actions"><button type="button" class="main-action" id="spot-recipe">Rezept aaluege</button></div>';
- byId("spot-recipe").addEventListener("click",()=>openRecipe(item));
+ '<h2>'+escapeHtml(item.title)+'</h2><p>'+escapeHtml(item.description||"Menü im Kalender bearbeite")+'</p>'+
+ '<div class="detail-actions"><button type="button" class="main-action" id="spot-edit">Menü bearbeite</button></div>';
+ byId("spot-edit").addEventListener("click",()=>openMealEditor(date,"dinner"));
 }
 function renderArchive(){
  const grid=byId("recipe-grid");
