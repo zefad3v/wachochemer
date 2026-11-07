@@ -375,6 +375,15 @@ function openRecipe(item){
   actions.innerHTML='<button class="main-action" type="button" id="jump-to-ingredients">Zutate aaluege</button>'+
   '<a class="bring-action" href="'+live+'" target="_blank" rel="noopener noreferrer" aria-label="Bring! Import auf der veröffentlichten Rezeptseite öffnen" title="Bring! öffnet die Rezeptseite. Die gewählte Portionszahl dort nochmals einstellen.">'+bringIcon()+'</a>';
   byId("jump-to-ingredients").addEventListener("click",()=>byId("dialog-ingredients-section").scrollIntoView({behavior:"smooth",block:"start"}));
+  const planBtn=document.createElement("button");
+  planBtn.type="button";
+  planBtn.className="plan-recipe-action";
+  planBtn.textContent="I Wucheplan";
+  actions.append(planBtn);
+  planBtn.addEventListener("click",()=>{
+   closeRecipe();
+   openMealEditor(weekDays()[state.current].date,"dinner",recipe.id);
+  });
   byId("dialog-ingredients").innerHTML="";
   renderPortions(recipe);
   const steps=recipe.instructions?.["de-CH"]||[];
