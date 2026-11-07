@@ -1,5 +1,6 @@
 "use strict";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
+import {addDays,formatDay,parseDay,mealKey,mealFor,normalizePlan,validateEntry,ingredientTotals,datesBetween,shoppingWindow} from "./planner.mjs";
 
 // Design prototype. Public recipes and ingredient IDs are read from the existing JSON files.
 // The remaining day cards are clearly labelled visual demos, not published recipes.
@@ -28,7 +29,8 @@ const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
 const archiveImages={"kuerbissuppe-kaesetoast":images.pumpkin,"poulet-fajitas":images.fajitas};
 const state={
  tab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
- recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:""
+ recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",
+ plan:{version:1,entries:{}},planRevision:0,editingDate:null,shopping:null,extras:[]
 };
 function readSaved(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
 function save(key,value){try{localStorage.setItem(key,JSON.stringify(value))}catch{}}
@@ -37,6 +39,13 @@ if(!Number.isInteger(state.startDay)||state.startDay<0||state.startDay>6)state.s
 state.favorites=new Set(readSaved("wachochemer:favorites",[]));
 state.checked=new Set(readSaved("wachochemer:shoppingChecked",[]));
 state.servings=readSaved("wachochemer:recipeServings",{});
+const localToday=()=>{const n=new Date();return [n.getFullYear(),String(n.getMonth()+1).padStart(2,"0"),String(n.getDate()).padStart(2,"0")].join("-")};
+function safeShoppingRange(value){
+ try{datesBetween(value?.from,value?.to);return {from:value.from,to:value.to}}catch{return shoppingWindow(localToday())}
+}
+state.shopping=safeShoppingRange(readSaved("wachochemer:shoppingRange",null));
+const savedExtras=readSaved("wachochemer:shoppingExtras",[]);
+state.extras=Array.isArray(savedExtras)?savedExtras.filter(x=>x&&typeof x.id==="string"&&typeof x.title==="string").slice(0,200):[];
 const byId=id=>document.getElementById(id);
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 function moneyLike(n){return Number(n).toLocaleString("de-CH",{maximumFractionDigits:2})}
@@ -60,11 +69,25 @@ function baseWeek(){
  anchor.setDate(anchor.getDate()-(anchor.getDay()-state.startDay+7)%7+state.weekOffset*7);
  return anchor;
 }
+function itemForDay(date){
+ const iso=formatDay(new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate(),12)));
+ const dinner=mealFor(state.plan.entries,iso,"dinner");
+ const lunch=mealFor(state.plan.entries,iso,"lunch");
+ const entry=dinner||lunch;
+ const mealLabel=dinner?"Znacht":"Zmittag";
+ if(!entry)return {id:"empty-"+iso,title:"No nüt plant",description:"Tippe uf d Charte oder uf s Stift-Symbol, zum s Menü plane.",minutes:0,image:null,real:false,planned:false,mealLabel:""};
+ if(entry.type==="recipe"){
+  const recipe=state.recipes[entry.recipeId],meta=state.archiveEntries.find(x=>x.id===entry.recipeId);
+  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,real:!!recipe,planned:true,mealLabel,servings:entry.servings};
+ }
+ if(entry.type==="manual")return {id:"manual-"+iso,title:entry.title,description:"Eigenes Menü",minutes:0,image:null,real:false,planned:true,mealLabel};
+ return {id:"leftover-"+iso,title:"Reschte vom "+entry.sourceDate,description:"Scho kocht, kei zweite Iichauf nötig.",minutes:0,image:null,real:false,planned:true,mealLabel};
+}
 function weekDays(){
  const start=baseWeek();
  return Array.from({length:7},(_,i)=>{
- const date=new Date(start);date.setDate(date.getDate()+i);
- return {date,day:date.getDay(),item:demos.find(d=>d.weekday===date.getDay())};
+  const date=new Date(start);date.setDate(date.getDate()+i);
+  return {date,day:date.getDay(),item:itemForDay(date)};
  });
 }
 function activeItem(){return weekDays()[state.current].item}
