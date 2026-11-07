@@ -75,13 +75,14 @@ function itemForDay(date){
  const lunch=mealFor(state.plan.entries,iso,"lunch");
  const entry=dinner||lunch;
  const mealLabel=dinner?"Znacht":"Zmittag";
- if(!entry)return {id:"empty-"+iso,title:"No nüt plant",description:"Tippe uf d Charte oder uf s Stift-Symbol, zum s Menü plane.",minutes:0,image:null,real:false,planned:false,mealLabel:""};
+ const bothMeals=!!(dinner&&lunch);
+ if(!entry)return {id:"empty-"+iso,title:"No nüt plant",description:"Tippe uf d Charte oder uf s Stift-Symbol, zum s Menü plane.",minutes:0,image:null,real:false,planned:false,mealLabel:"",bothMeals:false};
  if(entry.type==="recipe"){
   const recipe=state.recipes[entry.recipeId],meta=state.archiveEntries.find(x=>x.id===entry.recipeId);
-  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,real:!!recipe,planned:true,mealLabel,servings:entry.servings};
+  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,real:!!recipe,planned:true,mealLabel,bothMeals,servings:entry.servings};
  }
- if(entry.type==="manual")return {id:"manual-"+iso,title:entry.title,description:"Eigenes Menü",minutes:0,image:null,real:false,planned:true,mealLabel};
- return {id:"leftover-"+iso,title:"Reschte vom "+entry.sourceDate,description:"Scho kocht, kei zweite Iichauf nötig.",minutes:0,image:null,real:false,planned:true,mealLabel};
+ if(entry.type==="manual")return {id:"manual-"+iso,title:entry.title,description:"Eigenes Menü",minutes:0,image:null,real:false,planned:true,mealLabel,bothMeals};
+ return {id:"leftover-"+iso,title:"Reschte vom "+entry.sourceDate,description:"Scho kocht, kei zweite Iichauf nötig.",minutes:0,image:null,real:false,planned:true,mealLabel,bothMeals};
 }
 function weekDays(){
  const start=baseWeek();
@@ -147,7 +148,7 @@ function renderWheel(){
   wheel.innerHTML=days.map(({item,date},i)=>{
    const day=escapeHtml(weekdays[date.getDay()]);
    const label=escapeHtml(item.title);
-   const meta=item.planned?(item.mealLabel+" · "+(item.servings?item.servings+" Portione":item.real?item.minutes+" Min.":"Eigenes Menü")):"Menü plane";
+   const meta=item.planned?(item.mealLabel+(item.bothMeals?" + Zmittag":"")+" · "+(item.servings?item.servings+" Portione":item.real?item.minutes+" Min.":"Eigenes Menü")):"Menü plane";
    return '<button type="button" class="recipe-card'+(!item.image?' no-photo':'')+'" data-day="'+i+'" aria-label="'+day+', '+label+'" aria-current="false">'+
     (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" loading="'+(Math.abs(i-state.current)<2?"eager":"lazy")+'">':'<span class="card-no-photo" aria-hidden="true">✳</span>')+
     '<span class="card-content"><span class="card-day">'+day+" · "+niceDate(date)+'</span><span class="card-bottom"><span class="card-title">'+label+'</span><span class="card-meta">'+escapeHtml(meta)+'</span></span></span></button>';
