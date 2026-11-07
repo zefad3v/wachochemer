@@ -330,3 +330,98 @@ body{background:#19231b}
 .wheel.wheel-initial .recipe-card{
  transition:none!important;
 }
+
+
+/* M3: 3D carousel and calendar editor, scoped to the active weekly experience. */
+#screen-week .wheel-shell{perspective:1100px;perspective-origin:42% 50%;isolation:isolate}
+#screen-week .wheel{transform-style:preserve-3d;overflow:visible}
+#screen-week .recipe-card{
+ backface-visibility:hidden;-webkit-backface-visibility:hidden;
+ transform-style:preserve-3d;transform-origin:center;
+ transition:transform .55s cubic-bezier(.2,.8,.22,1),opacity .5s ease;
+}
+#screen-week .recipe-card.current{box-shadow:0 18px 45px rgba(0,0,0,.42)}
+#screen-week .recipe-card.no-photo{
+ background:linear-gradient(145deg,#435a42 0%,#283c31 44%,#16271f 100%);
+}
+#screen-week .card-no-photo{
+ position:absolute;inset:0;display:grid;place-items:center;
+ font-size:clamp(90px,27vw,180px);opacity:.09;color:#e3f5c7;
+}
+#screen-week .edit-day{
+ font-size:20px;font-weight:600;
+ background:rgba(98,126,82,.7);border-color:rgba(223,241,197,.8);
+ margin-top:3px;
+}
+.plan-recipe-action{
+ border:1px solid var(--stroke);border-radius:11px;
+ background:#334834;color:#f2f5e9;min-height:45px;
+ padding:8px 12px;font-size:13px;
+}
+.shopping-date-panel{
+ margin:0 4px 18px;padding:15px;border:1px solid var(--stroke);
+ background:rgba(52,69,52,.42);border-radius:17px;
+ display:grid;grid-template-columns:1fr 1fr;gap:12px;
+}
+.shopping-date-panel label,.shopping-add-form>label{
+ display:grid;gap:6px;color:#d4dfca;font-size:12px;font-weight:650;
+}
+.shopping-date-panel input,.shopping-add-form input{
+ width:100%;min-width:0;min-height:45px;border:1px solid var(--stroke);
+ border-radius:10px;padding:8px 10px;background:#2a3b2e;color:#fff;
+ font-size:16px;color-scheme:dark;
+}
+.shopping-shortcuts{display:flex;gap:7px;flex-wrap:wrap;grid-column:1/-1}
+.shopping-shortcuts button,.shopping-add-form button{
+ border:1px solid var(--stroke);background:rgba(220,234,192,.12);
+ color:#f0f5ea;padding:9px 11px;border-radius:10px;min-height:39px;
+ font-size:12px;
+}
+#shopping-window-error{grid-column:1/-1;color:#ffd1ba;font-size:12px}
+.shopping-add-form{margin:0 4px 11px;display:grid;gap:8px}
+.shopping-add-form>div{display:flex;gap:8px}
+.shopping-add-form button{white-space:nowrap}
+.shopping-disclaimer,.empty-message{font-size:12px;color:#bbcdb9;margin:9px 4px 17px}
+.remove-extra{background:transparent;border:0;color:#e0e7d9;font-size:19px;padding:8px}
+.meal-editor{
+ width:min(95vw,480px);max-width:none;max-height:calc(100dvh - 30px);
+ border:1px solid rgba(230,242,211,.38);border-radius:22px;
+ padding:0;background:#1c2a20;color:#f0f2e9;
+ box-shadow:0 24px 75px rgba(0,0,0,.55);
+}
+.meal-editor::backdrop{background:rgba(4,12,6,.7);backdrop-filter:blur(4px)}
+.meal-form{padding:20px;display:grid;gap:15px}
+.editor-head{display:flex;justify-content:space-between;align-items:center}
+.editor-head h2{font-size:28px}
+.editor-head button{
+ border:1px solid var(--stroke);border-radius:50%;background:transparent;
+ color:#fff;min-width:41px;height:41px;font-size:18px;
+}
+#meal-editor-date{color:#bdcfb2;font-size:14px}
+.editor-fields{display:grid;gap:12px}
+.editor-fields label{display:grid;gap:6px;color:#d5e2d1;font-size:13px}
+.editor-fields input,.editor-fields select{
+ background:#304233;border:1px solid var(--stroke);border-radius:11px;
+ min-height:46px;padding:9px;color:#fff;font-size:16px;width:100%;
+ color-scheme:dark;
+}
+.editor-fields [hidden]{display:none!important}
+.meal-editor-actions{display:flex;gap:12px}
+.meal-editor-actions button{
+ flex:1;min-height:47px;border-radius:12px;padding:10px;
+}
+#meal-remove{border:1px solid var(--stroke);background:transparent;color:#dfebdd}
+#meal-remove:disabled{opacity:.4}
+#meal-editor-error{color:#ffbe9f;font-size:13px}
+.editor-note{font-size:12px;color:#b2c6af}
+@media(max-width:1039px){
+ #screen-week .wheel-shell{perspective:980px;perspective-origin:38% 50%}
+ #screen-week .recipe-card{width:min(73%,340px);height:min(65%,465px)}
+ #screen-week .wheel{overflow:visible}
+ #screen-week .day-controls{right:3px}
+ .detail-actions{flex-wrap:wrap}
+ .plan-recipe-action{flex:1 1 100%}
+}
+@media(prefers-reduced-motion:reduce){
+ #screen-week .recipe-card{transition:none!important}
+}
