@@ -1,5 +1,6 @@
 "use strict";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
+import {addDays,formatDay,parseDay,mealKey,mealFor,normalizePlan,validateEntry,ingredientTotals,datesBetween,shoppingWindow} from "./planner.mjs";
 
 // Design prototype. Public recipes and ingredient IDs are read from the existing JSON files.
 // The remaining day cards are clearly labelled visual demos, not published recipes.
@@ -28,15 +29,23 @@ const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
 const archiveImages={"kuerbissuppe-kaesetoast":images.pumpkin,"poulet-fajitas":images.fajitas};
 const state={
  tab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
- recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:""
+ recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",
+ plan:{version:1,entries:{}},planRevision:0,editingDate:null,shopping:null,extras:[]
 };
 function readSaved(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
-function save(key,value){try{localStorage.setItem(key,JSON.stringify(value))}catch{}}
+function save(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}}
 state.startDay=Number(readSaved("wachochemer:weekstart",4));
 if(!Number.isInteger(state.startDay)||state.startDay<0||state.startDay>6)state.startDay=4;
 state.favorites=new Set(readSaved("wachochemer:favorites",[]));
 state.checked=new Set(readSaved("wachochemer:shoppingChecked",[]));
 state.servings=readSaved("wachochemer:recipeServings",{});
+const localToday=()=>{const n=new Date();return [n.getFullYear(),String(n.getMonth()+1).padStart(2,"0"),String(n.getDate()).padStart(2,"0")].join("-")};
+function safeShoppingRange(value){
+ try{datesBetween(value?.from,value?.to);return {from:value.from,to:value.to}}catch{return shoppingWindow(localToday())}
+}
+state.shopping=safeShoppingRange(readSaved("wachochemer:shoppingRange",null));
+const savedExtras=readSaved("wachochemer:shoppingExtras",[]);
+state.extras=Array.isArray(savedExtras)?savedExtras.filter(x=>x&&typeof x.id==="string"&&typeof x.title==="string").slice(0,200):[];
 const byId=id=>document.getElementById(id);
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 function moneyLike(n){return Number(n).toLocaleString("de-CH",{maximumFractionDigits:2})}
@@ -60,11 +69,33 @@ function baseWeek(){
  anchor.setDate(anchor.getDate()-(anchor.getDay()-state.startDay+7)%7+state.weekOffset*7);
  return anchor;
 }
+function itemForDay(date){
+ const iso=formatDay(new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate(),12)));
+ const dinner=mealFor(state.plan.entries,iso,"dinner");
+ const lunch=mealFor(state.plan.entries,iso,"lunch");
+ const entry=dinner||lunch;
+ const mealLabel=dinner?"Znacht":"Zmittag";
+ const bothMeals=!!(dinner&&lunch);
+ if(!entry){
+  // Visual sample only; never persist this as a meal or count it in shopping.
+  const sample=demos.find(x=>x.weekday===date.getDay());
+  return {id:"preview-"+iso,title:sample?.title||"No nüt plant",
+   description:"Designbeispiel, kei gspeicherts Menü. Tippe uf d Charte zum plane.",
+   minutes:sample?.minutes||0,image:sample?.image||null,
+   real:false,planned:false,preview:true,mealLabel:"",bothMeals:false};
+ }
+ if(entry.type==="recipe"){
+  const recipe=state.recipes[entry.recipeId],meta=state.archiveEntries.find(x=>x.id===entry.recipeId);
+  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,real:!!recipe,planned:true,mealLabel,bothMeals,servings:entry.servings};
+ }
+ if(entry.type==="manual")return {id:"manual-"+iso,title:entry.title,description:"Eigenes Menü",minutes:0,image:null,real:false,planned:true,mealLabel,bothMeals};
+ return {id:"leftover-"+iso,title:"Reschte vom "+entry.sourceDate,description:"Scho kocht, kei zweite Iichauf nötig.",minutes:0,image:null,real:false,planned:true,mealLabel,bothMeals};
+}
 function weekDays(){
  const start=baseWeek();
  return Array.from({length:7},(_,i)=>{
- const date=new Date(start);date.setDate(date.getDate()+i);
- return {date,day:date.getDay(),item:demos.find(d=>d.weekday===date.getDay())};
+  const date=new Date(start);date.setDate(date.getDate()+i);
+  return {date,day:date.getDay(),item:itemForDay(date)};
  });
 }
 function activeItem(){return weekDays()[state.current].item}
@@ -113,74 +144,63 @@ function renderWheel(){
  byId("wheel-position").style.top=(state.current/6*100)+"%";
  byId("wheel-position").style.setProperty("--progress",(state.current/6*100)+"%");
  const item=activeItem();
- byId("ambient").style.backgroundImage="url('"+item.image+"')";
- byId("ambient-backdrop").style.backgroundImage="url('"+item.image+"')";
+ const bg=item.image?"url('"+item.image+"')":"linear-gradient(140deg,#344832,#15251c)";
+ byId("ambient").style.backgroundImage=bg;
+ byId("ambient-backdrop").style.backgroundImage=bg;
  const wheel=byId("wheel");
- const weekKey=days.map(day=>day.date.toDateString()).join("|");
- // Preserve the same seven DOM elements across day changes. Recreating them on
- // every swipe made their transforms animate from the unpositioned centre.
+ const weekKey=days.map(day=>day.date.toDateString()).join("|")+"|"+state.planRevision;
  const rebuilding=wheel.dataset.weekKey!==weekKey||wheel.children.length!==7;
  if(rebuilding){
   wheel.classList.add("wheel-initial");
   wheel.innerHTML=days.map(({item,date},i)=>{
    const day=escapeHtml(weekdays[date.getDay()]);
    const label=escapeHtml(item.title);
-   const meta=item.minutes+" Min. · "+(state.recipes[item.id]?.baseServings||3)+" Portione";
-   return '<button type="button" class="recipe-card" data-day="'+i+'" aria-label="'+day+', '+label+'" aria-current="false">'+
-    '<img src="'+item.image+'" alt="" loading="'+(Math.abs(i-state.current)<2?"eager":"lazy")+'">'+
-    '<span class="card-content"><span class="card-day">'+day+" · "+niceDate(date)+'</span><span class="card-bottom"><span class="card-title">'+label+'</span><span class="card-meta">'+meta+(item.real?'':' · Demo')+'</span></span></span></button>';
+   const meta=item.planned?(item.mealLabel+(item.bothMeals?" + Zmittag":"")+" · "+(item.servings?item.servings+" Portione":item.real?item.minutes+" Min.":"Eigenes Menü")):"Demo · Menü plane";
+   return '<button type="button" class="recipe-card'+(!item.image?' no-photo':'')+'" data-day="'+i+'" aria-label="'+day+', '+label+'" aria-current="false">'+
+    (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" loading="'+(Math.abs(i-state.current)<2?"eager":"lazy")+'">':'<span class="card-no-photo" aria-hidden="true">✳</span>')+
+    '<span class="card-content"><span class="card-day">'+day+" · "+niceDate(date)+'</span><span class="card-bottom"><span class="card-title">'+label+'</span><span class="card-meta">'+escapeHtml(meta)+'</span></span></span></button>';
   }).join("");
   wheel.dataset.weekKey=weekKey;
   wheel.querySelectorAll(".recipe-card").forEach(card=>{
    card.addEventListener("click",()=>{
     if(Date.now()-lastWheelSwipeAt<420)return;
     const i=Number(card.dataset.day);
-    if(i===state.current)openRecipe(weekDays()[i].item);
-    else setDay(i);
+    if(i!==state.current){setDay(i);return}
+    const target=weekDays()[i];
+    if(target.item.real)openRecipe(target.item);
+    else openMealEditor(target.date,"dinner");
    });
   });
  }
  const wide=window.matchMedia("(min-width: 1040px)").matches;
- const wheelHeight=wheel.clientHeight;
+ const height=wheel.clientHeight;
+ const travel=Math.max(100,Math.min(290,height*.42));
  Array.from(wheel.children).forEach((element,i)=>{
   const d=distance(i),a=Math.abs(d),isCurrent=i===state.current;
-  const size=wide?1-a*.12:1-a*.11;
-  const cardHeight=element.offsetHeight;
-  const visibleHeight=cardHeight*size;
-  const maxPreviewShift=Math.max(0,(wheelHeight-visibleHeight)/2-14);
-  const desiredShift=a===1?169:a===2?274:367;
-  const delta=wide?d*138:(d===0?0:Math.sign(d)*Math.min(desiredShift,maxPreviewShift));
+  const angle=d*25*Math.PI/180;
+  const y=Math.sin(angle)*travel;
+  const depth=(Math.cos(angle)-1)*310;
+  const size=1-a*.075;
   element.classList.toggle("current",isCurrent);
   element.setAttribute("aria-current",String(isCurrent));
   element.setAttribute("aria-label",weekdays[days[i].date.getDay()]+", "+days[i].item.title+
-    (isCurrent?", Rezept öffnen":", Tag auswählen"));
+   (isCurrent?", Rezept öffnen oder Menü bearbeiten":", Tag auswählen"));
   element.style.zIndex=String(10-a);
-  if(!wide){
-   element.style.borderRadius=(19/size).toFixed(2)+"px";
-   element.style.borderWidth=(1/size).toFixed(2)+"px";
-   element.style.opacity=a>1?"0":".99";
-   element.style.pointerEvents=a>1?"none":"auto";
-  }else{
-   element.style.borderRadius="";
-   element.style.borderWidth="";
-   element.style.opacity=a>2?"0":String(.99-a*.16);
-   element.style.pointerEvents=a>2?"none":"auto";
-  }
-  element.style.transform="translate(-50%,-50%) "+(wide
-    ?"translateX("+delta+"px) rotateY("+(-d*7)+"deg)"
-    :"translateY("+delta+"px)")+" scale("+size+")";
+  element.style.opacity=String(.99-a*.16);
+  element.style.pointerEvents="auto";
+  element.style.borderRadius=(19/size).toFixed(2)+"px";
+  element.style.borderWidth=(1/size).toFixed(2)+"px";
+  element.style.transform=wide
+   ?"translate(-50%,-50%) translate3d("+(d*118)+"px,0,"+depth+"px) rotateY("+(-10-d*8)+"deg) scale("+size+")"
+   :"translate(-50%,-50%) translate3d(-12px,"+y.toFixed(1)+"px,"+depth.toFixed(1)+"px) rotateX("+(-d*14)+"deg) rotateY(-11deg) scale("+size+")";
  });
- if(rebuilding){
-  // Initial positions must be painted without transitions; all subsequent
-  // swipes animate existing elements between their current positions.
-  requestAnimationFrame(()=>requestAnimationFrame(()=>wheel.classList.remove("wheel-initial")));
- }
+ if(rebuilding)requestAnimationFrame(()=>requestAnimationFrame(()=>wheel.classList.remove("wheel-initial")));
  const spot=byId("desktop-spotlight");
  const date=days[state.current].date;
  spot.innerHTML='<span class="spot-day">'+escapeHtml(weekdays[date.getDay()])+' · '+niceDate(date)+'</span>'+
- '<h2>'+escapeHtml(item.title)+'</h2><p>'+escapeHtml(item.description)+'</p><div class="detail-meta"><span>◷ '+item.minutes+' Min.</span><span>♙ '+(state.recipes[item.id]?.baseServings||3)+' Portione</span>'+(item.real?'':'<span>Demo</span>')+'</div>'+
- '<div class="detail-actions"><button type="button" class="main-action" id="spot-recipe">Rezept aaluege</button></div>';
- byId("spot-recipe").addEventListener("click",()=>openRecipe(item));
+ '<h2>'+escapeHtml(item.title)+'</h2><p>'+escapeHtml(item.description||"Menü im Kalender bearbeite")+'</p>'+
+ '<div class="detail-actions"><button type="button" class="main-action" id="spot-edit">Menü bearbeite</button></div>';
+ byId("spot-edit").addEventListener("click",()=>openMealEditor(date,"dinner"));
 }
 function renderArchive(){
  const grid=byId("recipe-grid");
@@ -203,27 +223,120 @@ function renderArchive(){
  }));
  document.querySelectorAll(".filter-chip").forEach(btn=>btn.classList.toggle("active",btn.dataset.filter===state.filter));
 }
+function persistPlan(){
+ if(!save("wachochemer:mealPlanV1",state.plan))throw Error("Planig chönnt nöd gspeicheret werde. Bitte Speicherplatz und Browser-Iistellige prüefe.");
+ state.planRevision++;
+ byId("wheel").dataset.weekKey="";
+ renderWheel();
+ if(state.tab==="shopping")renderShopping();
+}
+function openMealEditor(date,meal="dinner",recipeId=null){
+ const localDate=typeof date==="string"?date:[date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-");
+ state.editingDate=localDate;
+ byId("meal-editor-date").textContent=localDate;
+ byId("meal-recipe").innerHTML=state.archiveEntries.map(x=>'<option value="'+escapeHtml(x.id)+'">'+escapeHtml(x.title)+'</option>').join("");
+ byId("meal-type").value=meal;
+ loadMealEditor();
+ if(recipeId){byId("meal-kind").value="recipe";byId("meal-recipe").value=recipeId;updateMealEditorFields()}
+ byId("meal-editor").showModal();
+ byId("meal-kind").focus({preventScroll:true});
+}
+function loadMealEditor(){
+ const entry=mealFor(state.plan.entries,state.editingDate,byId("meal-type").value);
+ byId("meal-kind").value=entry?.type||"recipe";
+ byId("meal-recipe").value=entry?.recipeId||state.archiveEntries[0]?.id||"";
+ byId("meal-servings").value=entry?.servings||3;
+ byId("meal-manual").value=entry?.type==="manual"?entry.title:"";
+ byId("meal-leftover-source").value=entry?.type==="leftover"?entry.sourceDate:addDays(state.editingDate,-1);
+ byId("meal-remove").disabled=!entry;
+ byId("meal-editor-error").hidden=true;
+ updateMealEditorFields();
+}
+function updateMealEditorFields(){
+ const kind=byId("meal-kind").value;
+ byId("meal-recipe-line").hidden=kind!=="recipe";
+ byId("meal-servings-line").hidden=kind!=="recipe";
+ byId("meal-manual-line").hidden=kind!=="manual";
+ byId("meal-leftover-line").hidden=kind!=="leftover";
+ byId("meal-leftover-tip").hidden=kind!=="leftover";
+}
+function saveMealEditor(event){
+ event.preventDefault();
+ const date=state.editingDate,meal=byId("meal-type").value;
+ const key=mealKey(date,meal),kind=byId("meal-kind").value;
+ const previous=state.plan.entries[key];
+ try{
+  if(kind==="none")delete state.plan.entries[key];
+  else{
+   let entry;
+   if(kind==="recipe")entry={type:"recipe",recipeId:byId("meal-recipe").value,servings:Number(byId("meal-servings").value)};
+   if(kind==="manual")entry={type:"manual",title:byId("meal-manual").value.trim()};
+   if(kind==="leftover"){
+    const sourceDate=byId("meal-leftover-source").value;
+    if(sourceDate>=date)throw Error("Reschte müend vo eme früehere Tag sii.");
+    entry={type:"leftover",sourceDate};
+   }
+   validateEntry(entry,state.recipes);
+   state.plan.entries[key]=entry;
+  }
+  persistPlan();
+  byId("meal-editor").close();
+ }catch(err){
+  if(previous)state.plan.entries[key]=previous;else delete state.plan.entries[key];
+  byId("meal-editor-error").hidden=false;
+  byId("meal-editor-error").textContent=err.message;
+ }
+}
+function changeShoppingRange(from,to){
+ try{
+  datesBetween(from,to);
+  state.shopping={from,to};
+  save("wachochemer:shoppingRange",state.shopping);
+  byId("shopping-window-error").hidden=true;
+  renderShopping();
+ }catch(err){
+  byId("shopping-window-error").hidden=false;
+  byId("shopping-window-error").textContent=err.message;
+ }
+}
 function renderShopping(){
- const aggregate=new Map();
- demos.filter(d=>d.real).forEach(d=>{
-  const recipe=state.recipes[d.id];if(!recipe)return;
-  recipe.ingredients.forEach(row=>{
-   if(row.optional)return;
-   const key=row.ingredientId+"|"+row.unit;
-   const quantity=scaledQuantity(row.quantity,row.unit,currentServings(recipe)/recipe.baseServings);
-   if(!aggregate.has(key))aggregate.set(key,{...row,quantity});
-   else {const existing=aggregate.get(key);if(typeof quantity==="number"&&typeof existing.quantity==="number")existing.quantity+=quantity}
-  });
- });
- const items=[...aggregate].map(([key,row])=>({key,row}));
- const done=items.filter(item=>state.checked.has(item.key)).length;
- byId("shopping-progress").textContent=done+" vo "+items.length+" Zutate abghakt · Demo mit "+demos.filter(d=>d.real).length+" echten Rezepten";
- byId("shopping-items").innerHTML='<div class="shopping-group"><h3>Üsi Zutate</h3>'+items.map(({key,row})=>
- '<label class="shopping-row'+(state.checked.has(key)?' checked':'')+'"><input type="checkbox" data-shopping="'+escapeHtml(key)+'"'+(state.checked.has(key)?' checked':'')+'><span class="shopping-name">'+escapeHtml(state.names[row.ingredientId]||row.ingredientId)+'</span><span class="shopping-amount">'+escapeHtml(row.quantity===null?"Nach Geschmack":moneyLike(row.quantity)+(units[row.unit]?" "+units[row.unit]:""))+'</span></label>'
- ).join("")+'</div>';
+ byId("shopping-from").value=state.shopping.from;
+ byId("shopping-to").value=state.shopping.to;
+ const {from,to}=state.shopping;
+ let result;
+ try{result=ingredientTotals(state.plan.entries,state.recipes,from,to)}
+ catch(err){byId("shopping-window-error").textContent=err.message;byId("shopping-window-error").hidden=false;return}
+ const {items,skipped}=result;
+ const range=from+"|"+to;
+ const purchased=items.filter(row=>state.checked.has(range+"|"+row.key)).length;
+ const rangeDays=new Set(datesBetween(from,to));
+ const relevantExtras=state.extras.filter(row=>rangeDays.has(row.date));
+ const checkedExtra=relevantExtras.filter(row=>state.checked.has("extra|"+row.id)).length;
+ byId("shopping-progress").textContent=(purchased+checkedExtra)+" vo "+(items.length+relevantExtras.length)+
+   " Sache abghakt · "+from+" bis "+to;
+ const ingredientHtml=items.length?items.map(row=>{
+  const checked=state.checked.has(range+"|"+row.key);
+  const label=state.names[row.ingredientId]||row.ingredientId;
+  const quantity=row.quantity===null?"Nach Gschmack":moneyLike(Math.round(row.quantity*100)/100)+(units[row.unit]?" "+units[row.unit]:"");
+  return '<label class="shopping-row'+(checked?' checked':'')+'"><input type="checkbox" data-shopping="'+escapeHtml(range+"|"+row.key)+'"'+(checked?' checked':'')+'><span class="shopping-name">'+escapeHtml(label)+'</span><span class="shopping-amount">'+escapeHtml(quantity)+'</span></label>';
+ }).join(""):'<p class="empty-message">Kei Rezept-Zutate i dem Ziitruum. Plan dini Menü im Wucheplan.</p>';
+ const extrasHtml=relevantExtras.map(row=>{
+  const checked=state.checked.has("extra|"+row.id);
+  return '<div class="shopping-row'+(checked?' checked':'')+'"><input type="checkbox" aria-label="'+escapeHtml(row.title)+' abghakt" data-shopping="extra|'+escapeHtml(row.id)+'"'+(checked?' checked':'')+'><span class="shopping-name">'+escapeHtml(row.title)+'</span><button type="button" class="remove-extra" data-remove-extra="'+escapeHtml(row.id)+'" aria-label="'+escapeHtml(row.title)+' entferne">✕</button></div>';
+ }).join("");
+ byId("shopping-items").innerHTML='<section class="shopping-group"><h3>Zutate us de Menüs</h3>'+ingredientHtml+'</section>'+
+  '<section class="shopping-group"><h3>Zusätzlich</h3>'+(extrasHtml||'<p class="empty-message">No nüt ergänzt.</p>')+'</section>'+
+  (skipped.length?'<p class="shopping-disclaimer">'+skipped.length+' eigenes Menü ohni Rezept-Zutate. Falls nötig, ergänze d Sache obe.</p>':'');
  byId("shopping-items").querySelectorAll("[data-shopping]").forEach(input=>input.addEventListener("change",()=>{
   if(input.checked)state.checked.add(input.dataset.shopping);else state.checked.delete(input.dataset.shopping);
   save("wachochemer:shoppingChecked",[...state.checked]);renderShopping();
+ }));
+ byId("shopping-items").querySelectorAll("[data-remove-extra]").forEach(btn=>btn.addEventListener("click",()=>{
+  state.extras=state.extras.filter(x=>x.id!==btn.dataset.removeExtra);
+  state.checked.delete("extra|"+btn.dataset.removeExtra);
+  save("wachochemer:shoppingExtras",state.extras);
+  save("wachochemer:shoppingChecked",[...state.checked]);
+  renderShopping();
  }));
 }
 function currentServings(recipe){
@@ -273,6 +386,15 @@ function openRecipe(item){
   actions.innerHTML='<button class="main-action" type="button" id="jump-to-ingredients">Zutate aaluege</button>'+
   '<a class="bring-action" href="'+live+'" target="_blank" rel="noopener noreferrer" aria-label="Bring! Import auf der veröffentlichten Rezeptseite öffnen" title="Bring! öffnet die Rezeptseite. Die gewählte Portionszahl dort nochmals einstellen.">'+bringIcon()+'</a>';
   byId("jump-to-ingredients").addEventListener("click",()=>byId("dialog-ingredients-section").scrollIntoView({behavior:"smooth",block:"start"}));
+  const planBtn=document.createElement("button");
+  planBtn.type="button";
+  planBtn.className="plan-recipe-action";
+  planBtn.textContent="I Wucheplan";
+  actions.append(planBtn);
+  planBtn.addEventListener("click",()=>{
+   closeRecipe();
+   openMealEditor(weekDays()[state.current].date,"dinner",recipe.id);
+  });
   byId("dialog-ingredients").innerHTML="";
   renderPortions(recipe);
   const steps=recipe.instructions?.["de-CH"]||[];
@@ -303,6 +425,8 @@ async function loadRecipes(){
   state.recipes=Object.fromEntries(recipes.map(recipe=>[recipe.id,recipe]));
   state.archiveEntries=archiveEntries(recipes,archiveImages);
   state.archiveStatus="ready";
+  state.plan=normalizePlan(readSaved("wachochemer:mealPlanV1",null),state.recipes);
+  state.planRevision++;
  }catch(err){
   console.warn("Could not load canonical recipe data",err);
   state.archiveStatus="error";
@@ -324,6 +448,38 @@ function init(){
  byId("week-next").addEventListener("click",()=>setWeekOffset(1));
  byId("day-prev").addEventListener("click",()=>setDay(state.current-1));
  byId("day-next").addEventListener("click",()=>setDay(state.current+1));
+ byId("edit-day").addEventListener("click",()=>openMealEditor(weekDays()[state.current].date,"dinner"));
+ byId("meal-editor-close").addEventListener("click",()=>byId("meal-editor").close());
+ byId("meal-form").addEventListener("submit",saveMealEditor);
+ byId("meal-type").addEventListener("change",loadMealEditor);
+ byId("meal-kind").addEventListener("change",updateMealEditorFields);
+ byId("meal-remove").addEventListener("click",()=>{
+  const key=mealKey(state.editingDate,byId("meal-type").value),previous=state.plan.entries[key];
+  delete state.plan.entries[key];
+  try{persistPlan();byId("meal-editor").close()}
+  catch(err){
+   if(previous)state.plan.entries[key]=previous;
+   byId("meal-editor-error").hidden=false;byId("meal-editor-error").textContent=err.message;
+  }
+ });
+ for(const id of ["shopping-from","shopping-to"]){
+  byId(id).addEventListener("change",()=>changeShoppingRange(byId("shopping-from").value,byId("shopping-to").value));
+ }
+ byId("shopping-seven").addEventListener("click",()=>{const w=shoppingWindow(localToday());changeShoppingRange(w.from,w.to)});
+ byId("shopping-following").addEventListener("click",()=>{const from=addDays(state.shopping.to,1);changeShoppingRange(from,addDays(from,6))});
+ byId("shopping-plan-week").addEventListener("click",()=>{
+  const days=weekDays();
+  const local=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+  changeShoppingRange(local(days[0].date),local(days[6].date));
+ });
+ byId("shopping-add-form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const input=byId("shopping-extra"),title=input.value.trim();
+  if(!title)return;
+  state.extras.push({id:String(Date.now())+"-"+Math.random().toString(36).slice(2,8),date:state.shopping.from,title});
+  save("wachochemer:shoppingExtras",state.extras);
+  input.value="";renderShopping();
+ });
  const shell=byId("wheel");
  let startX=0,startY=0,tracking=false;
  shell.addEventListener("touchstart",e=>{

@@ -45,13 +45,14 @@
         <div id="ambient" class="ambient" aria-hidden="true"></div>
         <section id="desktop-spotlight" class="desktop-spotlight" aria-label="Ausgewähltes Gericht"></section>
         <div class="wheel-shell">
-          <div id="wheel" class="wheel" role="region" aria-roledescription="Karussell" aria-label="Sieben Tagesgerichte. Wische vertikal oder nutze die Tasten."></div>
+          <div id="wheel" class="wheel" role="region" aria-roledescription="Karussell" aria-label="Sieben Tage als 3D Karussell. Wische vertikal oder nutze die Tasten."></div>
           <div class="wheel-rail" aria-hidden="true"><span id="wheel-position"></span></div>
         </div>
         <div class="day-controls">
           <button type="button" id="day-prev" class="circle-control" aria-label="Vorheriger Tag">↑</button>
           <span id="day-indicator" aria-live="polite">1 / 7</span>
           <button type="button" id="day-next" class="circle-control" aria-label="Nächster Tag">↓</button>
+          <button type="button" id="edit-day" class="circle-control edit-day" aria-label="Menü für ausgewählten Tag bearbeiten" title="Menü bearbeiten">✎</button>
         </div>
       </div>
       <p class="hint">Wisch uf oder ab, um dä Tag z'wächsle. Tippe uf s Bild fürs Rezept.</p>
@@ -63,7 +64,22 @@
       <div class="recipe-grid" id="recipe-grid"></div>
     </section>
     <section class="screen" id="screen-shopping" aria-labelledby="shopping-title">
-      <div class="section-title"><span class="eyebrow">ALLES UF EINEN BLICK</span><h1 id="shopping-title">Iichaufslischte</h1><p>Zutate vo üsem aktuelle Demo-Wucheplan.</p></div>
+      <div class="section-title"><span class="eyebrow">ALLES UF EINEN BLICK</span><h1 id="shopping-title">Iichaufslischte</h1><p>Für weli Täg chaufsch ii? Frei wählbar, au über d Wuchegränze.</p></div>
+      <div class="shopping-date-panel" role="group" aria-label="Einkaufszeitraum">
+        <label>Vo <input id="shopping-from" type="date" aria-label="Einkaufen ab Datum"></label>
+        <label>Bis <input id="shopping-to" type="date" aria-label="Einkaufen bis Datum"></label>
+        <div class="shopping-shortcuts">
+          <button type="button" id="shopping-seven">Ab hüt 7 Täg</button>
+          <button type="button" id="shopping-following">Nächsti 7 Täg</button>
+          <button type="button" id="shopping-plan-week">Aazeigti Wuche</button>
+        </div>
+        <p id="shopping-window-error" role="alert" hidden></p>
+      </div>
+      <form id="shopping-add-form" class="shopping-add-form">
+        <label for="shopping-extra">Zuesätzlich iichaufe</label>
+        <div><input id="shopping-extra" placeholder="z. B. Milch oder Windle" maxlength="120" required><button type="submit">Hinzuefüege</button></div>
+      </form>
+      <p class="shopping-disclaimer">Nur gplanti Rezepte wärded zämegfasst. Eigeni Menüs ohni Zutate und Reschte erzeuged kei zweite Iichauf.</p>
       <div id="shopping-progress" class="shopping-progress"></div>
       <div id="shopping-items" class="shopping-items"></div>
     </section>
@@ -81,6 +97,29 @@
     <button data-tab="archive" type="button" class="bottom-link" aria-label="Chochchischtli"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.8 6-1.8 9 0 3-1.8 6-1.8 9 0v14c-3-1.8-6-1.8-9 0-3-1.8-6-1.8-9 0zM12 5.5v14"/></svg><span>Chochchischtli</span></button>
     <button data-tab="shopping" type="button" class="bottom-link" aria-label="Iichaufslischte"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-2 12H6L4 9zm4 0 4-7 4 7m-8 4v4m4-4v4m4-4v4"/></svg><span>Iichauf</span></button>
   </nav>
+  <dialog id="meal-editor" class="meal-editor" aria-labelledby="meal-editor-title">
+    <form id="meal-form" class="meal-form">
+      <div class="editor-head"><h2 id="meal-editor-title">Menü plane</h2><button type="button" id="meal-editor-close" aria-label="Schliessen">✕</button></div>
+      <p id="meal-editor-date"></p>
+      <div class="editor-fields">
+        <label>Mahlziit<select id="meal-type"><option value="dinner">Znacht</option><option value="lunch">Zmittag</option></select></label>
+        <label>Was gits?<select id="meal-kind">
+          <option value="recipe">Rezept us em Chochchischtli</option>
+          <option value="manual">Eigenes Menü / öppis usserhalb</option>
+          <option value="leftover">Reschte vom Vortag</option>
+          <option value="none">Nüt plant / iichaufe</option>
+        </select></label>
+        <label id="meal-recipe-line">Rezept<select id="meal-recipe"></select></label>
+        <label id="meal-servings-line">Portione<input id="meal-servings" type="number" min="1" max="24" step="1" value="3" inputmode="numeric"></label>
+        <label id="meal-manual-line" hidden>Menü<input id="meal-manual" maxlength="140" placeholder="z. B. Znacht bi de Grosseltere"></label>
+        <label id="meal-leftover-line" hidden>Reschte vom<input id="meal-leftover-source" type="date"></label>
+        <p id="meal-leftover-tip" class="editor-note" hidden>Wichtig: Bi de Kochmenge vom Ursprungstag gnueg Portione für d Reschte iiplane. Das passiert no nöd automatisch.</p>
+      </div>
+      <p id="meal-editor-error" role="alert" hidden></p>
+      <div class="meal-editor-actions"><button type="button" id="meal-remove">Entferne</button><button type="submit" class="main-action">Speichere</button></div>
+      <p class="editor-note">Dini Planig isch lokal uf däm Grät gspeicheret. Reschte chaufsch nöd doppelt ii.</p>
+    </form>
+  </dialog>
   <dialog id="recipe-dialog" class="recipe-dialog" aria-labelledby="dialog-title">
     <div class="dialog-scroll">
       <div class="dialog-hero" id="dialog-hero">

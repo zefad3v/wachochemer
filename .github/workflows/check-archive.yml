@@ -27,10 +27,11 @@ jobs:
         run: |
           node --check prototype/app.js
           node --check prototype/catalog.mjs
+          node --check prototype/planner.mjs
           node --check scripts/build-recipe-index.mjs
           node --check scripts/build.mjs
       - name: Validate archive behavior and real recipes
-        run: node --test tests/archive.test.mjs tests/ui-regression.test.mjs
+        run: node --test tests/archive.test.mjs tests/ui-regression.test.mjs tests/planner.test.mjs
       - name: Confirm generated directory is up to date
         run: |
           node scripts/build-recipe-index.mjs
