@@ -81,3 +81,10 @@ test('date based menu form and shopping range are visible and wired',()=>{
  assert.match(js,/byId\("shopping-following"\)\.addEventListener/);
  assert.match(js,/byId\("edit-day"\)\.addEventListener/);
 });
+
+test('meal editor shows leftover reminder and does not claim failed persistence',()=>{
+ assert.match(html,/id="meal-leftover-tip"/);
+ assert.match(js,/byId\("meal-leftover-tip"\)\.hidden=kind!=="leftover"/);
+ assert.match(js,/if\(!save\("wachochemer:mealPlanV1",state\.plan\)\)throw Error/);
+ assert.match(js,/if\(previous\)state\.plan\.entries\[key\]=previous;else delete state\.plan\.entries\[key\]/);
+});
