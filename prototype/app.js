@@ -215,27 +215,113 @@ function renderArchive(){
  }));
  document.querySelectorAll(".filter-chip").forEach(btn=>btn.classList.toggle("active",btn.dataset.filter===state.filter));
 }
+function persistPlan(){
+ save("wachochemer:mealPlanV1",state.plan);
+ state.planRevision++;
+ byId("wheel").dataset.weekKey="";
+ renderWheel();
+ if(state.tab==="shopping")renderShopping();
+}
+function openMealEditor(date,meal="dinner"){
+ const localDate=typeof date==="string"?date:[date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-");
+ state.editingDate=localDate;
+ byId("meal-editor-date").textContent=localDate;
+ byId("meal-recipe").innerHTML=state.archiveEntries.map(x=>'<option value="'+escapeHtml(x.id)+'">'+escapeHtml(x.title)+'</option>').join("");
+ byId("meal-type").value=meal;
+ loadMealEditor();
+ byId("meal-editor").showModal();
+ byId("meal-kind").focus({preventScroll:true});
+}
+function loadMealEditor(){
+ const entry=mealFor(state.plan.entries,state.editingDate,byId("meal-type").value);
+ byId("meal-kind").value=entry?.type||"none";
+ byId("meal-recipe").value=entry?.recipeId||state.archiveEntries[0]?.id||"";
+ byId("meal-servings").value=entry?.servings||3;
+ byId("meal-manual").value=entry?.type==="manual"?entry.title:"";
+ byId("meal-leftover-source").value=entry?.type==="leftover"?entry.sourceDate:addDays(state.editingDate,-1);
+ byId("meal-remove").disabled=!entry;
+ byId("meal-editor-error").hidden=true;
+ updateMealEditorFields();
+}
+function updateMealEditorFields(){
+ const kind=byId("meal-kind").value;
+ byId("meal-recipe-line").hidden=kind!=="recipe";
+ byId("meal-servings-line").hidden=kind!=="recipe";
+ byId("meal-manual-line").hidden=kind!=="manual";
+ byId("meal-leftover-line").hidden=kind!=="leftover";
+}
+function saveMealEditor(event){
+ event.preventDefault();
+ const date=state.editingDate,meal=byId("meal-type").value;
+ const key=mealKey(date,meal),kind=byId("meal-kind").value;
+ try{
+  if(kind==="none")delete state.plan.entries[key];
+  else{
+   let entry;
+   if(kind==="recipe")entry={type:"recipe",recipeId:byId("meal-recipe").value,servings:Number(byId("meal-servings").value)};
+   if(kind==="manual")entry={type:"manual",title:byId("meal-manual").value.trim()};
+   if(kind==="leftover"){
+    const sourceDate=byId("meal-leftover-source").value;
+    if(sourceDate>=date)throw Error("Reschte müend vo eme früehere Tag sii.");
+    entry={type:"leftover",sourceDate};
+   }
+   state.plan.entries[key]=validateEntry(entry,state.recipes);
+  }
+  persistPlan();
+  byId("meal-editor").close();
+ }catch(err){
+  byId("meal-editor-error").hidden=false;
+  byId("meal-editor-error").textContent=err.message;
+ }
+}
+function changeShoppingRange(from,to){
+ try{
+  datesBetween(from,to);
+  state.shopping={from,to};
+  save("wachochemer:shoppingRange",state.shopping);
+  byId("shopping-window-error").hidden=true;
+  renderShopping();
+ }catch(err){
+  byId("shopping-window-error").hidden=false;
+  byId("shopping-window-error").textContent=err.message;
+ }
+}
 function renderShopping(){
- const aggregate=new Map();
- demos.filter(d=>d.real).forEach(d=>{
-  const recipe=state.recipes[d.id];if(!recipe)return;
-  recipe.ingredients.forEach(row=>{
-   if(row.optional)return;
-   const key=row.ingredientId+"|"+row.unit;
-   const quantity=scaledQuantity(row.quantity,row.unit,currentServings(recipe)/recipe.baseServings);
-   if(!aggregate.has(key))aggregate.set(key,{...row,quantity});
-   else {const existing=aggregate.get(key);if(typeof quantity==="number"&&typeof existing.quantity==="number")existing.quantity+=quantity}
-  });
- });
- const items=[...aggregate].map(([key,row])=>({key,row}));
- const done=items.filter(item=>state.checked.has(item.key)).length;
- byId("shopping-progress").textContent=done+" vo "+items.length+" Zutate abghakt · Demo mit "+demos.filter(d=>d.real).length+" echten Rezepten";
- byId("shopping-items").innerHTML='<div class="shopping-group"><h3>Üsi Zutate</h3>'+items.map(({key,row})=>
- '<label class="shopping-row'+(state.checked.has(key)?' checked':'')+'"><input type="checkbox" data-shopping="'+escapeHtml(key)+'"'+(state.checked.has(key)?' checked':'')+'><span class="shopping-name">'+escapeHtml(state.names[row.ingredientId]||row.ingredientId)+'</span><span class="shopping-amount">'+escapeHtml(row.quantity===null?"Nach Geschmack":moneyLike(row.quantity)+(units[row.unit]?" "+units[row.unit]:""))+'</span></label>'
- ).join("")+'</div>';
+ byId("shopping-from").value=state.shopping.from;
+ byId("shopping-to").value=state.shopping.to;
+ const {from,to}=state.shopping;
+ let result;
+ try{result=ingredientTotals(state.plan.entries,state.recipes,from,to)}
+ catch(err){byId("shopping-window-error").textContent=err.message;byId("shopping-window-error").hidden=false;return}
+ const {items,skipped}=result;
+ const range=from+"|"+to;
+ const purchased=items.filter(row=>state.checked.has(range+"|"+row.key)).length;
+ const checkedExtra=state.extras.filter(row=>state.checked.has("extra|"+row.id)).length;
+ byId("shopping-progress").textContent=(purchased+checkedExtra)+" vo "+(items.length+state.extras.length)+
+   " Sache abghakt · "+from+" bis "+to;
+ const ingredientHtml=items.length?items.map(row=>{
+  const checked=state.checked.has(range+"|"+row.key);
+  const label=state.names[row.ingredientId]||row.ingredientId;
+  const quantity=row.quantity===null?"Nach Gschmack":moneyLike(Math.round(row.quantity*100)/100)+(units[row.unit]?" "+units[row.unit]:"");
+  return '<label class="shopping-row'+(checked?' checked':'')+'"><input type="checkbox" data-shopping="'+escapeHtml(range+"|"+row.key)+'"'+(checked?' checked':'')+'><span class="shopping-name">'+escapeHtml(label)+'</span><span class="shopping-amount">'+escapeHtml(quantity)+'</span></label>';
+ }).join(""):'<p class="empty-message">Kei Rezept-Zutate i dem Ziitruum. Plan dini Menü im Wucheplan.</p>';
+ const extrasHtml=state.extras.map(row=>{
+  const checked=state.checked.has("extra|"+row.id);
+  return '<div class="shopping-row'+(checked?' checked':'')+'"><input type="checkbox" aria-label="'+escapeHtml(row.title)+' abghakt" data-shopping="extra|'+escapeHtml(row.id)+'"'+(checked?' checked':'')+'><span class="shopping-name">'+escapeHtml(row.title)+'</span><button type="button" class="remove-extra" data-remove-extra="'+escapeHtml(row.id)+'" aria-label="'+escapeHtml(row.title)+' entferne">✕</button></div>';
+ }).join("");
+ byId("shopping-items").innerHTML='<section class="shopping-group"><h3>Zutate us de Menüs</h3>'+ingredientHtml+'</section>'+
+  '<section class="shopping-group"><h3>Zusätzlich</h3>'+(extrasHtml||'<p class="empty-message">No nüt ergänzt.</p>')+'</section>'+
+  (skipped.length?'<p class="shopping-disclaimer">'+skipped.length+' eigenes Menü ohni Rezept-Zutate. Falls nötig, ergänze d Sache obe.</p>':'');
  byId("shopping-items").querySelectorAll("[data-shopping]").forEach(input=>input.addEventListener("change",()=>{
   if(input.checked)state.checked.add(input.dataset.shopping);else state.checked.delete(input.dataset.shopping);
   save("wachochemer:shoppingChecked",[...state.checked]);renderShopping();
+ }));
+ byId("shopping-items").querySelectorAll("[data-remove-extra]").forEach(btn=>btn.addEventListener("click",()=>{
+  state.extras=state.extras.filter(x=>x.id!==btn.dataset.removeExtra);
+  state.checked.delete("extra|"+btn.dataset.removeExtra);
+  save("wachochemer:shoppingExtras",state.extras);
+  save("wachochemer:shoppingChecked",[...state.checked]);
+  renderShopping();
  }));
 }
 function currentServings(recipe){
