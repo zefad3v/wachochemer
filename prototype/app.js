@@ -428,6 +428,34 @@ function init(){
  byId("week-next").addEventListener("click",()=>setWeekOffset(1));
  byId("day-prev").addEventListener("click",()=>setDay(state.current-1));
  byId("day-next").addEventListener("click",()=>setDay(state.current+1));
+ byId("edit-day").addEventListener("click",()=>openMealEditor(weekDays()[state.current].date,"dinner"));
+ byId("meal-editor-close").addEventListener("click",()=>byId("meal-editor").close());
+ byId("meal-form").addEventListener("submit",saveMealEditor);
+ byId("meal-type").addEventListener("change",loadMealEditor);
+ byId("meal-kind").addEventListener("change",updateMealEditorFields);
+ byId("meal-remove").addEventListener("click",()=>{
+  delete state.plan.entries[mealKey(state.editingDate,byId("meal-type").value)];
+  persistPlan();
+  byId("meal-editor").close();
+ });
+ for(const id of ["shopping-from","shopping-to"]){
+  byId(id).addEventListener("change",()=>changeShoppingRange(byId("shopping-from").value,byId("shopping-to").value));
+ }
+ byId("shopping-seven").addEventListener("click",()=>{const w=shoppingWindow(localToday());changeShoppingRange(w.from,w.to)});
+ byId("shopping-following").addEventListener("click",()=>{const from=addDays(state.shopping.to,1);changeShoppingRange(from,addDays(from,6))});
+ byId("shopping-plan-week").addEventListener("click",()=>{
+  const days=weekDays();
+  const local=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+  changeShoppingRange(local(days[0].date),local(days[6].date));
+ });
+ byId("shopping-add-form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const input=byId("shopping-extra"),title=input.value.trim();
+  if(!title)return;
+  state.extras.push({id:String(Date.now())+"-"+Math.random().toString(36).slice(2,8),date:state.shopping.from,title});
+  save("wachochemer:shoppingExtras",state.extras);
+  input.value="";renderShopping();
+ });
  const shell=byId("wheel");
  let startX=0,startY=0,tracking=false;
  shell.addEventListener("touchstart",e=>{
