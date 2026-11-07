@@ -33,7 +33,7 @@ const state={
  plan:{version:1,entries:{}},planRevision:0,editingDate:null,shopping:null,extras:[]
 };
 function readSaved(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
-function save(key,value){try{localStorage.setItem(key,JSON.stringify(value))}catch{}}
+function save(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}}
 state.startDay=Number(readSaved("wachochemer:weekstart",4));
 if(!Number.isInteger(state.startDay)||state.startDay<0||state.startDay>6)state.startDay=4;
 state.favorites=new Set(readSaved("wachochemer:favorites",[]));
@@ -224,7 +224,7 @@ function renderArchive(){
  document.querySelectorAll(".filter-chip").forEach(btn=>btn.classList.toggle("active",btn.dataset.filter===state.filter));
 }
 function persistPlan(){
- save("wachochemer:mealPlanV1",state.plan);
+ if(!save("wachochemer:mealPlanV1",state.plan))throw Error("Planig chönnt nöd gspeicheret werde. Bitte Speicherplatz und Browser-Iistellige prüefe.");
  state.planRevision++;
  byId("wheel").dataset.weekKey="";
  renderWheel();
@@ -258,6 +258,7 @@ function updateMealEditorFields(){
  byId("meal-servings-line").hidden=kind!=="recipe";
  byId("meal-manual-line").hidden=kind!=="manual";
  byId("meal-leftover-line").hidden=kind!=="leftover";
+ byId("meal-leftover-tip").hidden=kind!=="leftover";
 }
 function saveMealEditor(event){
  event.preventDefault();
@@ -451,9 +452,13 @@ function init(){
  byId("meal-type").addEventListener("change",loadMealEditor);
  byId("meal-kind").addEventListener("change",updateMealEditorFields);
  byId("meal-remove").addEventListener("click",()=>{
-  delete state.plan.entries[mealKey(state.editingDate,byId("meal-type").value)];
-  persistPlan();
-  byId("meal-editor").close();
+  const key=mealKey(state.editingDate,byId("meal-type").value),previous=state.plan.entries[key];
+  delete state.plan.entries[key];
+  try{persistPlan();byId("meal-editor").close()}
+  catch(err){
+   if(previous)state.plan.entries[key]=previous;
+   byId("meal-editor-error").hidden=false;byId("meal-editor-error").textContent=err.message;
+  }
  });
  for(const id of ["shopping-from","shopping-to"]){
   byId(id).addEventListener("change",()=>changeShoppingRange(byId("shopping-from").value,byId("shopping-to").value));
