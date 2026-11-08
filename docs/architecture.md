@@ -1,5 +1,9 @@
 # Architektur
 
+## Entwicklungsprototyp: radiales Wochenkarussell
+
+Der M3-Entwicklungsstand verwendet `prototype/carousel.mjs` für reine Kreisgeometrie und kontinuierliche Tagesrotation. `prototype/app.js` verbindet sie mit vorhandenen Kalender- und Touchzuständen. Ein gemeinsamer CSS-3D-Ring dreht sieben beständige Karten; abgerundete, deckende Bildflächen enthalten jeweils ihre eigenen Textlayer. Nur die aktive Karte zeigt Titel und Verlauf. Es gibt keine neue Laufzeitabhängigkeit und keine Änderung am Rezept- oder Planmodell. Details zu Ebenen, Gesten und manueller iPhone-Abnahme stehen in [m3-planning.md](m3-planning.md).
+
 ## Entscheidungen
 
 * Die Oberfläche verwendet derzeit schweizerdeutsche Bezeichnungen. Rezeptinhalte bleiben auf Deutsch (CH).

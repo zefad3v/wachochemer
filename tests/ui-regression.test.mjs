@@ -34,14 +34,17 @@ test('shopping area no longer claims weekly Bring integration',()=>{
 });
 
 
-test('seven cards are positioned on a 3D rotating arc with left tilt',()=>{
- assert.match(css,/#screen-week \.wheel-shell\{perspective:1100px/);
- assert.match(css,/#screen-week \.wheel\{transform-style:preserve-3d/);
- assert.match(js,/const angle=d\*25\*Math\.PI\/180/);
- assert.match(js,/const depth=\(Math\.cos\(angle\)-1\)\*310/);
- assert.match(js,/rotateX\("\+\(-d\*14\)\+"deg\) rotateY\(-11deg\)/);
- assert.match(js,/element\.style\.pointerEvents="auto"/);
- assert.match(js,/element\.style\.borderRadius=\(19\/size\)\.toFixed\(2\)\+"px"/);
+test('3D ancestors preserve depth; only opaque rounded card faces clip their layers',()=>{
+ assert.match(css,/#screen-week \.wheel-shell\s*\{[^}]*perspective:900px/);
+ assert.match(css,/#screen-week \.wheel,#screen-week \.wheel-ring\s*\{[^}]*transform-style:preserve-3d;overflow:visible/);
+ assert.match(css,/#screen-week \.card-face\s*\{[^}]*border-radius:inherit;[^}]*overflow:hidden;background:#263a2c/s);
+ assert.match(css,/#screen-week \.recipe-card\s*\{[^}]*backface-visibility:hidden/s);
+ assert.match(css,/#screen-week \.recipe-card\s*\{[^}]*border-radius:calc\(19px \/ var\(--card-scale\)\)/s);
+ assert.match(css,/#screen-week \.card-content\[hidden\]\{display:none\}/);
+ assert.match(css,/#screen-week \.recipe-card\.current \.card-face::after/);
+ assert.match(js,/element\.querySelector\("\.card-content"\)\.hidden=!isCurrent/);
+ assert.doesNotMatch(js,/element\.style\.(opacity|zIndex)/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\s*#screen-week \.wheel-ring,#screen-week \.recipe-card\{transition:none!important\}/);
 });
 test('iOS revolver keeps vertical swipes instead of handing them to page scrolling',()=>{
  const v8=css.slice(css.indexOf('/* V8: vertical swipes'));
@@ -50,7 +53,7 @@ test('iOS revolver keeps vertical swipes instead of handing them to page scrolli
  assert.doesNotMatch(css,/\.recipe-card,\.circle-control,\.icon-btn\{touch-action:manipulation\}/);
  assert.match(js,/shell\.addEventListener\("touchstart"/);
  assert.match(js,/shell\.addEventListener\("touchmove"[\s\S]*?e\.cancelable\)e\.preventDefault\(\);\s*\},\{passive:false\}\)/);
- assert.match(js,/shell\.addEventListener\("touchend"[\s\S]*?setDay\(state\.current\+\(dy<0\?1:-1\)\)/);
+ assert.match(js,/shell\.addEventListener\("touchend"[\s\S]*?setDay\(state\.current\+direction\)/);
  assert.match(js,/shell\.addEventListener\("touchcancel"/);
  assert.match(js,/shell\.addEventListener\("wheel"/);
  assert.match(js,/byId\("day-prev"\)\.addEventListener/);
@@ -60,13 +63,13 @@ test('iOS revolver keeps vertical swipes instead of handing them to page scrolli
 
 test('revolver reuses the same card nodes across swipes, avoiding a visual jump',()=>{
  const render=js.slice(js.indexOf('function renderWheel(){'),js.indexOf('function renderArchive(){'));
- assert.match(render,/const rebuilding=wheel\.dataset\.weekKey!==weekKey\|\|wheel\.children\.length!==7/);
- assert.match(render,/if\(rebuilding\)\{\s*wheel\.classList\.add\("wheel-initial"\);\s*wheel\.innerHTML=/);
+ assert.match(render,/const rebuilding=wheel\.dataset\.weekKey!==weekKey\|\|wheel\.querySelectorAll\("\.recipe-card"\)\.length!==DAY_COUNT/);
+ assert.match(render,/if\(rebuilding\)\{\s*wheel\.classList\.add\("wheel-initial"\);\s*carouselTurn=state\.current;\s*wheel\.innerHTML=/);
  assert.match(render,/wheel\.dataset\.weekKey=weekKey/);
- assert.match(render,/Array\.from\(wheel\.children\)\.forEach/);
+ assert.match(render,/wheel\.querySelectorAll\("\.recipe-card"\)\.forEach/);
  assert.match(render,/element\.style\.transform=/);
  assert.match(render,/requestAnimationFrame\(\(\)=>requestAnimationFrame\(\(\)=>wheel\.classList\.remove\("wheel-initial"\)\)\)/);
- assert.match(css,/\.wheel\.wheel-initial \.recipe-card\s*\{\s*transition:none!important;/);
+ assert.match(css,/\.wheel\.wheel-initial \.wheel-ring,\.wheel\.wheel-initial \.recipe-card\s*\{\s*transition:none!important;/);
  // Rendering an already initialized week must not replace the wheel's nodes.
  assert.equal((render.match(/wheel\.innerHTML=/g)||[]).length,1);
 });
