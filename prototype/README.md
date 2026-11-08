@@ -1,8 +1,16 @@
 # Wa chochemer? · Mobiler Designprototyp
 
-Diese Vorschau lebt absichtlich auf **feat/mobile-revolver-prototype**. Die öffentliche GitHub-Pages-Version auf **main** wird nicht verändert.
+Der aktuelle Arbeitsstand lebt auf **codex/3d-radial-carousel-fix**, basierend auf **feat/m3-meal-planner-carousel-shopping-dates**. Der Pull Request richtet sich an diesen M3-Branch. Die öffentliche GitHub-Pages-Version auf **main** wird nicht verändert.
 
-## Was funktioniert
+## Aktueller Stand: M3 und radialer Ring, 8. November 2026
+
+Sieben beständige Tageskarten bewegen sich auf einem geschlossenen CSS-3D-Ring. Vertikales Wischen dreht ihn, Pfeile und Tastatur bleiben verfügbar. Nur die aktive, leicht nach links gedrehte Karte zeigt Titel, Datum und Menüinformationen; Nachbarn zeigen ihre deckenden Bilder. Die Tagessteuerung liegt unter dem Ring, damit sie keine Karten verdeckt.
+
+M3 speichert echte Zmittag-/Znacht-Einträge pro Kalenderdatum lokal und erzeugt den Einkauf ausschliesslich aus geplanten Rezepten in einem frei wählbaren Zeitraum. Eigene Menüs, Resten und zusätzliche Einkaufsartikel bleiben verfügbar. Die älteren M2-/Designabschnitte unten dokumentieren die Entwicklungsgeschichte.
+
+Technik und Prüfergebnisse: [M3-Dokumentation](../docs/m3-planning.md#radiales-3d-karussell-und-layer-fix-8-november-2026). Tests: `node --check prototype/app.js` und `node --test tests/*.test.mjs`. Optionale Browserprüfung mit separat installiertem Playwright: `node scripts/check-carousel-browser.cjs`. **Echte iPhone-Safari- und Homebildschirm-Abnahme bleibt offen.**
+
+## Historischer Ausgangspunkt: mobiler Designprototyp / M2
 
 * Vertikaler, räumlich gestaffelter Wochenrevolver auf Smartphones (Wischen, Tippen, Tasten, Mausrad).
 * Desktop ab 1040 px: ausgewähltes Gericht links ohne Kachel, horizontaler Revolver rechts.

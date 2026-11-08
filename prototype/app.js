@@ -1,6 +1,7 @@
 "use strict";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {addDays,formatDay,parseDay,mealKey,mealFor,normalizePlan,validateEntry,ingredientTotals,datesBetween,shoppingWindow} from "./planner.mjs";
+import {DAY_COUNT,wrapDay,turnToDay,ringGeometry,swipeDirection} from "./carousel.mjs";
 
 // Design prototype. Public recipes and ingredient IDs are read from the existing JSON files.
 // The remaining day cards are clearly labelled visual demos, not published recipes.
@@ -126,13 +127,13 @@ function weekLabel(){
  return niceDate(first)+" – "+niceDate(last);
 }
 function setWeekOffset(inc){
- state.weekOffset+=inc;state.current=0;renderWheel();
+ state.weekOffset+=inc;state.current=0;carouselTurn=0;renderWheel();
 }
-function setDay(idx){state.current=(idx+7)%7;renderWheel()}
-function distance(i){
- let d=(i-state.current+7)%7;
- if(d>3)d-=7;
- return d;
+let carouselTurn=0;
+function setDay(idx){
+ carouselTurn=turnToDay(carouselTurn,idx);
+ state.current=wrapDay(idx);
+ renderWheel();
 }
 let lastWheelSwipeAt=0;
 function renderWheel(){
@@ -149,17 +150,18 @@ function renderWheel(){
  byId("ambient-backdrop").style.backgroundImage=bg;
  const wheel=byId("wheel");
  const weekKey=days.map(day=>day.date.toDateString()).join("|")+"|"+state.planRevision;
- const rebuilding=wheel.dataset.weekKey!==weekKey||wheel.children.length!==7;
+ const rebuilding=wheel.dataset.weekKey!==weekKey||wheel.querySelectorAll(".recipe-card").length!==DAY_COUNT;
  if(rebuilding){
   wheel.classList.add("wheel-initial");
-  wheel.innerHTML=days.map(({item,date},i)=>{
+  carouselTurn=state.current;
+  wheel.innerHTML='<div class="wheel-ring">'+days.map(({item,date},i)=>{
    const day=escapeHtml(weekdays[date.getDay()]);
    const label=escapeHtml(item.title);
    const meta=item.planned?(item.mealLabel+(item.bothMeals?" + Zmittag":"")+" · "+(item.servings?item.servings+" Portione":item.real?item.minutes+" Min.":"Eigenes Menü")):"Demo · Menü plane";
-   return '<button type="button" class="recipe-card'+(!item.image?' no-photo':'')+'" data-day="'+i+'" aria-label="'+day+', '+label+'" aria-current="false">'+
-    (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" loading="'+(Math.abs(i-state.current)<2?"eager":"lazy")+'">':'<span class="card-no-photo" aria-hidden="true">✳</span>')+
-    '<span class="card-content"><span class="card-day">'+day+" · "+niceDate(date)+'</span><span class="card-bottom"><span class="card-title">'+label+'</span><span class="card-meta">'+escapeHtml(meta)+'</span></span></span></button>';
-  }).join("");
+   return '<button type="button" class="recipe-card'+(!item.image?' no-photo':'')+'" data-day="'+i+'" data-date="'+formatDay(new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate(),12)))+'" aria-label="'+day+', '+label+'" aria-current="false"><span class="card-face">'+
+    (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" draggable="false">':'<span class="card-no-photo" aria-hidden="true">✳</span>')+
+    '<span class="card-content"><span class="card-day">'+day+" · "+niceDate(date)+'</span><span class="card-bottom"><span class="card-title">'+label+'</span><span class="card-meta">'+escapeHtml(meta)+'</span></span></span></span></button>';
+  }).join("")+'</div>';
   wheel.dataset.weekKey=weekKey;
   wheel.querySelectorAll(".recipe-card").forEach(card=>{
    card.addEventListener("click",()=>{
@@ -172,27 +174,19 @@ function renderWheel(){
    });
   });
  }
- const wide=window.matchMedia("(min-width: 1040px)").matches;
- const height=wheel.clientHeight;
- const travel=Math.max(100,Math.min(290,height*.42));
- Array.from(wheel.children).forEach((element,i)=>{
-  const d=distance(i),a=Math.abs(d),isCurrent=i===state.current;
-  const angle=d*25*Math.PI/180;
-  const y=Math.sin(angle)*travel;
-  const depth=(Math.cos(angle)-1)*310;
-  const size=1-a*.075;
+ const geometry=ringGeometry(wheel.clientWidth,carouselTurn,wheel.clientHeight);
+ const ring=wheel.querySelector(".wheel-ring");
+ ring.style.transform=geometry.transform;
+ wheel.querySelectorAll(".recipe-card").forEach((element,i)=>{
+  const isCurrent=i===state.current;
+  const size=isCurrent?1:.62;
   element.classList.toggle("current",isCurrent);
   element.setAttribute("aria-current",String(isCurrent));
   element.setAttribute("aria-label",weekdays[days[i].date.getDay()]+", "+days[i].item.title+
    (isCurrent?", Rezept öffnen oder Menü bearbeiten":", Tag auswählen"));
-  element.style.zIndex=String(10-a);
-  element.style.opacity=String(.99-a*.16);
-  element.style.pointerEvents="auto";
-  element.style.borderRadius=(19/size).toFixed(2)+"px";
-  element.style.borderWidth=(1/size).toFixed(2)+"px";
-  element.style.transform=wide
-   ?"translate(-50%,-50%) translate3d("+(d*118)+"px,0,"+depth+"px) rotateY("+(-10-d*8)+"deg) scale("+size+")"
-   :"translate(-50%,-50%) translate3d(-12px,"+y.toFixed(1)+"px,"+depth.toFixed(1)+"px) rotateX("+(-d*14)+"deg) rotateY(-11deg) scale("+size+")";
+  element.querySelector(".card-content").hidden=!isCurrent;
+  element.style.setProperty("--card-scale",size);
+  element.style.transform="translate(-50%,-50%) "+geometry.slots[i].transform+" "+geometry.facing+" scale("+size+")";
  });
  if(rebuilding)requestAnimationFrame(()=>requestAnimationFrame(()=>wheel.classList.remove("wheel-initial")));
  const spot=byId("desktop-spotlight");
@@ -480,15 +474,17 @@ function init(){
   save("wachochemer:shoppingExtras",state.extras);
   input.value="";renderShopping();
  });
- const shell=byId("wheel");
- let startX=0,startY=0,tracking=false;
+ const shell=document.querySelector(".wheel-shell");
+ let startX=0,startY=0,tracking=false,dragged=false;
  shell.addEventListener("touchstart",e=>{
-  if(e.touches.length!==1){tracking=false;return}
-  startX=e.touches[0].clientX;startY=e.touches[0].clientY;tracking=true;
+  if(e.touches.length!==1||state.tab!=="week"){tracking=false;return}
+  startX=e.touches[0].clientX;startY=e.touches[0].clientY;tracking=true;dragged=false;
  },{passive:true});
  shell.addEventListener("touchmove",e=>{
-  if(!tracking||e.touches.length!==1||state.tab!=="week")return;
+  if(e.touches.length!==1){tracking=false;return}
+  if(!tracking||state.tab!=="week")return;
   const dy=e.touches[0].clientY-startY,dx=e.touches[0].clientX-startX;
+  if(Math.max(Math.abs(dx),Math.abs(dy))>7)dragged=true;
   // Claim vertical drags early so iOS never cancels the ending gesture.
   if(Math.abs(dy)>7&&Math.abs(dy)>Math.abs(dx)&&e.cancelable)e.preventDefault();
  },{passive:false});
@@ -498,17 +494,18 @@ function init(){
   if(state.tab!=="week"||e.changedTouches.length!==1)return;
   const dy=e.changedTouches[0].clientY-startY;
   const dx=e.changedTouches[0].clientX-startX;
-  if(Math.abs(dy)>35&&Math.abs(dy)>Math.abs(dx)){
-    lastWheelSwipeAt=Date.now();
+  const direction=swipeDirection(dx,dy);
+  if(dragged||direction)lastWheelSwipeAt=Date.now();
+  if(direction){
     if(e.cancelable)e.preventDefault();
-    setDay(state.current+(dy<0?1:-1));
+    setDay(state.current+direction);
   }
  },{passive:false});
- shell.addEventListener("touchcancel",()=>{tracking=false});
+ shell.addEventListener("touchcancel",()=>{tracking=false;lastWheelSwipeAt=Date.now()});
  let wheelCooldown=0;
- shell.addEventListener("wheel",e=>{if(state.tab!=="week")return;e.preventDefault();const now=Date.now();if(now-wheelCooldown<400)return;wheelCooldown=now;setDay(state.current+(e.deltaY>0?1:-1))},{passive:false});
+ shell.addEventListener("wheel",e=>{if(state.tab!=="week"||e.ctrlKey||!e.deltaY)return;if(e.cancelable)e.preventDefault();const now=Date.now();if(now-wheelCooldown<400)return;wheelCooldown=now;setDay(state.current+(e.deltaY>0?1:-1))},{passive:false});
  window.addEventListener("keydown",e=>{
-  if(byId("recipe-dialog").open)return;
+  if(byId("recipe-dialog").open||byId("meal-editor").open||e.target.closest("input,select,textarea,[contenteditable]"))return;
   if(state.tab!=="week")return;
   if(["ArrowDown","ArrowRight"].includes(e.key)){e.preventDefault();setDay(state.current+1)}
   if(["ArrowUp","ArrowLeft"].includes(e.key)){e.preventDefault();setDay(state.current-1)}
