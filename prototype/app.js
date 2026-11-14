@@ -307,43 +307,50 @@ function changeShoppingRange(from,to){
   byId("shopping-window-error").textContent=err.message;
  }
 }
+function shoppingTransferText(){
+ const {from,to}=state.shopping;
+ const {items,skipped}=ingredientTotals(state.plan.entries,state.recipes,from,to);
+ const days=new Set(datesBetween(from,to));
+ const extra=state.extras.filter(x=>days.has(x.date));
+ const lines=items.map(row=>{
+  const label=state.names[row.ingredientId]||row.ingredientId;
+  const unit=units[row.unit]||row.unit;
+  const quantity=row.quantity===null?"nach Geschmack":moneyLike(Math.round(row.quantity*100)/100)+(unit?" "+unit:"");
+  return label+" — "+quantity;
+ });
+ return ["Wachochemer, "+from+" bis "+to,...lines,...extra.map(x=>x.title),
+  ...(skipped.length?["Achtung: Eigene Menüs ohne Zutaten: "+skipped.map(x=>x.title).join(", ")]:[])].join("\n");
+}
 function renderShopping(){
  byId("shopping-from").value=state.shopping.from;
  byId("shopping-to").value=state.shopping.to;
  const {from,to}=state.shopping;
- let result;
- try{result=ingredientTotals(state.plan.entries,state.recipes,from,to)}
- catch(err){byId("shopping-window-error").textContent=err.message;byId("shopping-window-error").hidden=false;return}
- const {items,skipped}=result;
- const range=from+"|"+to;
- const purchased=items.filter(row=>state.checked.has(range+"|"+row.key)).length;
- const rangeDays=new Set(datesBetween(from,to));
- const relevantExtras=state.extras.filter(row=>rangeDays.has(row.date));
- const checkedExtra=relevantExtras.filter(row=>state.checked.has("extra|"+row.id)).length;
- byId("shopping-progress").textContent=(purchased+checkedExtra)+" vo "+(items.length+relevantExtras.length)+
-   " Sache abghakt · "+from+" bis "+to;
- const ingredientHtml=items.length?items.map(row=>{
-  const checked=state.checked.has(range+"|"+row.key);
+ let totals;
+ try{totals=ingredientTotals(state.plan.entries,state.recipes,from,to)}
+ catch(err){
+  byId("shopping-window-error").textContent=err.message;
+  byId("shopping-window-error").hidden=false;
+  return;
+ }
+ const {items,skipped}=totals;
+ const days=new Set(datesBetween(from,to));
+ const extras=state.extras.filter(x=>days.has(x.date));
+ byId("shopping-progress").textContent=items.length+" Rezept-Zutate · "+extras.length+" Zusatzartikel";
+ const rows=items.length?items.map(row=>{
   const label=state.names[row.ingredientId]||row.ingredientId;
-  const quantity=row.quantity===null?"Nach Gschmack":moneyLike(Math.round(row.quantity*100)/100)+(units[row.unit]?" "+units[row.unit]:"");
-  return '<label class="shopping-row'+(checked?' checked':'')+'"><input type="checkbox" data-shopping="'+escapeHtml(range+"|"+row.key)+'"'+(checked?' checked':'')+'><span class="shopping-name">'+escapeHtml(label)+'</span><span class="shopping-amount">'+escapeHtml(quantity)+'</span></label>';
- }).join(""):'<p class="empty-message">Kei Rezept-Zutate i dem Ziitruum. Plan dini Menü im Wucheplan.</p>';
- const extrasHtml=relevantExtras.map(row=>{
-  const checked=state.checked.has("extra|"+row.id);
-  return '<div class="shopping-row'+(checked?' checked':'')+'"><input type="checkbox" aria-label="'+escapeHtml(row.title)+' abghakt" data-shopping="extra|'+escapeHtml(row.id)+'"'+(checked?' checked':'')+'><span class="shopping-name">'+escapeHtml(row.title)+'</span><button type="button" class="remove-extra" data-remove-extra="'+escapeHtml(row.id)+'" aria-label="'+escapeHtml(row.title)+' entferne">✕</button></div>';
- }).join("");
- byId("shopping-items").innerHTML='<section class="shopping-group"><h3>Zutate us de Menüs</h3>'+ingredientHtml+'</section>'+
-  '<section class="shopping-group"><h3>Zusätzlich</h3>'+(extrasHtml||'<p class="empty-message">No nüt ergänzt.</p>')+'</section>'+
-  (skipped.length?'<p class="shopping-disclaimer">'+skipped.length+' eigenes Menü ohni Rezept-Zutate. Falls nötig, ergänze d Sache obe.</p>':'');
- byId("shopping-items").querySelectorAll("[data-shopping]").forEach(input=>input.addEventListener("change",()=>{
-  if(input.checked)state.checked.add(input.dataset.shopping);else state.checked.delete(input.dataset.shopping);
-  save("wachochemer:shoppingChecked",[...state.checked]);renderShopping();
- }));
+  const unit=units[row.unit]||row.unit;
+  const quantity=row.quantity===null?"Nach Gschmack":moneyLike(Math.round(row.quantity*100)/100)+(unit?" "+unit:"");
+  return '<div class="shopping-row"><span class="shopping-name">'+escapeHtml(label)+'</span>'+
+   '<span class="shopping-amount">'+escapeHtml(quantity)+'</span></div>';
+ }).join(""):'<p class="empty-message">Kei Rezept-Zutate i däm Ziitruum.</p>';
+ const extraRows=extras.map(row=>'<div class="shopping-row"><span class="shopping-name">'+escapeHtml(row.title)+'</span>'+
+  '<button type="button" class="remove-extra" data-remove-extra="'+escapeHtml(row.id)+'" aria-label="'+escapeHtml(row.title)+' entferne">✕</button></div>').join("");
+ byId("shopping-items").innerHTML='<section class="shopping-group"><h3>Für Bring! vorbereite</h3>'+rows+'</section>'+
+  (extraRows?'<section class="shopping-group"><h3>Zusätzlechi Sache</h3>'+extraRows+'</section>':'')+
+  (skipped.length?'<p class="shopping-disclaimer">'+skipped.length+' eigenes Menü ohni Rezept-Zutate. D Zutate bi Bedarf ergänze.</p>':'');
  byId("shopping-items").querySelectorAll("[data-remove-extra]").forEach(btn=>btn.addEventListener("click",()=>{
   state.extras=state.extras.filter(x=>x.id!==btn.dataset.removeExtra);
-  state.checked.delete("extra|"+btn.dataset.removeExtra);
   save("wachochemer:shoppingExtras",state.extras);
-  save("wachochemer:shoppingChecked",[...state.checked]);
   renderShopping();
  }));
 }
@@ -488,6 +495,16 @@ function init(){
  for(const id of ["shopping-from","shopping-to"]){
   byId(id).addEventListener("change",()=>changeShoppingRange(byId("shopping-from").value,byId("shopping-to").value));
  }
+ byId("shopping-copy").addEventListener("click",async()=>{
+  const status=byId("shopping-copy-status");
+  try{
+   if(!navigator.clipboard?.writeText)throw Error("Zwüschespeicher isch i däm Browser nöd verfügbar");
+   await navigator.clipboard.writeText(shoppingTransferText());
+   status.textContent="Zutate kopiert. In Bring! müend si no übernoh werde. En direkte Gesamtimport isch no nöd bestätigt.";
+  }catch(err){
+   status.textContent="Kopiere nöd möglich: "+err.message;
+  }
+ });
  byId("shopping-seven").addEventListener("click",()=>{const w=shoppingWindow(localToday());changeShoppingRange(w.from,w.to)});
  byId("shopping-following").addEventListener("click",()=>{const from=addDays(state.shopping.to,1);changeShoppingRange(from,addDays(from,6))});
  byId("shopping-plan-week").addEventListener("click",()=>{
