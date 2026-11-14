@@ -124,7 +124,7 @@ function mealSummary(date){
  }).join("");
 }
 function localISO(date){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-")}
-function picture(item){return item.image?'<img src="'+escapeHtml(item.image)+'" alt="" draggable="false">':'<span class="planner-placeholder" aria-hidden="true">✳</span>'}
+function picture(item){return item.image?'<img src="'+escapeHtml(item.image)+'" alt="" draggable="false">':'<span class="planner-placeholder" aria-hidden="true"></span>'}
 function renderPlanner(){
  const days=weekDays(),selected=days[state.current],meal=displayedMeal(),item=itemForDay(selected.date,meal);
  byId("week-range").textContent=weekLabel();
