@@ -488,7 +488,8 @@ function init(){
   if(!tracking)return;tracking=false;
   const dx=e.changedTouches[0].clientX-startX,dy=e.changedTouches[0].clientY-startY;
   if(Math.max(Math.abs(dx),Math.abs(dy))>7)lastSwipeAt=Date.now();
-  const direction=swipeDirection(dx,dy);if(direction)setDay(state.current+direction);
+  const direction=swipeDirection(dx,dy);
+  if(direction){state.selectedMeal=direction>0?"dinner":"lunch";renderPlanner()}
  },{passive:true});
  shell.addEventListener("touchcancel",()=>{tracking=false;lastSwipeAt=Date.now()});
  window.addEventListener("keydown",e=>{
