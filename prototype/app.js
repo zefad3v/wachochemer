@@ -10,7 +10,7 @@ const archiveImages={};
 const state={
  tab:"week",returnTab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
  recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",
- plan:{version:1,entries:{}},editingDate:null,shopping:null,extras:[]
+ plan:{version:1,entries:{}},editingDate:null,shopping:null,extras:[],selectedMeal:null
 };
 function readSaved(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
 function save(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}}
@@ -49,12 +49,12 @@ function baseWeek(){
  anchor.setDate(anchor.getDate()-(anchor.getDay()-state.startDay+7)%7+state.weekOffset*7);
  return anchor;
 }
-function itemForDay(date){
+function itemForDay(date,requestedMeal=null){
  const iso=formatDay(new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate(),12)));
  const dinner=mealFor(state.plan.entries,iso,"dinner");
  const lunch=mealFor(state.plan.entries,iso,"lunch");
- const entry=dinner||lunch;
- const mealLabel=dinner?"Znacht":"Zmittag";
+ const entry=requestedMeal?(requestedMeal==="lunch"?lunch:dinner):dinner||lunch;
+ const mealLabel=requestedMeal?(requestedMeal==="lunch"?"Zmittag":"Znacht"):(dinner?"Znacht":"Zmittag");
  if(!entry){
   return {id:"empty-"+iso,title:"No nüt plant",description:"Wähl es Rezept, es eigenes Menü oder Reschte.",minutes:0,image:null,real:false,planned:false,mealLabel:""};
  }
@@ -72,7 +72,9 @@ function weekDays(){
   return {date,day:date.getDay(),item:itemForDay(date)};
  });
 }
-function activeItem(){return weekDays()[state.current].item}
+const mealForTime=()=>new Date().getHours()<14?"lunch":"dinner";
+const displayedMeal=()=>state.selectedMeal||mealForTime();
+function activeItem(){return itemForDay(weekDays()[state.current].date,displayedMeal())}
 function showTab(tab){
  if(tab==="settings"&&state.tab==="settings")tab=state.returnTab||"week";
  else if(tab==="settings")state.returnTab=state.tab;
@@ -108,10 +110,10 @@ function updateDisplay(){
  if(next!==currentClass){currentClass=next;plannerView=viewForClass(next,viewPreferences)}
  renderPlanner();
 }
-function setWeekOffset(inc){state.weekOffset+=inc;renderPlanner()}
+function setWeekOffset(inc){state.weekOffset+=inc;state.selectedMeal=null;renderPlanner()}
 function setDay(idx){
  const next=moveDay(state.current,state.weekOffset,idx-state.current);
- state.current=next.current;state.weekOffset=next.weekOffset;renderPlanner();
+ state.current=next.current;state.weekOffset=next.weekOffset;state.selectedMeal=null;renderPlanner();
 }
 function mealSummary(date){
  const iso=localISO(date);
@@ -124,15 +126,20 @@ function mealSummary(date){
 function localISO(date){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-")}
 function picture(item){return item.image?'<img src="'+escapeHtml(item.image)+'" alt="" draggable="false">':'<span class="planner-placeholder" aria-hidden="true">✳</span>'}
 function renderPlanner(){
- const days=weekDays(),selected=days[state.current],item=selected.item;
+ const days=weekDays(),selected=days[state.current],meal=displayedMeal(),item=itemForDay(selected.date,meal);
  byId("week-range").textContent=weekLabel();
  byId("screen-week").dataset.view=plannerView;
  document.querySelectorAll("button[data-view]").forEach(btn=>btn.setAttribute("aria-pressed",String(btn.dataset.view===plannerView)));
  byId("week-strip").innerHTML=days.map(({date,item},i)=>'<button type="button" data-day="'+i+'" aria-current="'+(i===state.current?'date':'false')+'" aria-label="'+escapeHtml(weekdays[date.getDay()]+', '+niceDate(date)+(item.planned?', Menü geplant':', ungeplant'))+'"><span>'+weekdayShort[date.getDay()]+'</span><strong>'+date.getDate()+'</strong><span class="plan-dot" data-planned="'+item.planned+'" aria-hidden="true"></span></button>').join("");
  byId("week-overview").innerHTML=days.map(({date,item},i)=>'<article class="week-row'+(i===state.current?' selected':'')+'"><button type="button" class="day-select" data-day="'+i+'" aria-pressed="'+(i===state.current)+'">'+picture(item)+'<span class="row-content"><strong>'+escapeHtml(weekdays[date.getDay()]+" · "+niceDate(date))+'</strong>'+mealSummary(date)+'</span></button><button type="button" class="row-edit" data-edit-day="'+i+'" aria-label="Menü für '+escapeHtml(weekdays[date.getDay()])+ ' bearbeiten">✎</button></article>').join("");
  byId("day-card").innerHTML=picture(item)+'<span class="day-card-content"><span>'+escapeHtml(weekdays[selected.date.getDay()]+" · "+niceDate(selected.date))+'</span><strong>'+escapeHtml(item.title)+'</strong><span>'+escapeHtml(item.planned?(item.mealLabel+" · "+(item.real?item.minutes+" Min. · "+item.servings+" Portione":item.description)):"Ungeplant")+'</span></span>';
- byId("day-card").setAttribute("aria-label",item.real?item.title+", Rezeptdetails öffnen":item.title+", Menü bearbeiten");
- byId("day-meals").innerHTML=mealSummary(selected.date);
+ byId("day-card").setAttribute("aria-label",(meal==="lunch"?"Zmittag: ":"Znacht: ")+(item.real?item.title+", Rezeptdetails öffnen":item.title+", Menü bearbeiten"));
+ for(const btn of document.querySelectorAll("[data-meal-page]")){
+  const active=btn.dataset.mealPage===meal;
+  btn.setAttribute("aria-pressed",String(active));
+  btn.classList.toggle("active",active);
+ }
+ byId("day-meals").innerHTML="";
 }
 function renderArchive(){
  const grid=byId("recipe-grid");
@@ -144,12 +151,18 @@ function renderArchive(){
   return;
  }
  const all=filterArchive(state.archiveEntries,{query:state.query,filter:state.filter,favorites:state.favorites});
- grid.innerHTML=all.length?all.map(item=>'<button type="button" class="archive-card" data-recipe="'+escapeHtml(item.id)+'">'+
-  (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" loading="lazy">':
-    '<span class="archive-image-placeholder" aria-hidden="true"><span>Rezeptbild folgt</span></span>')+
-  '<span class="archive-caption"><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept'+
-  (state.favorites.has(item.id)?' ♡':'')+'</small></span></button>').join(""):'<p>Kei passende Rezepte gfunde.</p>';
- grid.querySelectorAll(".archive-card").forEach(btn=>btn.addEventListener("click",()=>{
+ const searching=Boolean(state.query.trim());
+ grid.classList.toggle("search-suggestions",searching);
+ grid.innerHTML=searching
+  ?(all.length?all.map(item=>'<button type="button" class="archive-suggestion" data-recipe="'+escapeHtml(item.id)+'">'+
+     '<span class="suggestion-icon">⌕</span><span><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept</small></span></button>').join("")
+     :'<p class="empty-message">Kei passende Rezepte gfunde.</p>')
+  :(all.length?all.map(item=>'<button type="button" class="archive-card" data-recipe="'+escapeHtml(item.id)+'">'+
+     (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" loading="lazy">':
+      '<span class="archive-image-placeholder" aria-hidden="true"><span>Rezeptbild folgt</span></span>')+
+     '<span class="archive-caption"><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept'+
+     (state.favorites.has(item.id)?' ♡':'')+'</small></span></button>').join(""):'<p>Kei Rezepte gfunde.</p>');
+ grid.querySelectorAll("[data-recipe]").forEach(btn=>btn.addEventListener("click",()=>{
   const item=state.archiveEntries.find(recipe=>recipe.id===btn.dataset.recipe);
   if(item)openRecipe(item);
  }));
@@ -401,8 +414,16 @@ function init(){
   if(edit){setDay(Number(edit.dataset.editDay));openMealEditor(weekDays()[state.current].date)}
   if(view){plannerView=view.dataset.view;viewPreferences[currentClass]=plannerView;save("wachochemer:plannerViews",viewPreferences);renderPlanner()}
  });
- byId("day-card").addEventListener("click",()=>{if(Date.now()-lastSwipeAt<420)return;const item=activeItem();if(item.real)openRecipe(item);else openMealEditor(weekDays()[state.current].date)});
- byId("edit-day").addEventListener("click",()=>openMealEditor(weekDays()[state.current].date,"dinner"));
+ byId("day-card").addEventListener("click",()=>{if(Date.now()-lastSwipeAt<420)return;const item=activeItem();if(item.real)openRecipe(item);else openMealEditor(weekDays()[state.current].date,displayedMeal())});
+ byId("edit-day").addEventListener("click",()=>openMealEditor(weekDays()[state.current].date,displayedMeal()));
+ document.querySelectorAll("[data-meal-page]").forEach(btn=>btn.addEventListener("click",()=>{
+  state.selectedMeal=btn.dataset.mealPage;renderPlanner();
+ }));
+ byId("open-week-overview").addEventListener("click",()=>{
+  plannerView="week";renderPlanner();
+ });
+ byId("prepare-bring").addEventListener("click",()=>showTab("shopping"));
+ byId("shopping-back").addEventListener("click",()=>showTab("week"));
  byId("settings-back").addEventListener("click",()=>showTab(state.returnTab||"week"));
  byId("meal-recipe-search").addEventListener("input",renderMealRecipeOptions);
  byId("meal-recipe-options").addEventListener("click",event=>{
