@@ -1,5 +1,8 @@
 # M3: Menüplanung, 3D-Revolver und Einkaufszeitraum
 
+> Historischer Entwicklungsbericht. Die aktive Bedienung wurde in V13 durch [responsive Tages- und Wochenplanung](responsive-day-week-planner.md) ersetzt; 3D-Navigation wird nicht weiterverfolgt.
+
+
 Status: **Implementiert als Entwurf in PR #4**, basiert auf M2 / PR #3. Automatisierte Tests und echte iPhone-Abnahme getrennt ausweisen. Kein Merge nach `main`.
 
 ## Bedienablauf für den Alltag

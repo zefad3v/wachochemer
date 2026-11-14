@@ -13,7 +13,6 @@
 </head>
 <body>
 <div id="app">
-  <div id="ambient-backdrop" class="ambient-backdrop" aria-hidden="true"></div>
   <header class="topbar">
     <div class="brand-block">
       <span class="eyebrow">ÜSERI FAMILIECHUCHI</span>
@@ -41,21 +40,20 @@
           <button type="button" class="icon-btn" id="week-next" aria-label="Nächste Woche">›</button>
         </div>
       </div>
-      <div class="week-experience">
-        <div id="ambient" class="ambient" aria-hidden="true"></div>
-        <section id="desktop-spotlight" class="desktop-spotlight" aria-label="Ausgewähltes Gericht"></section>
-        <div class="wheel-shell">
-          <div id="wheel" class="wheel" role="region" aria-roledescription="Karussell" aria-label="Sieben Tage als 3D Karussell. Wische vertikal oder nutze die Tasten."></div>
-          <div class="wheel-rail" aria-hidden="true"><span id="wheel-position"></span></div>
-        </div>
-        <div class="day-controls">
-          <button type="button" id="day-prev" class="circle-control" aria-label="Vorheriger Tag">↑</button>
-          <span id="day-indicator" aria-live="polite">1 / 7</span>
-          <button type="button" id="day-next" class="circle-control" aria-label="Nächster Tag">↓</button>
-          <button type="button" id="edit-day" class="circle-control edit-day" aria-label="Menü für ausgewählten Tag bearbeiten" title="Menü bearbeiten">✎</button>
-        </div>
+      <div class="view-switch" role="group" aria-label="Planansicht">
+        <button type="button" data-view="day" aria-pressed="true">Tag</button>
+        <button type="button" data-view="week" aria-pressed="false">Woche</button>
       </div>
-      <p class="hint">Wisch uf oder ab, um dä Tag z'wächsle. Tippe uf s Bild fürs Rezept.</p>
+      <nav id="week-strip" class="week-strip" aria-label="Tagesauswahl"></nav>
+      <div class="planner-layout">
+        <div id="week-overview" class="week-overview" aria-label="Sieben Tage im Überblick"></div>
+        <section class="day-detail" aria-label="Ausgewählter Tag">
+          <button type="button" id="day-card" class="day-card"></button>
+          <div id="day-meals" class="day-meals" aria-live="polite"></div>
+          <button type="button" id="edit-day" class="main-action">Menü bearbeiten</button>
+        </section>
+      </div>
+      <p class="hint">Wisch nach links oder rechts für de nächscht oder vorherig Tag.</p>
     </section>
     <section class="screen" id="screen-archive" aria-labelledby="archive-title">
       <div class="section-title"><span class="eyebrow">FÜR JEDÄ TAG</span><h1 id="archive-title">Chochchischtli</h1><p>Alli Rezepte a eim Ort. Klari Bilder, eifachi Suche.</p></div>

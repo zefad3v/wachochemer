@@ -1,8 +1,8 @@
 # Architektur
 
-## Entwicklungsprototyp: radiales Wochenkarussell
+## Entwicklungsprototyp: responsive Tages- und Wochenplanung
 
-Der M3-Entwicklungsstand verwendet `prototype/carousel.mjs` für reine Kreisgeometrie und kontinuierliche Tagesrotation. `prototype/app.js` verbindet sie mit vorhandenen Kalender- und Touchzuständen. Ein gemeinsamer CSS-3D-Ring dreht sieben beständige Karten; abgerundete, deckende Bildflächen enthalten jeweils ihre eigenen Textlayer. Nur die aktive Karte zeigt Titel und Verlauf. Es gibt keine neue Laufzeitabhängigkeit und keine Änderung am Rezept- oder Planmodell. Details zu Ebenen, Gesten und manueller iPhone-Abnahme stehen in [m3-planning.md](m3-planning.md).
+`prototype/responsive-planner.mjs` kapselt Breitenklassen, Ansichtsvorgaben, Tageswechsel über Wochengrenzen und horizontale Wischschwellen. `prototype/app.js` rendert Tageskarte und Wochenübersicht aus demselben datumsschlüsselbasierten Plan in `prototype/planner.mjs`. Der bestehende Datenspeicher bleibt kompatibel. CSS verwendet normale Grid-/Listenlayouts. Die frühere 3D-Geometrie und `carousel.mjs` wurden entfernt. Details: [responsive-day-week-planner.md](responsive-day-week-planner.md).
 
 ## Entscheidungen
 
