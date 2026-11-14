@@ -36,3 +36,10 @@ test('search results become text suggestions with stable search header',()=>{
  assert.match(js,/grid\.querySelectorAll\("\[data-recipe\]"\)/);
  assert.match(css,/#screen-archive \.section-title h1\{/);
 });
+
+test('horizontal swipes target the two meal pages; weekdays remain directly selectable',()=>{
+ assert.match(js,/const direction=swipeDirection\(dx,dy\);\s*if\(direction\)\{state\.selectedMeal=direction>0\?"dinner":"lunch";renderPlanner\(\)\}/);
+ assert.match(html,/id="week-strip"/);
+ assert.match(js,/if\(day\)setDay\(Number\(day\.dataset\.day\)\)/);
+ assert.match(css,/#screen-week \.view-switch\{\s*position:absolute;right:4px;top:3px/);
+});
