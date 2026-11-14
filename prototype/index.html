@@ -45,15 +45,23 @@
         <button type="button" data-view="week" aria-pressed="false">Woche</button>
       </div>
       <nav id="week-strip" class="week-strip" aria-label="Tagesauswahl"></nav>
+
       <div class="planner-layout">
         <div id="week-overview" class="week-overview" aria-label="Sieben Tage im Überblick"></div>
         <section class="day-detail" aria-label="Ausgewählter Tag">
           <button type="button" id="day-card" class="day-card"></button>
+          <div id="meal-pages" class="meal-pages" role="group" aria-label="Mahlzeit für ausgewählten Tag">
+            <button id="choose-lunch" type="button" data-meal-page="lunch" aria-pressed="false" aria-label="Zmittag anzeigen"><span class="meal-dot"></span><span>Zmittag</span></button>
+            <button id="choose-dinner" type="button" data-meal-page="dinner" aria-pressed="true" aria-label="Znacht anzeigen"><span class="meal-dot"></span><span>Znacht</span></button>
+          </div>
           <div id="day-meals" class="day-meals" aria-live="polite"></div>
           <button type="button" id="edit-day" class="main-action">Menü bearbeiten</button>
         </section>
       </div>
-      <p class="hint">Wisch nach links oder rechts für de nächscht oder vorherig Tag.</p>
+      <div class="planner-secondary-actions">
+        <button type="button" id="open-week-overview">Wuche aaluege</button>
+        <button type="button" id="prepare-bring">Für Bring! vorbereite</button>
+      </div>
     </section>
     <section class="screen" id="screen-archive" aria-labelledby="archive-title">
       <div class="section-title"><span class="eyebrow">FÜR JEDÄ TAG</span><h1 id="archive-title">Chochchischtli</h1><p>Alli Rezepte a eim Ort. Klari Bilder, eifachi Suche.</p></div>
@@ -62,7 +70,7 @@
       <div class="recipe-grid" id="recipe-grid"></div>
     </section>
     <section class="screen" id="screen-shopping" aria-labelledby="shopping-title">
-      <div class="section-title"><span class="eyebrow">ALLES UF EINEN BLICK</span><h1 id="shopping-title">Iichauf für Bring!</h1><p>Zutate us dine Menüs vorbereite und nach Bring! überneh.</p></div>
+      <div class="section-title"><button type="button" id="shopping-back" class="settings-back">‹ Zrugg zum Wucheplan</button><span class="eyebrow">EINKAUF VORBEREITEN</span><h1 id="shopping-title">Für Bring!</h1><p>Dini Zutate prüefe. De offizielli Gesamtimport isch no nöd verfügbar.</p></div>
       <div class="shopping-date-panel" role="group" aria-label="Einkaufszeitraum">
         <label>Vo <input id="shopping-from" type="date" aria-label="Einkaufen ab Datum"></label>
         <label>Bis <input id="shopping-to" type="date" aria-label="Einkaufen bis Datum"></label>
@@ -97,7 +105,6 @@
   <nav class="bottom-nav" aria-label="Hauptnavigation">
     <button data-tab="week" type="button" class="bottom-link active" aria-label="Wucheplan"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 10h18m-12 4h6m-6 4h4"/></svg><span>Wucheplan</span></button>
     <button data-tab="archive" type="button" class="bottom-link" aria-label="Chochchischtli"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.8 6-1.8 9 0 3-1.8 6-1.8 9 0v14c-3-1.8-6-1.8-9 0-3-1.8-6-1.8-9 0zM12 5.5v14"/></svg><span>Chochchischtli</span></button>
-    <button data-tab="shopping" type="button" class="bottom-link" aria-label="Iichaufslischte"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-2 12H6L4 9zm4 0 4-7 4 7m-8 4v4m4-4v4m4-4v4"/></svg><span>Iichauf</span></button>
   </nav>
   <dialog id="meal-editor" class="meal-editor" aria-labelledby="meal-editor-title">
     <form id="meal-form" class="meal-form">

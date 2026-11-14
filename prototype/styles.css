@@ -125,3 +125,96 @@ html,body{max-width:100%;background:#19231b}button,input,select{font-size:16px}b
 @media(min-width:1100px){.week-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.screen-heading{justify-content:stretch}.week-controls{justify-self:center}}
 /* The wide header has room for the same navigation dock above the content. */
 @media(min-width:1100px){.bottom-nav{top:calc(5px + env(safe-area-inset-top));bottom:auto;min-height:54px}.bottom-link{height:44px}.screen{padding-bottom:40px}}
+
+
+/* V14 UX: prioritise the meal over brand chrome and a second shopping app. */
+.bottom-nav{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ background:rgba(31,49,35,.55);
+ backdrop-filter:blur(20px) saturate(150%);
+ -webkit-backdrop-filter:blur(20px) saturate(150%);
+ border-color:rgba(225,238,209,.34);
+}
+.meal-pages{display:flex;justify-content:center;gap:16px;align-items:center;min-height:29px}
+.meal-pages button{
+ display:flex;align-items:center;gap:6px;
+ border:0;background:transparent;color:var(--muted);
+ min-height:32px;padding:4px 10px;font-size:12px;
+}
+.meal-pages button[aria-pressed=true]{color:var(--cream);font-weight:700}
+.meal-dot{width:7px;height:7px;border-radius:99px;border:1px solid #a5b69b}
+.meal-pages button[aria-pressed=true] .meal-dot{background:var(--lime);border-color:var(--lime)}
+.planner-secondary-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.planner-secondary-actions button{
+ border:1px solid var(--stroke);border-radius:99px;
+ background:rgba(42,62,44,.62);color:var(--cream);
+ min-height:35px;padding:7px 14px;font-size:12px;
+}
+.recipe-grid.search-suggestions{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+.archive-suggestion{
+ display:flex;align-items:center;gap:15px;width:100%;
+ border:0;border-bottom:1px solid rgba(230,242,217,.15);
+ background:transparent;color:var(--cream);
+ text-align:left;padding:12px 8px;min-height:58px;
+}
+.archive-suggestion .suggestion-icon{font-size:22px;color:var(--muted);min-width:28px}
+.archive-suggestion>span:last-child{display:grid;gap:4px}
+.archive-suggestion strong{font-size:15px;line-height:1.2;font-weight:600}
+.archive-suggestion small{font-size:12px;color:var(--muted)}
+@media(max-width:679px){
+ /* The top brand is redundant once Wachochemer is installed on Home Screen. */
+ .topbar{
+  height:calc(42px + env(safe-area-inset-top));min-height:0;
+  padding:calc(2px + env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left));
+  justify-content:end;
+ }
+ .topbar .brand-block{display:none}
+ .topbar .header-settings{width:42px;height:42px}
+ #screen-week .screen-heading{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  padding:2px 0 8px;min-height:40px;
+ }
+ #screen-week .screen-heading>div:first-child{justify-self:center}
+ #screen-week .screen-heading h1{font-size:28px;line-height:1.15;text-align:center}
+ #screen-week .week-controls{display:none}
+ #screen-week[data-view=week] .week-controls{
+  display:flex;position:absolute;top:47px;left:50%;
+  transform:translateX(-50%);z-index:5;background:#26372a;
+  padding:2px 5px;
+ }
+ #screen-week[data-view=week] .week-strip{margin-top:57px}
+ #screen-week .view-switch{
+  position:absolute;right:4px;top:3px;
+  padding:0;margin:0;z-index:6;
+  border:1px solid rgba(219,236,207,.23);background:rgba(36,53,39,.85);
+ }
+ #screen-week .view-switch button{min-height:34px;padding:5px 12px;font-size:12px}
+ #screen-week[data-view=day] .view-switch button[data-view=day],
+ #screen-week[data-view=week] .view-switch button[data-view=week]{display:none}
+ #screen-week .week-strip{margin:0 0 8px;gap:3px}
+ #screen-week .week-strip button{min-height:52px;padding:4px 0;border-radius:11px;font-size:10px}
+ #screen-week .week-strip strong{font-size:17px}
+ #screen-week .planner-layout,#screen-week .day-detail{gap:6px}
+ #screen-week .day-card{
+  height:clamp(240px,calc(100svh - 415px),525px);
+  border-radius:19px;
+ }
+ #screen-week .day-card-content{inset:16px;gap:7px}
+ #screen-week .day-card-content strong{font-size:clamp(23px,6vw,34px)}
+ #screen-week .day-detail>.main-action{min-height:42px}
+ #screen-week .day-meals{display:none}
+ #screen-week[data-view=day] .planner-secondary-actions{display:none}
+ #screen-week[data-view=week] .planner-secondary-actions{margin:15px 0}
+ #screen-archive .section-title{
+  padding:0 3px 12px;gap:4px;
+ }
+ #screen-archive .section-title .eyebrow,
+ #screen-archive .section-title p{display:none}
+ #screen-archive .section-title h1{
+  text-align:center;font-size:28px;line-height:1.15;
+ }
+ #screen-archive .filter-row{padding:8px 0 12px}
+ .bottom-nav{max-width:290px;min-height:62px}
+ .bottom-link{height:50px}
+ .screen{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+}
