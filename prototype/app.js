@@ -29,7 +29,7 @@ const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
 // Do not invent cooking photography. Recipes without a verified image use a placeholder.
 const archiveImages={"kuerbissuppe-kaesetoast":images.pumpkin,"poulet-fajitas":images.fajitas};
 const state={
- tab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
+ tab:"week",returnTab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
  recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",
  plan:{version:1,entries:{}},planRevision:0,editingDate:null,shopping:null,extras:[]
 };
@@ -101,6 +101,8 @@ function weekDays(){
 }
 function activeItem(){return weekDays()[state.current].item}
 function showTab(tab){
+ if(tab==="settings"&&state.tab==="settings")tab=state.returnTab||"week";
+ else if(tab==="settings")state.returnTab=state.tab;
  state.tab=tab;
  document.body.classList.toggle("week-mode",tab==="week");
  document.querySelectorAll(".screen").forEach(el=>el.classList.toggle("active",el.id==="screen-"+tab));
@@ -198,7 +200,7 @@ function renderWheel(){
 }
 function renderArchive(){
  const grid=byId("recipe-grid");
- grid.classList.toggle("search-results",Boolean(state.query.trim()));
+ grid.classList.remove("search-results");
  if(state.archiveStatus!=="ready"){
   grid.innerHTML='<p role="status">'+(state.archiveStatus==="error"
    ?"Rezepte chönd grad nöd glade werde. Bitte Verbindig prüefe und d Siite neu lade."
@@ -227,18 +229,19 @@ function persistPlan(){
 function openMealEditor(date,meal="dinner",recipeId=null){
  const localDate=typeof date==="string"?date:[date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-");
  state.editingDate=localDate;
- byId("meal-editor-date").textContent=localDate;
+ byId("meal-date").value=localDate;
  byId("meal-recipe").innerHTML=state.archiveEntries.map(x=>'<option value="'+escapeHtml(x.id)+'">'+escapeHtml(x.title)+'</option>').join("");
  byId("meal-type").value=meal;
  loadMealEditor();
- if(recipeId){byId("meal-kind").value="recipe";byId("meal-recipe").value=recipeId;updateMealEditorFields()}
+ if(recipeId){byId("meal-kind").value="recipe";byId("meal-recipe").value=recipeId;renderMealRecipeOptions();updateMealEditorFields()}
  byId("meal-editor").showModal();
- byId("meal-kind").focus({preventScroll:true});
+ byId("meal-editor-title").focus({preventScroll:true});
 }
 function loadMealEditor(){
  const entry=mealFor(state.plan.entries,state.editingDate,byId("meal-type").value);
  byId("meal-kind").value=entry?.type||"recipe";
  byId("meal-recipe").value=entry?.recipeId||state.archiveEntries[0]?.id||"";
+ renderMealRecipeOptions();
  byId("meal-servings").value=entry?.servings||3;
  byId("meal-manual").value=entry?.type==="manual"?entry.title:"";
  byId("meal-leftover-source").value=entry?.type==="leftover"?entry.sourceDate:addDays(state.editingDate,-1);
@@ -256,7 +259,8 @@ function updateMealEditorFields(){
 }
 function saveMealEditor(event){
  event.preventDefault();
- const date=state.editingDate,meal=byId("meal-type").value;
+ const date=byId("meal-date").value,meal=byId("meal-type").value;
+ state.editingDate=date;
  const key=mealKey(date,meal),kind=byId("meal-kind").value;
  const previous=state.plan.entries[key];
  try{
