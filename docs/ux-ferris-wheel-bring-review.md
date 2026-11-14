@@ -1,5 +1,8 @@
 # UX Review: Riesenrad, Planung, Bring! Vorbereitung
 
+> Historischer Entwicklungsbericht. Die aktive Bedienung wurde in V13 durch [responsive Tages- und Wochenplanung](responsive-day-week-planner.md) ersetzt; 3D-Navigation wird nicht weiterverfolgt.
+
+
 Status: **Implementierter Entwurf in PR #6**, basierend auf dem Codex-Branch aus PR #5. Die öffentliche Seite und `main` bleiben unverändert.
 
 ## Rückmeldung und Entscheide

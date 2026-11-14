@@ -8,7 +8,7 @@ on:
       - 'src/domain/**'
       - 'tests/archive.test.mjs'
       - 'tests/ui-regression.test.mjs'
-      - 'tests/carousel.test.mjs'
+      - 'tests/responsive-planner.test.mjs'
       - '.github/workflows/check-archive.yml'
   push:
     branches:
@@ -29,7 +29,7 @@ jobs:
           node --check prototype/app.js
           node --check prototype/catalog.mjs
           node --check prototype/planner.mjs
-          node --check prototype/carousel.mjs
+          node --check prototype/responsive-planner.mjs
           node --check scripts/build-recipe-index.mjs
           node --check scripts/build.mjs
       - name: Validate archive behavior and real recipes
