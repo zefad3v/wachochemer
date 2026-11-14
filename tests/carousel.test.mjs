@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DAY_COUNT,DAY_ANGLE,wrapDay,turnToDay,ringGeometry,swipeDirection} from '../prototype/carousel.mjs';
 
-test('seven equally spaced days form a closed X/Z circle, not a vertical stack',()=>{
+test('seven equally spaced days form a vertical Y/Z Ferris wheel',()=>{
  const {radius,slots}=ringGeometry(390,0);
  assert.equal(slots.length,7);
  assert.deepEqual(slots.map(x=>x.index),[0,1,2,3,4,5,6]);
- for(const slot of slots)assert(Math.abs(Math.hypot(slot.x,slot.z)-radius)<1e-9);
+ for(const slot of slots)assert(Math.abs(Math.hypot(slot.y,slot.z)-radius)<1e-9);
  for(let i=0;i<7;i++){
   const a=slots[i],b=slots[(i+1)%7];
-  assert(Math.abs(Math.hypot(a.x-b.x,a.z-b.z)-2*radius*Math.sin(Math.PI/7))<1e-9);
+  assert(Math.abs(Math.hypot(a.y-b.y,a.z-b.z)-2*radius*Math.sin(Math.PI/7))<1e-9);
  }
  assert.equal(DAY_COUNT*DAY_ANGLE,360);
 });
@@ -18,11 +18,11 @@ test('every selected day is the frontmost point, with neighbours on both sides',
  for(let turn=-15;turn<16;turn++){
   const {slots,radius}=ringGeometry(390,turn);
   const front=slots[wrapDay(turn)];
-  assert(Math.abs(front.x)<1e-9);
+  assert(Math.abs(front.y)<1e-9);
   assert(Math.abs(front.z-radius)<1e-9);
   assert(slots.every(slot=>slot.z<=front.z+1e-9));
-  assert(slots[wrapDay(turn+1)].x>0);
-  assert(slots[wrapDay(turn-1)].x<0);
+  assert(slots[wrapDay(turn+1)].y>0);
+  assert(slots[wrapDay(turn-1)].y<0);
  }
 });
 
@@ -47,12 +47,13 @@ test('slot transforms stay fixed during rotation; responsive radius and week res
  assert.deepEqual(first.slots.map(x=>x.transform),rotated.slots.map(x=>x.transform));
  assert.notEqual(first.transform,rotated.transform);
  assert.equal(rotated.rotation,8*DAY_ANGLE);
+ assert(first.slots[1].transform.includes('rotateX(-51.42857142857143deg)'));
  assert.equal(ringGeometry(390,0).transform,first.transform);
  assert(ringGeometry(320,0).radius<first.radius);
- assert.equal(ringGeometry(2000,0).radius,290);
+ assert.equal(ringGeometry(2000,0).radius,320);
  assert(ringGeometry(320,0,300).radius<ringGeometry(320,0).radius);
- assert.match(first.transform,/rotateX\(-38deg\) rotateY\(0deg\)/);
- assert.match(first.facing,/rotateY\(-11deg\)/);
+ assert.match(first.transform,/rotateY\(-9deg\) rotateX\(0deg\)/);
+ assert.match(first.facing,/rotateX\(0deg\)/);
 });
 
 test('only deliberate vertical swipes select a day; taps, horizontal drags and jitter do not',()=>{
