@@ -457,6 +457,21 @@ function init(){
  byId("day-prev").addEventListener("click",()=>setDay(state.current-1));
  byId("day-next").addEventListener("click",()=>setDay(state.current+1));
  byId("edit-day").addEventListener("click",()=>openMealEditor(weekDays()[state.current].date,"dinner"));
+ byId("settings-back").addEventListener("click",()=>showTab(state.returnTab||"week"));
+ byId("meal-recipe-search").addEventListener("input",renderMealRecipeOptions);
+ byId("meal-recipe-options").addEventListener("click",event=>{
+  const btn=event.target.closest("[data-pick-recipe]");
+  if(!btn)return;
+  byId("meal-recipe").value=btn.dataset.pickRecipe;
+  renderMealRecipeOptions();
+ });
+ byId("meal-date").addEventListener("change",event=>{
+  try{parseDay(event.target.value);state.editingDate=event.target.value}
+  catch{
+   byId("meal-editor-error").hidden=false;
+   byId("meal-editor-error").textContent="Bitte es gültigs Datum wähle.";
+  }
+ });
  byId("meal-editor-close").addEventListener("click",()=>byId("meal-editor").close());
  byId("meal-form").addEventListener("submit",saveMealEditor);
  byId("meal-type").addEventListener("change",loadMealEditor);
