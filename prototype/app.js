@@ -29,7 +29,7 @@ const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
 // Do not invent cooking photography. Recipes without a verified image use a placeholder.
 const archiveImages={"kuerbissuppe-kaesetoast":images.pumpkin,"poulet-fajitas":images.fajitas};
 const state={
- tab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
+ tab:"week",returnTab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
  recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",
  plan:{version:1,entries:{}},planRevision:0,editingDate:null,shopping:null,extras:[]
 };
@@ -101,6 +101,8 @@ function weekDays(){
 }
 function activeItem(){return weekDays()[state.current].item}
 function showTab(tab){
+ if(tab==="settings"&&state.tab==="settings")tab=state.returnTab||"week";
+ else if(tab==="settings")state.returnTab=state.tab;
  state.tab=tab;
  document.body.classList.toggle("week-mode",tab==="week");
  document.querySelectorAll(".screen").forEach(el=>el.classList.toggle("active",el.id==="screen-"+tab));
@@ -198,7 +200,7 @@ function renderWheel(){
 }
 function renderArchive(){
  const grid=byId("recipe-grid");
- grid.classList.toggle("search-results",Boolean(state.query.trim()));
+ grid.classList.remove("search-results");
  if(state.archiveStatus!=="ready"){
   grid.innerHTML='<p role="status">'+(state.archiveStatus==="error"
    ?"Rezepte chönd grad nöd glade werde. Bitte Verbindig prüefe und d Siite neu lade."
@@ -227,24 +229,35 @@ function persistPlan(){
 function openMealEditor(date,meal="dinner",recipeId=null){
  const localDate=typeof date==="string"?date:[date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-");
  state.editingDate=localDate;
- byId("meal-editor-date").textContent=localDate;
- byId("meal-recipe").innerHTML=state.archiveEntries.map(x=>'<option value="'+escapeHtml(x.id)+'">'+escapeHtml(x.title)+'</option>').join("");
+ byId("meal-date").value=localDate;
+ byId("meal-recipe-search").value="";
  byId("meal-type").value=meal;
  loadMealEditor();
- if(recipeId){byId("meal-kind").value="recipe";byId("meal-recipe").value=recipeId;updateMealEditorFields()}
+ if(recipeId){byId("meal-kind").value="recipe";byId("meal-recipe").value=recipeId;renderMealRecipeOptions();updateMealEditorFields()}
  byId("meal-editor").showModal();
- byId("meal-kind").focus({preventScroll:true});
+ byId("meal-editor-title").focus({preventScroll:true});
 }
 function loadMealEditor(){
  const entry=mealFor(state.plan.entries,state.editingDate,byId("meal-type").value);
  byId("meal-kind").value=entry?.type||"recipe";
  byId("meal-recipe").value=entry?.recipeId||state.archiveEntries[0]?.id||"";
+ renderMealRecipeOptions();
  byId("meal-servings").value=entry?.servings||3;
  byId("meal-manual").value=entry?.type==="manual"?entry.title:"";
  byId("meal-leftover-source").value=entry?.type==="leftover"?entry.sourceDate:addDays(state.editingDate,-1);
  byId("meal-remove").disabled=!entry;
  byId("meal-editor-error").hidden=true;
  updateMealEditorFields();
+}
+function renderMealRecipeOptions(){
+ const query=byId("meal-recipe-search").value.trim().toLocaleLowerCase("de-CH");
+ const selected=byId("meal-recipe").value;
+ const current=state.archiveEntries.find(item=>item.id===selected);
+ byId("meal-recipe-selected").textContent=current?"Usgewählt: "+current.title:"Bitte es Rezept wähle";
+ const matching=state.archiveEntries.filter(item=>item.title.toLocaleLowerCase("de-CH").includes(query));
+ byId("meal-recipe-options").innerHTML=matching.length?matching.map(item=>
+  '<button type="button" role="option" aria-selected="'+(item.id===selected)+'" data-pick-recipe="'+escapeHtml(item.id)+'">'+
+  escapeHtml(item.title)+'</button>').join(""):'<p>Kei Rezepte gfunde</p>';
 }
 function updateMealEditorFields(){
  const kind=byId("meal-kind").value;
@@ -256,7 +269,8 @@ function updateMealEditorFields(){
 }
 function saveMealEditor(event){
  event.preventDefault();
- const date=state.editingDate,meal=byId("meal-type").value;
+ const date=byId("meal-date").value,meal=byId("meal-type").value;
+ state.editingDate=date;
  const key=mealKey(date,meal),kind=byId("meal-kind").value;
  const previous=state.plan.entries[key];
  try{
@@ -293,43 +307,50 @@ function changeShoppingRange(from,to){
   byId("shopping-window-error").textContent=err.message;
  }
 }
+function shoppingTransferText(){
+ const {from,to}=state.shopping;
+ const {items,skipped}=ingredientTotals(state.plan.entries,state.recipes,from,to);
+ const days=new Set(datesBetween(from,to));
+ const extra=state.extras.filter(x=>days.has(x.date));
+ const lines=items.map(row=>{
+  const label=state.names[row.ingredientId]||row.ingredientId;
+  const unit=units[row.unit]||row.unit;
+  const quantity=row.quantity===null?"nach Geschmack":moneyLike(Math.round(row.quantity*100)/100)+(unit?" "+unit:"");
+  return label+" — "+quantity;
+ });
+ return ["Wachochemer, "+from+" bis "+to,...lines,...extra.map(x=>x.title),
+  ...(skipped.length?["Achtung: Eigene Menüs ohne Zutaten: "+skipped.map(x=>x.title).join(", ")]:[])].join("\n");
+}
 function renderShopping(){
  byId("shopping-from").value=state.shopping.from;
  byId("shopping-to").value=state.shopping.to;
  const {from,to}=state.shopping;
- let result;
- try{result=ingredientTotals(state.plan.entries,state.recipes,from,to)}
- catch(err){byId("shopping-window-error").textContent=err.message;byId("shopping-window-error").hidden=false;return}
- const {items,skipped}=result;
- const range=from+"|"+to;
- const purchased=items.filter(row=>state.checked.has(range+"|"+row.key)).length;
- const rangeDays=new Set(datesBetween(from,to));
- const relevantExtras=state.extras.filter(row=>rangeDays.has(row.date));
- const checkedExtra=relevantExtras.filter(row=>state.checked.has("extra|"+row.id)).length;
- byId("shopping-progress").textContent=(purchased+checkedExtra)+" vo "+(items.length+relevantExtras.length)+
-   " Sache abghakt · "+from+" bis "+to;
- const ingredientHtml=items.length?items.map(row=>{
-  const checked=state.checked.has(range+"|"+row.key);
+ let totals;
+ try{totals=ingredientTotals(state.plan.entries,state.recipes,from,to)}
+ catch(err){
+  byId("shopping-window-error").textContent=err.message;
+  byId("shopping-window-error").hidden=false;
+  return;
+ }
+ const {items,skipped}=totals;
+ const days=new Set(datesBetween(from,to));
+ const extras=state.extras.filter(x=>days.has(x.date));
+ byId("shopping-progress").textContent=items.length+" Rezept-Zutate · "+extras.length+" Zusatzartikel";
+ const rows=items.length?items.map(row=>{
   const label=state.names[row.ingredientId]||row.ingredientId;
-  const quantity=row.quantity===null?"Nach Gschmack":moneyLike(Math.round(row.quantity*100)/100)+(units[row.unit]?" "+units[row.unit]:"");
-  return '<label class="shopping-row'+(checked?' checked':'')+'"><input type="checkbox" data-shopping="'+escapeHtml(range+"|"+row.key)+'"'+(checked?' checked':'')+'><span class="shopping-name">'+escapeHtml(label)+'</span><span class="shopping-amount">'+escapeHtml(quantity)+'</span></label>';
- }).join(""):'<p class="empty-message">Kei Rezept-Zutate i dem Ziitruum. Plan dini Menü im Wucheplan.</p>';
- const extrasHtml=relevantExtras.map(row=>{
-  const checked=state.checked.has("extra|"+row.id);
-  return '<div class="shopping-row'+(checked?' checked':'')+'"><input type="checkbox" aria-label="'+escapeHtml(row.title)+' abghakt" data-shopping="extra|'+escapeHtml(row.id)+'"'+(checked?' checked':'')+'><span class="shopping-name">'+escapeHtml(row.title)+'</span><button type="button" class="remove-extra" data-remove-extra="'+escapeHtml(row.id)+'" aria-label="'+escapeHtml(row.title)+' entferne">✕</button></div>';
- }).join("");
- byId("shopping-items").innerHTML='<section class="shopping-group"><h3>Zutate us de Menüs</h3>'+ingredientHtml+'</section>'+
-  '<section class="shopping-group"><h3>Zusätzlich</h3>'+(extrasHtml||'<p class="empty-message">No nüt ergänzt.</p>')+'</section>'+
-  (skipped.length?'<p class="shopping-disclaimer">'+skipped.length+' eigenes Menü ohni Rezept-Zutate. Falls nötig, ergänze d Sache obe.</p>':'');
- byId("shopping-items").querySelectorAll("[data-shopping]").forEach(input=>input.addEventListener("change",()=>{
-  if(input.checked)state.checked.add(input.dataset.shopping);else state.checked.delete(input.dataset.shopping);
-  save("wachochemer:shoppingChecked",[...state.checked]);renderShopping();
- }));
+  const unit=units[row.unit]||row.unit;
+  const quantity=row.quantity===null?"Nach Gschmack":moneyLike(Math.round(row.quantity*100)/100)+(unit?" "+unit:"");
+  return '<div class="shopping-row"><span class="shopping-name">'+escapeHtml(label)+'</span>'+
+   '<span class="shopping-amount">'+escapeHtml(quantity)+'</span></div>';
+ }).join(""):'<p class="empty-message">Kei Rezept-Zutate i däm Ziitruum.</p>';
+ const extraRows=extras.map(row=>'<div class="shopping-row"><span class="shopping-name">'+escapeHtml(row.title)+'</span>'+
+  '<button type="button" class="remove-extra" data-remove-extra="'+escapeHtml(row.id)+'" aria-label="'+escapeHtml(row.title)+' entferne">✕</button></div>').join("");
+ byId("shopping-items").innerHTML='<section class="shopping-group"><h3>Für Bring! vorbereite</h3>'+rows+'</section>'+
+  (extraRows?'<section class="shopping-group"><h3>Zusätzlechi Sache</h3>'+extraRows+'</section>':'')+
+  (skipped.length?'<p class="shopping-disclaimer">'+skipped.length+' eigenes Menü ohni Rezept-Zutate. D Zutate bi Bedarf ergänze.</p>':'');
  byId("shopping-items").querySelectorAll("[data-remove-extra]").forEach(btn=>btn.addEventListener("click",()=>{
   state.extras=state.extras.filter(x=>x.id!==btn.dataset.removeExtra);
-  state.checked.delete("extra|"+btn.dataset.removeExtra);
   save("wachochemer:shoppingExtras",state.extras);
-  save("wachochemer:shoppingChecked",[...state.checked]);
   renderShopping();
  }));
 }
@@ -443,6 +464,21 @@ function init(){
  byId("day-prev").addEventListener("click",()=>setDay(state.current-1));
  byId("day-next").addEventListener("click",()=>setDay(state.current+1));
  byId("edit-day").addEventListener("click",()=>openMealEditor(weekDays()[state.current].date,"dinner"));
+ byId("settings-back").addEventListener("click",()=>showTab(state.returnTab||"week"));
+ byId("meal-recipe-search").addEventListener("input",renderMealRecipeOptions);
+ byId("meal-recipe-options").addEventListener("click",event=>{
+  const btn=event.target.closest("[data-pick-recipe]");
+  if(!btn)return;
+  byId("meal-recipe").value=btn.dataset.pickRecipe;
+  renderMealRecipeOptions();
+ });
+ byId("meal-date").addEventListener("change",event=>{
+  try{parseDay(event.target.value);state.editingDate=event.target.value}
+  catch{
+   byId("meal-editor-error").hidden=false;
+   byId("meal-editor-error").textContent="Bitte es gültigs Datum wähle.";
+  }
+ });
  byId("meal-editor-close").addEventListener("click",()=>byId("meal-editor").close());
  byId("meal-form").addEventListener("submit",saveMealEditor);
  byId("meal-type").addEventListener("change",loadMealEditor);
@@ -459,6 +495,16 @@ function init(){
  for(const id of ["shopping-from","shopping-to"]){
   byId(id).addEventListener("change",()=>changeShoppingRange(byId("shopping-from").value,byId("shopping-to").value));
  }
+ byId("shopping-copy").addEventListener("click",async()=>{
+  const status=byId("shopping-copy-status");
+  try{
+   if(!navigator.clipboard?.writeText)throw Error("Zwüschespeicher isch i däm Browser nöd verfügbar");
+   await navigator.clipboard.writeText(shoppingTransferText());
+   status.textContent="Zutate kopiert. In Bring! müend si no übernoh werde. En direkte Gesamtimport isch no nöd bestätigt.";
+  }catch(err){
+   status.textContent="Kopiere nöd möglich: "+err.message;
+  }
+ });
  byId("shopping-seven").addEventListener("click",()=>{const w=shoppingWindow(localToday());changeShoppingRange(w.from,w.to)});
  byId("shopping-following").addEventListener("click",()=>{const from=addDays(state.shopping.to,1);changeShoppingRange(from,addDays(from,6))});
  byId("shopping-plan-week").addEventListener("click",()=>{

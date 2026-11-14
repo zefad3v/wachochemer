@@ -64,7 +64,7 @@
       <div class="recipe-grid" id="recipe-grid"></div>
     </section>
     <section class="screen" id="screen-shopping" aria-labelledby="shopping-title">
-      <div class="section-title"><span class="eyebrow">ALLES UF EINEN BLICK</span><h1 id="shopping-title">Iichaufslischte</h1><p>Für weli Täg chaufsch ii? Frei wählbar, au über d Wuchegränze.</p></div>
+      <div class="section-title"><span class="eyebrow">ALLES UF EINEN BLICK</span><h1 id="shopping-title">Iichauf für Bring!</h1><p>Zutate us dine Menüs vorbereite und nach Bring! überneh.</p></div>
       <div class="shopping-date-panel" role="group" aria-label="Einkaufszeitraum">
         <label>Vo <input id="shopping-from" type="date" aria-label="Einkaufen ab Datum"></label>
         <label>Bis <input id="shopping-to" type="date" aria-label="Einkaufen bis Datum"></label>
@@ -80,11 +80,15 @@
         <div><input id="shopping-extra" placeholder="z. B. Milch oder Windle" maxlength="120" required><button type="submit">Hinzuefüege</button></div>
       </form>
       <p class="shopping-disclaimer">Nur gplanti Rezepte wärded zämegfasst. Eigeni Menüs ohni Zutate und Reschte erzeuged kei zweite Iichauf.</p>
+      <div class="shopping-transfer">
+        <button type="button" id="shopping-copy" class="main-action">Zutate für Bring! kopiere</button>
+        <p id="shopping-copy-status" role="status">D Liste wird vorbereitet. Für de Import in Bring! brucht es no en bestätigte Übergabewäg.</p>
+      </div>
       <div id="shopping-progress" class="shopping-progress"></div>
       <div id="shopping-items" class="shopping-items"></div>
     </section>
     <section class="screen" id="screen-settings" aria-labelledby="settings-title">
-      <div class="section-title"><span class="eyebrow">NUR EINMAL IISTELLE</span><h1 id="settings-title">Iistellige</h1><p>Dini persönleche Wuche, ohni Schalter im Wucheplan.</p></div>
+      <div class="section-title"><button type="button" id="settings-back" class="settings-back">‹ Zrugg</button><span class="eyebrow">NUR EINMAL IISTELLE</span><h1 id="settings-title">Iistellige</h1><p>Dini persönleche Wuche, ohni Schalter im Wucheplan.</p></div>
       <div class="settings-card">
         <label for="start-day"><strong>Wuchebeginn</strong><span>Vo wellem Tag söll dini Wuche starte?</span></label>
         <select id="start-day"><option value="1">Mäntig</option><option value="2">Zischtig</option><option value="3">Mittwuch</option><option value="4">Dunschtig</option><option value="5">Friitig</option><option value="6">Samschtig</option><option value="0">Sunntig</option></select>
@@ -99,8 +103,10 @@
   </nav>
   <dialog id="meal-editor" class="meal-editor" aria-labelledby="meal-editor-title">
     <form id="meal-form" class="meal-form">
-      <div class="editor-head"><h2 id="meal-editor-title">Menü plane</h2><button type="button" id="meal-editor-close" aria-label="Schliessen">✕</button></div>
-      <p id="meal-editor-date"></p>
+      <div class="editor-head"><h2 id="meal-editor-title" tabindex="-1">Menü plane</h2><button type="button" id="meal-editor-close" aria-label="Schliessen">✕</button></div>
+      <label class="editor-date-label" for="meal-date">Datum vom Menü
+        <input id="meal-date" type="date" required>
+      </label>
       <div class="editor-fields">
         <label>Mahlziit<select id="meal-type"><option value="dinner">Znacht</option><option value="lunch">Zmittag</option></select></label>
         <label>Was gits?<select id="meal-kind">
@@ -109,7 +115,13 @@
           <option value="leftover">Reschte vom Vortag</option>
           <option value="none">Nüt plant / iichaufe</option>
         </select></label>
-        <label id="meal-recipe-line">Rezept<select id="meal-recipe"></select></label>
+        <div id="meal-recipe-line" class="meal-picker">
+          <label for="meal-recipe-search">Rezept ussueche</label>
+          <input id="meal-recipe-search" type="search" autocomplete="off" placeholder="Rezept sueche…">
+          <div id="meal-recipe-options" class="meal-recipe-options" role="listbox" aria-label="Rezept us em Chochchischtli"></div>
+          <output id="meal-recipe-selected" class="meal-recipe-selected" aria-live="polite">Keis Rezept gwählt</output>
+          <input id="meal-recipe" type="hidden">
+        </div>
         <label id="meal-servings-line">Portione<input id="meal-servings" type="number" min="1" max="24" step="1" value="3" inputmode="numeric"></label>
         <label id="meal-manual-line" hidden>Menü<input id="meal-manual" maxlength="140" placeholder="z. B. Znacht bi de Grosseltere"></label>
         <label id="meal-leftover-line" hidden>Reschte vom<input id="meal-leftover-source" type="date"></label>
