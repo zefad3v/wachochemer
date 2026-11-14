@@ -45,14 +45,15 @@
         <button type="button" data-view="week" aria-pressed="false">Woche</button>
       </div>
       <nav id="week-strip" class="week-strip" aria-label="Tagesauswahl"></nav>
-      <div id="meal-pages" class="meal-pages" role="group" aria-label="Mahlzeit für ausgewählten Tag">
-        <button id="choose-lunch" type="button" data-meal-page="lunch" aria-pressed="false" aria-label="Zmittag anzeigen"><span class="meal-dot"></span><span>Zmittag</span></button>
-        <button id="choose-dinner" type="button" data-meal-page="dinner" aria-pressed="true" aria-label="Znacht anzeigen"><span class="meal-dot"></span><span>Znacht</span></button>
-      </div>
+
       <div class="planner-layout">
         <div id="week-overview" class="week-overview" aria-label="Sieben Tage im Überblick"></div>
         <section class="day-detail" aria-label="Ausgewählter Tag">
           <button type="button" id="day-card" class="day-card"></button>
+          <div id="meal-pages" class="meal-pages" role="group" aria-label="Mahlzeit für ausgewählten Tag">
+            <button id="choose-lunch" type="button" data-meal-page="lunch" aria-pressed="false" aria-label="Zmittag anzeigen"><span class="meal-dot"></span><span>Zmittag</span></button>
+            <button id="choose-dinner" type="button" data-meal-page="dinner" aria-pressed="true" aria-label="Znacht anzeigen"><span class="meal-dot"></span><span>Znacht</span></button>
+          </div>
           <div id="day-meals" class="day-meals" aria-live="polite"></div>
           <button type="button" id="edit-day" class="main-action">Menü bearbeiten</button>
         </section>
