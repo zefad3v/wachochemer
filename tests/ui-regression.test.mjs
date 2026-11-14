@@ -91,3 +91,35 @@ test('meal editor shows leftover reminder and does not claim failed persistence'
  assert.match(js,/if\(!save\("wachochemer:mealPlanV1",state\.plan\)\)throw Error/);
  assert.match(js,/if\(previous\)state\.plan\.entries\[key\]=previous;else delete state\.plan\.entries\[key\]/);
 });
+
+test('Ferris-wheel uses a horizontal axle and a full-height hero card',()=>{
+ const carousel=readFileSync(new URL('../prototype/carousel.mjs',import.meta.url),'utf8');
+ assert.match(carousel,/rotateY\(\$\{LEFT_TILT\}deg\) rotateX\(\$\{rotation\}deg\)/);
+ assert.match(carousel,/rotateX\(\$\{-angle\}deg\) translateZ/);
+ assert.match(css,/#screen-week \.recipe-card\{\s*width:min\(82vw,380px\);height:min\(81%,555px\)/);
+ assert.match(css,/#screen-week \.week-controls\{[^}]*justify-self:center/s);
+});
+test('settings returns to previous tab and archive layout remains stable during search',()=>{
+ assert.match(html,/id="settings-back"/);
+ assert.match(js,/if\(tab==="settings"&&state\.tab==="settings"\)tab=state\.returnTab/);
+ assert.match(js,/grid\.classList\.remove\("search-results"\)/);
+ assert.match(js,/byId\("settings-back"\)\.addEventListener/);
+});
+test('editing targets an explicit date with searchable nonnative recipe picker',()=>{
+ for(const id of ['meal-date','meal-recipe-search','meal-recipe-options','meal-recipe-selected'])assert(html.includes('id="'+id+'"'));
+ assert.match(html,/<h2 id="meal-editor-title" tabindex="-1">/);
+ assert.match(html,/id="meal-recipe" type="hidden"/);
+ assert.match(js,/byId\("meal-editor-title"\)\.focus\(\{preventScroll:true\}\)/);
+ assert.match(js,/function renderMealRecipeOptions\(\)/);
+ assert.match(js,/byId\("meal-recipe-options"\)\.addEventListener/);
+ assert.match(js,/const date=byId\("meal-date"\)\.value/);
+});
+test('Bring-first export uses clipboard and no second checkbox shopping workflow',()=>{
+ assert.match(html,/id="shopping-copy"/);
+ assert.match(html,/id="shopping-copy-status"/);
+ assert.match(js,/function shoppingTransferText\(\)/);
+ assert.match(js,/navigator\.clipboard\.writeText\(shoppingTransferText\(\)\)/);
+ const shopping=js.slice(js.indexOf('function renderShopping(){'),js.indexOf('function currentServings(recipe){'));
+ assert.doesNotMatch(shopping,/data-shopping=/);
+ assert.match(css,/\.shopping-date-panel\s*\{[^}]*grid-template-columns:minmax\(0,1fr\)/s);
+});
