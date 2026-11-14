@@ -230,7 +230,7 @@ function openMealEditor(date,meal="dinner",recipeId=null){
  const localDate=typeof date==="string"?date:[date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-");
  state.editingDate=localDate;
  byId("meal-date").value=localDate;
- byId("meal-recipe").innerHTML=state.archiveEntries.map(x=>'<option value="'+escapeHtml(x.id)+'">'+escapeHtml(x.title)+'</option>').join("");
+ byId("meal-recipe-search").value="";
  byId("meal-type").value=meal;
  loadMealEditor();
  if(recipeId){byId("meal-kind").value="recipe";byId("meal-recipe").value=recipeId;renderMealRecipeOptions();updateMealEditorFields()}
@@ -248,6 +248,16 @@ function loadMealEditor(){
  byId("meal-remove").disabled=!entry;
  byId("meal-editor-error").hidden=true;
  updateMealEditorFields();
+}
+function renderMealRecipeOptions(){
+ const query=byId("meal-recipe-search").value.trim().toLocaleLowerCase("de-CH");
+ const selected=byId("meal-recipe").value;
+ const current=state.archiveEntries.find(item=>item.id===selected);
+ byId("meal-recipe-selected").textContent=current?"Usgewählt: "+current.title:"Bitte es Rezept wähle";
+ const matching=state.archiveEntries.filter(item=>item.title.toLocaleLowerCase("de-CH").includes(query));
+ byId("meal-recipe-options").innerHTML=matching.length?matching.map(item=>
+  '<button type="button" role="option" aria-selected="'+(item.id===selected)+'" data-pick-recipe="'+escapeHtml(item.id)+'">'+
+  escapeHtml(item.title)+'</button>').join(""):'<p>Kei Rezepte gfunde</p>';
 }
 function updateMealEditorFields(){
  const kind=byId("meal-kind").value;
