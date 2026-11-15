@@ -19,7 +19,7 @@ test('day view exposes both lunch and dinner and keeps manual override until day
  assert.match(js,/const mealForTime=\(\)=>new Date\(\)\.getHours\(\)<14\?"lunch":"dinner"/);
  assert.match(js,/function itemForDay\(date,requestedMeal=null\)/);
  assert.match(js,/state\.selectedMeal=btn\.dataset\.mealPage;renderPlanner\(\)/);
- assert.match(js,/state\.selectedMeal=null;renderPlanner\(\)/);
+ assert.match(js,/calendarDay!==localToday\(\).*state\.selectedMeal=null/);
  assert.match(js,/openMealEditor\(weekDays\(\)\[state\.current\]\.date,displayedMeal\(\)\)/);
 });
 test('compact mobile title, restored glass bar and no obsolete image placeholder glyph',()=>{

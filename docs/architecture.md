@@ -32,3 +32,7 @@ Die GitHub Action `.github/workflows/generate.yml` soll bei Änderungen an Rezep
 * Die Benennung mancher Einheiten und Pluralformen ist derzeit pragmatisch. Für mehr Rezepte benötigen wir Tests mit Mengen, Zutatenvarianten und Übersetzungen.
 * Die Rezepte sind öffentlich. Persönliche Wochenpläne und Familienprofile gehören später in einen separaten privaten Datenbereich.
 * Die Browseroberfläche und das Design werden im nächsten Schritt überarbeitet.
+
+## V15-Bedienung
+
+Die Hauptkarte öffnet den Menüeditor für Datum und angezeigte Mahlzeit; Rezeptdetails bleiben im Archiv. Die Mahlzeitsteuerung liegt als separate Geschwisterschaltfläche innerhalb der Kartenhülle, ohne verschachtelte Buttons. Heute verwendet den lokalen Gerätekalender (`aria-current="date"`), Auswahl `aria-pressed`. Die manuelle Mahlzeitwahl bleibt während der laufenden Sitzung bis zum lokalen Tageswechsel erhalten, auch bei Tages-/Wochennavigation. Sichtbarkeitswechsel und eine sparsame Uhrprüfung aktualisieren Standard und Heute-Markierung. Planformat und Speicherschlüssel bleiben unverändert. Details: [V15-Abnahme](v15-ui.md).
