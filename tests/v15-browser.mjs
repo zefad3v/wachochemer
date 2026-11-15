@@ -60,7 +60,7 @@ try{
    if(await page.locator('#screen-week').getAttribute('data-view')!=='day')await page.locator('button[data-view=day]').click();
    const result=await page.evaluate(()=>{
     const c=document.querySelector('#day-card').getBoundingClientRect(),m=document.querySelector('#meal-pages').getBoundingClientRect(),t=document.querySelector('.day-card-content strong').getBoundingClientRect();
-    return {inside:m.bottom<=c.bottom&&m.top>=c.top,noOverlap:t.bottom<m.top,noOverflow:document.documentElement.scrollWidth<=innerWidth,blur:getComputedStyle(document.querySelector('.bottom-nav')).backdropFilter};
+    return {inside:m.bottom<=c.bottom&&m.top>=c.top,noOverlap:t.bottom<m.top,noOverflow:document.documentElement.scrollWidth<=innerWidth,blur:getComputedStyle(document.querySelector('.bottom-nav'),'::before').backdropFilter};
    });
    assert(result.inside&&result.noOverlap&&result.noOverflow,JSON.stringify({size,result}));assert.match(result.blur,/blur/);
   }
@@ -92,8 +92,8 @@ try{
  await west.close();
  // Exercise the photo path with an explicit test fixture, without adding recipe photos.
  const photo=await browser.newPage({viewport:{width:390,height:844}});
- await photo.route('**/prototype/app.js',async route=>{
-  const response=await route.fetch();const body=(await response.text()).replace('const archiveImages={};','const archiveImages={"poulet-fajitas":"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="};');
+ await photo.route('**/prototype/recipe-images.mjs',async route=>{
+  const response=await route.fetch();const body=(await response.text()).replace('export const recipeImages={};','export const recipeImages={"poulet-fajitas":"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="};');
   await route.fulfill({response,body});
  });
  await photo.goto(base+'/prototype/');await photo.locator('.bottom-nav [data-tab=archive]').click();await photo.locator('#recipe-search').fill('poulet');

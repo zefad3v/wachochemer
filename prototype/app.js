@@ -5,8 +5,9 @@ import {addDays,formatDay,parseDay,mealKey,mealFor,normalizePlan,validateEntry,i
 const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig","Samschtig"];
 const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
 const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
-// Do not invent cooking photography. Recipes without a verified image use a placeholder.
-const archiveImages={};
+import {recipeImages,imageFor} from "./recipe-images.mjs";
+const archiveImages=recipeImages;
+let imageDemo=new URLSearchParams(location.search).get("imageDemo")==="1";
 const state={
  tab:"week",returnTab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
  recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",
@@ -60,7 +61,7 @@ function itemForDay(date,requestedMeal=null){
  }
  if(entry.type==="recipe"){
   const recipe=state.recipes[entry.recipeId],meta=state.archiveEntries.find(x=>x.id===entry.recipeId);
-  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,real:!!recipe,planned:true,mealLabel,servings:entry.servings};
+  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,imageDemo:meta?.imageDemo||false,real:!!recipe,planned:true,mealLabel,servings:entry.servings};
  }
  if(entry.type==="manual")return {id:"manual-"+iso,title:entry.title,description:"Eigenes Menü",minutes:0,image:null,real:false,planned:true,mealLabel};
  return {id:"leftover-"+iso,title:"Reschte vom "+entry.sourceDate,description:"Scho kocht, kei zweite Iichauf nötig.",minutes:0,image:null,real:false,planned:true,mealLabel};
@@ -82,6 +83,7 @@ function showTab(tab){
  if(tab==="settings"&&state.tab==="settings")tab=state.returnTab||"week";
  else if(tab==="settings")state.returnTab=state.tab;
  state.tab=tab;
+ byId("mobile-page-title").textContent=({week:"Üse Wucheplan",archive:"Chochchischtli",shopping:"Für Bring!",settings:"Iistellige"})[tab];
  document.querySelectorAll(".screen").forEach(el=>el.classList.toggle("active",el.id==="screen-"+tab));
  document.querySelectorAll("[data-tab]").forEach(el=>{
    const yes=el.dataset.tab===tab;
@@ -127,15 +129,15 @@ function mealSummary(date){
  }).join("");
 }
 function localISO(date){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-")}
-function picture(item){return item.image?'<img src="'+escapeHtml(item.image)+'" alt="" draggable="false">':'<span class="planner-placeholder" aria-hidden="true"></span>'}
+function picture(item,label=false){return item.image?'<img src="'+escapeHtml(item.image)+'" alt="" decoding="async" draggable="false">'+(item.imageDemo&&label?'<span class="image-demo-badge">Bild-Demo · KI-Beispiel</span>':''):'<span class="planner-placeholder" aria-hidden="true"></span>'}
 function renderPlanner(){
  const days=weekDays(),selected=days[state.current],meal=displayedMeal(),item=itemForDay(selected.date,meal);
  byId("week-range").textContent=weekLabel();
  byId("screen-week").dataset.view=plannerView;
  document.querySelectorAll("button[data-view]").forEach(btn=>btn.setAttribute("aria-pressed",String(btn.dataset.view===plannerView)));
  byId("week-strip").innerHTML=days.map(({date,item},i)=>'<button type="button" data-day="'+i+'" aria-pressed="'+(i===state.current)+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-label="'+escapeHtml(weekdays[date.getDay()]+', '+niceDate(date)+(item.planned?', Menü geplant':', ungeplant'))+'"><span>'+weekdayShort[date.getDay()]+'</span><strong>'+date.getDate()+'</strong><span class="plan-dot" data-planned="'+item.planned+'" aria-hidden="true"></span></button>').join("");
- byId("week-overview").innerHTML=days.map(({date,item},i)=>'<article class="week-row'+(i===state.current?' selected':'')+'"><button type="button" class="day-select" data-day="'+i+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-pressed="'+(i===state.current)+'">'+picture(item)+'<span class="row-content"><strong>'+escapeHtml(weekdays[date.getDay()]+" · "+niceDate(date))+'</strong>'+mealSummary(date)+'</span></button><button type="button" class="row-edit" data-edit-day="'+i+'" aria-label="Menü für '+escapeHtml(weekdays[date.getDay()])+ ' bearbeiten">✎</button></article>').join("");
- byId("day-card").innerHTML=picture(item)+'<span class="day-card-content"><span>'+escapeHtml(weekdays[selected.date.getDay()]+" · "+niceDate(selected.date))+'</span><strong>'+escapeHtml(item.title)+'</strong><span>'+escapeHtml(item.planned?(item.mealLabel+" · "+(item.real?item.minutes+" Min. · "+item.servings+" Portione":item.description)):"Ungeplant")+'</span></span>';
+ byId("week-overview").innerHTML=days.map(({date,item},i)=>'<article class="week-row'+(i===state.current?' selected':'')+'"><button type="button" class="day-select" data-day="'+i+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-pressed="'+(i===state.current)+'">'+picture(item)+'<span class="row-content"><strong>'+escapeHtml(weekdays[date.getDay()]+" · "+niceDate(date))+'</strong>'+mealSummary(date)+(item.imageDemo?'<span class="demo-tag">Bild-Demo · KI-Beispiel</span>':'')+'</span></button><button type="button" class="row-edit" data-edit-day="'+i+'" aria-label="Menü für '+escapeHtml(weekdays[date.getDay()])+ ' bearbeiten">✎</button></article>').join("");
+ byId("day-card").innerHTML=picture(item,true)+'<span class="day-card-content"><span>'+escapeHtml(weekdays[selected.date.getDay()]+" · "+niceDate(selected.date))+'</span><strong>'+escapeHtml(item.title)+'</strong><span>'+escapeHtml(item.planned?(item.mealLabel+" · "+(item.real?item.minutes+" Min. · "+item.servings+" Portione":item.description)):"Ungeplant")+'</span></span>';
  byId("day-card").setAttribute("aria-label",(meal==="lunch"?"Zmittag: ":"Znacht: ")+item.title+", Menü bearbeiten");
  for(const btn of document.querySelectorAll("[data-meal-page]")){
   const active=btn.dataset.mealPage===meal;
@@ -161,13 +163,13 @@ function renderArchive(){
  grid.classList.toggle("search-suggestions",searching);
  grid.innerHTML=searching
   ?(all.length?all.map(item=>'<button type="button" class="archive-suggestion" data-recipe="'+escapeHtml(item.id)+'">'+
-     searchThumbnail(item)+'<span><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept</small></span></button>').join("")
+     searchThumbnail(item)+'<span><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept'+(item.imageDemo?' · Bild-Demo':'')+'</small></span></button>').join("")
      :'<p class="empty-message">Kei passende Rezepte gfunde.</p>')
   :(all.length?all.map(item=>'<button type="button" class="archive-card" data-recipe="'+escapeHtml(item.id)+'">'+
      (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" loading="lazy">':
       '<span class="archive-image-placeholder" aria-hidden="true"><span>Rezeptbild folgt</span></span>')+
      '<span class="archive-caption"><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept'+
-     (state.favorites.has(item.id)?' ♡':'')+'</small></span></button>').join(""):'<p>Kei Rezepte gfunde.</p>');
+     (item.imageDemo?' · Bild-Demo':'')+(state.favorites.has(item.id)?' ♡':'')+'</small></span></button>').join(""):'<p>Kei Rezepte gfunde.</p>');
  grid.querySelectorAll("[data-recipe]").forEach(btn=>btn.addEventListener("click",()=>{
   const item=state.archiveEntries.find(recipe=>recipe.id===btn.dataset.recipe);
   if(item)openRecipe(item);
@@ -342,7 +344,7 @@ function openRecipe(item){
  const dialog=byId("recipe-dialog");
  previouslyFocused=document.activeElement;
  byId("dialog-hero").style.backgroundImage=item.image?"url('"+item.image+"')":"linear-gradient(135deg,#35442f,#19231b)";
- byId("dialog-category").textContent=recipe?"FAMILIENREZEPT":item.real?"REZEPT NICHT VERFÜGBAR":"DESIGNBEISPIEL";
+ byId("dialog-category").textContent=recipe?(item.imageDemo?"FAMILIENREZEPT · BILD-DEMO (KI)":"FAMILIENREZEPT"):item.real?"REZEPT NICHT VERFÜGBAR":"DESIGNBEISPIEL";
  byId("dialog-title").textContent=recipe?.title||item.title;
  byId("dialog-description").textContent=recipe?.description||item.description;
  byId("dialog-meta").innerHTML='<span>◷ '+(recipe?recipe.prepMinutes+recipe.cookMinutes:item.minutes)+' Min.</span><span>♙ '+(recipe?.baseServings||3)+' Portione</span>';
@@ -392,7 +394,7 @@ async function loadRecipes(){
   const {catalog,recipes}=await fetchArchiveData(fetchJson);
   state.names=Object.fromEntries(catalog.ingredients.map(x=>[x.id,x.names["de-CH"]]));
   state.recipes=Object.fromEntries(recipes.map(recipe=>[recipe.id,recipe]));
-  state.archiveEntries=archiveEntries(recipes,archiveImages);
+  state.archiveEntries=archiveEntries(recipes,archiveImages).map(item=>({...item,...imageFor(item.id,imageDemo)}));
   state.archiveStatus="ready";
   state.plan=normalizePlan(readSaved("wachochemer:mealPlanV1",null),state.recipes);
   }catch(err){
@@ -513,6 +515,12 @@ function init(){
  const filters=[["all","Alli"],["favorites","Favoritä"]];
  byId("recipe-filters").innerHTML=filters.map(([id,label])=>'<button type="button" class="filter-chip'+(id===state.filter?' active':'')+'" data-filter="'+id+'">'+label+'</button>').join("");
  byId("recipe-filters").addEventListener("click",e=>{const target=e.target.closest("[data-filter]");if(!target)return;state.filter=target.dataset.filter;renderArchive()});
+ byId("image-demo").checked=imageDemo;
+ byId("image-demo").addEventListener("change",event=>{
+  imageDemo=event.target.checked;
+  const url=new URL(location.href);if(imageDemo)url.searchParams.set("imageDemo","1");else url.searchParams.delete("imageDemo");history.replaceState(null,"",url);
+  state.archiveEntries=state.archiveEntries.map(item=>({...item,...imageFor(item.id,imageDemo)}));renderPlanner();
+ });
  byId("start-day").value=String(state.startDay);
  byId("start-day").addEventListener("change",e=>{state.startDay=Number(e.target.value);save("wachochemer:weekstart",state.startDay);state.current=0;state.weekOffset=0;renderPlanner()});
  byId("portion-minus").addEventListener("click",()=>adjustPortions(-1));

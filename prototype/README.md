@@ -11,3 +11,5 @@ Lokal starten: `python3 -m http.server 8765`, dann `/prototype/` öffnen.
 Prüfen: `node --test tests/*.test.mjs`, `node --check prototype/app.js`, `node scripts/build-recipe-index.mjs`. Optional mit separat verfügbarem Playwright und Chromium: `node scripts/check-responsive-planner-browser.cjs`. `PLAYWRIGHT_MODULE`, `CHROMIUM_PATH` und `PLANNER_SCREENSHOTS` können Pfade überschreiben. Keine neue Laufzeitabhängigkeit.
 
 Details und offene echte iPhone-Abnahme: [Responsive Tages- und Wochenplanung](../docs/responsive-day-week-planner.md). Frühere 3D-Berichte dokumentieren ausschliesslich verworfene historische Entwicklungsstände.
+
+V16 auf PR #10: optionale Bild-Demo mit `?imageDemo=1` oder über Iistellige. Anschliessend «Kürbissuppe mit Käsetoast» selbst in eine Mahlzeit einplanen; die Demo legt keine Menüs an. Beispielbild ist KI-generiert, kein tatsächliches Rezeptfoto. Details, Tests und fünf neue Screenshots: [V16](../docs/v16-ui.md). Browserprüfung: `BASE_URL=http://127.0.0.1:8765 node tests/v16-browser.mjs`.

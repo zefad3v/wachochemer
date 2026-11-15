@@ -36,3 +36,7 @@ Die GitHub Action `.github/workflows/generate.yml` soll bei Änderungen an Rezep
 ## V15-Bedienung
 
 Die Hauptkarte öffnet den Menüeditor für Datum und angezeigte Mahlzeit; Rezeptdetails bleiben im Archiv. Die Mahlzeitsteuerung liegt als separate Geschwisterschaltfläche innerhalb der Kartenhülle, ohne verschachtelte Buttons. Heute verwendet den lokalen Gerätekalender (`aria-current="date"`), Auswahl `aria-pressed`. Die manuelle Mahlzeitwahl bleibt während der laufenden Sitzung bis zum lokalen Tageswechsel erhalten, auch bei Tages-/Wochennavigation. Sichtbarkeitswechsel und eine sparsame Uhrprüfung aktualisieren Standard und Heute-Markierung. Planformat und Speicherschlüssel bleiben unverändert. Details: [V15-Abnahme](v15-ui.md).
+
+## V16-Bild- und Materialebenen
+
+Verifizierte Bilder und opt-in Demo-Bilder sind in `prototype/recipe-images.mjs` von Rezeptdaten getrennt. Nur Darstellungsmetadaten erhalten `imageDemo`; das Planformat bleibt unverändert. Mobile Seitentitel verwenden den normalen Headerfluss; Glass-Blur sitzt auf positionsgebundenen Pseudoelementen, ohne Header/Text/SVG zu filtern. [V16-Abnahme und Screenshots](v16-ui.md).
