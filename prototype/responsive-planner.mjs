@@ -2,7 +2,7 @@
 export const displayClass=width=>width>=680?'wide':'compact';
 export function viewForClass(cls,preferences={}){
  const saved=preferences[cls];
- return saved==='day'||saved==='week'?saved:cls==='wide'?'week':'day';
+ return saved==='day'||saved==='week'?saved:'day';
 }
 export function moveDay(current,weekOffset,delta){
  const target=current+delta;

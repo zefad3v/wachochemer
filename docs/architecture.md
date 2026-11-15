@@ -40,3 +40,7 @@ Die Hauptkarte öffnet den Menüeditor für Datum und angezeigte Mahlzeit; Rezep
 ## V16-Bild- und Materialebenen
 
 Verifizierte Bilder und opt-in Demo-Bilder sind in `prototype/recipe-images.mjs` von Rezeptdaten getrennt. Nur Darstellungsmetadaten erhalten `imageDemo`; das Planformat bleibt unverändert. Mobile Seitentitel verwenden den normalen Headerfluss; Glass-Blur sitzt auf positionsgebundenen Pseudoelementen, ohne Header/Text/SVG zu filtern. [V16-Abnahme und Screenshots](v16-ui.md).
+
+## V17-Header und Archiv
+
+`app-backdrop`, Headerhintergrund und Header-Vordergrund bilden getrennte Ebenen. Der App-Container selbst bleibt ungefiltert und untransformiert, ohne gemeinsame isolierte Compositing-Gruppe. Der Archiv-Grid nutzt gleich hohe Zeilentracks; Bild/Platzhalter füllen die ganze Kachel, Texte liegen auf einem separaten Overlay. Tag ist ohne gespeicherte Präferenz auf allen Breiten Standard; der Wechsel sitzt bei der Tagesnavigation. [V17-Abnahme](v17-ui.md), mit klarer Grenze zwischen Chromium/Safe-Area-Simulation und echtem iOS-PWA-Test.

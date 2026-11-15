@@ -41,5 +41,5 @@ test('horizontal swipes target the two meal pages; weekdays remain directly sele
  assert.match(js,/const direction=swipeDirection\(dx,dy\);\s*if\(direction\)\{state\.selectedMeal=direction>0\?"dinner":"lunch";renderPlanner\(\)\}/);
  assert.match(html,/id="week-strip"/);
  assert.match(js,/if\(day\)setDay\(Number\(day\.dataset\.day\)\)/);
- assert.match(css,/#screen-week \.view-switch\{\s*position:absolute;right:4px;top:3px/);
+ assert.match(html,/class="day-navigation">[^]*?id="week-strip"[^]*?class="view-switch"/);
 });

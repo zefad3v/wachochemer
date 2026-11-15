@@ -13,7 +13,9 @@
 </head>
 <body>
 <div id="app">
+  <div class="app-backdrop" aria-hidden="true"></div>
   <header class="topbar">
+    <span class="header-backdrop" aria-hidden="true"></span>
     <div id="mobile-page-title" class="mobile-page-title">Üse Wucheplan</div>
     <div class="brand-block">
       <span class="eyebrow">ÜSERI FAMILIECHUCHI</span>
@@ -41,11 +43,13 @@
           <button type="button" class="icon-btn" id="week-next" aria-label="Nächste Woche">›</button>
         </div>
       </div>
-      <div class="view-switch" role="group" aria-label="Planansicht">
-        <button type="button" data-view="day" aria-pressed="true">Tag</button>
-        <button type="button" data-view="week" aria-pressed="false">Woche</button>
+      <div class="day-navigation">
+        <nav id="week-strip" class="week-strip" aria-label="Tagesauswahl"></nav>
+        <div class="view-switch" role="group" aria-label="Planansicht">
+          <button type="button" data-view="day" aria-pressed="true"><span aria-hidden="true">‹ </span>Tag</button>
+          <button type="button" data-view="week" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="14" rx="2"/><path d="M6 2v4m8-4v4M3 8h14M7 8v9m6-9v9"/></svg>Woche</button>
+        </div>
       </div>
-      <nav id="week-strip" class="week-strip" aria-label="Tagesauswahl"></nav>
 
       <div class="planner-layout">
         <div id="week-overview" class="week-overview" aria-label="Sieben Tage im Überblick"></div>

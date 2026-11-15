@@ -83,6 +83,7 @@ function showTab(tab){
  if(tab==="settings"&&state.tab==="settings")tab=state.returnTab||"week";
  else if(tab==="settings")state.returnTab=state.tab;
  state.tab=tab;
+ byId("app").dataset.tab=tab;
  byId("mobile-page-title").textContent=({week:"Üse Wucheplan",archive:"Chochchischtli",shopping:"Für Bring!",settings:"Iistellige"})[tab];
  document.querySelectorAll(".screen").forEach(el=>el.classList.toggle("active",el.id==="screen-"+tab));
  document.querySelectorAll("[data-tab]").forEach(el=>{
@@ -133,6 +134,8 @@ function picture(item,label=false){return item.image?'<img src="'+escapeHtml(ite
 function renderPlanner(){
  const days=weekDays(),selected=days[state.current],meal=displayedMeal(),item=itemForDay(selected.date,meal);
  byId("week-range").textContent=weekLabel();
+ const atmosphere=byId("app");
+ if(item.image)atmosphere.style.setProperty("--meal-atmosphere",'url("'+item.image+'")');else atmosphere.style.removeProperty("--meal-atmosphere");
  byId("screen-week").dataset.view=plannerView;
  document.querySelectorAll("button[data-view]").forEach(btn=>btn.setAttribute("aria-pressed",String(btn.dataset.view===plannerView)));
  byId("week-strip").innerHTML=days.map(({date,item},i)=>'<button type="button" data-day="'+i+'" aria-pressed="'+(i===state.current)+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-label="'+escapeHtml(weekdays[date.getDay()]+', '+niceDate(date)+(item.planned?', Menü geplant':', ungeplant'))+'"><span>'+weekdayShort[date.getDay()]+'</span><strong>'+date.getDate()+'</strong><span class="plan-dot" data-planned="'+item.planned+'" aria-hidden="true"></span></button>').join("");
