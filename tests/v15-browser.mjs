@@ -31,7 +31,7 @@ try{
   await page.locator('#choose-dinner').click();await page.locator('#day-card').click();
   assert.equal(await page.locator('#meal-type').inputValue(),'dinner');
   assert.equal(await page.locator('#meal-date').inputValue(),'2026-12-31');
-  await page.locator('#meal-servings').fill('6');await page.locator('#meal-form button[type=submit]').click();
+  await page.locator('#meal-recipe-search').fill('Kürbis');await page.locator('[data-pick-recipe]').click();await page.locator('#meal-servings').fill('6');await page.locator('#meal-form button[type=submit]').click();
   await page.reload();await page.waitForFunction(()=>document.querySelector('#day-card').textContent.length>0);
   await page.locator('#choose-dinner').click();await page.locator('#day-card').click();
   assert.equal(await page.locator('#meal-servings').inputValue(),'6');

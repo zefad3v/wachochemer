@@ -383,3 +383,13 @@ html{overscroll-behavior-y:none}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.bottom-nav:before,.back-btn:before,.fav-btn:before{background:#304b3b}.archive-caption:before{background:#213d2eea}}
 @media(prefers-reduced-transparency:reduce){.bottom-nav:before,.back-btn:before,.fav-btn:before{background:#304b3b;backdrop-filter:none;-webkit-backdrop-filter:none}.archive-caption:before{background:#213d2e;backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media(min-width:1100px){.bottom-nav{z-index:70}}
+
+/* Issue 11 A: targeted alignment, no iOS compositor workaround. */
+.meal-pages{justify-content:center}
+#screen-week[data-view=week] .day-navigation .week-strip{display:none}
+.meal-editor,.meal-editor *{box-sizing:border-box;min-width:0}
+.meal-form{padding:20px; padding-bottom:max(20px,env(safe-area-inset-bottom))}
+.meal-form input,.meal-form select,.meal-recipe-options{width:100%;max-width:100%}
+.meal-recipe-options[hidden]{display:none}
+.meal-recipe-options button{overflow-wrap:anywhere}
+.meal-editor{overscroll-behavior:contain;scroll-padding:20px}

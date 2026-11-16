@@ -198,8 +198,9 @@ function openMealEditor(date,meal="dinner",recipeId=null){
 }
 function loadMealEditor(){
  const entry=mealFor(state.plan.entries,state.editingDate,byId("meal-type").value);
+ byId("meal-recipe-search").value="";
  byId("meal-kind").value=entry?.type||"recipe";
- byId("meal-recipe").value=entry?.recipeId||state.archiveEntries[0]?.id||"";
+ byId("meal-recipe").value=entry?.recipeId||"";
  renderMealRecipeOptions();
  byId("meal-servings").value=entry?.servings||3;
  byId("meal-manual").value=entry?.type==="manual"?entry.title:"";
@@ -213,6 +214,8 @@ function renderMealRecipeOptions(){
  const selected=byId("meal-recipe").value;
  const current=state.archiveEntries.find(item=>item.id===selected);
  byId("meal-recipe-selected").textContent=current?"Usgewählt: "+current.title:"Bitte es Rezept wähle";
+ byId("meal-recipe-options").hidden=!query;
+ if(!query){byId("meal-recipe-options").innerHTML="";return}
  const matching=state.archiveEntries.filter(item=>item.title.toLocaleLowerCase("de-CH").includes(query));
  byId("meal-recipe-options").innerHTML=matching.length?matching.map(item=>
   '<button type="button" role="option" aria-selected="'+(item.id===selected)+'" data-pick-recipe="'+escapeHtml(item.id)+'">'+
@@ -236,6 +239,7 @@ function saveMealEditor(event){
   if(kind==="none")delete state.plan.entries[key];
   else{
    let entry;
+   if(kind==="recipe"&&!state.recipes[byId("meal-recipe").value])throw Error("Bitte es gültigs Rezept ussueche.");
    if(kind==="recipe")entry={type:"recipe",recipeId:byId("meal-recipe").value,servings:Number(byId("meal-servings").value)};
    if(kind==="manual")entry={type:"manual",title:byId("meal-manual").value.trim()};
    if(kind==="leftover"){
@@ -252,6 +256,7 @@ function saveMealEditor(event){
   if(previous)state.plan.entries[key]=previous;else delete state.plan.entries[key];
   byId("meal-editor-error").hidden=false;
   byId("meal-editor-error").textContent=err.message;
+  byId("meal-editor-error").scrollIntoView({block:"nearest"});
  }
 }
 function changeShoppingRange(from,to){
@@ -440,6 +445,7 @@ function init(){
   const btn=event.target.closest("[data-pick-recipe]");
   if(!btn)return;
   byId("meal-recipe").value=btn.dataset.pickRecipe;
+  byId("meal-recipe-search").value="";
   renderMealRecipeOptions();
  });
  byId("meal-date").addEventListener("change",event=>{

@@ -31,7 +31,7 @@ try{
  await page.locator('[data-view=week]').click();check('week view opens',await page.locator('#week-overview').isVisible());await page.locator('[data-view=day]').click();
  await page.reload();await ready(page);check('explicit day preference survives reload',await page.locator('#screen-week').getAttribute('data-view')==='day');
  // Actual recipe planning, no injected recipe data.
- await page.locator('#day-card').click();await page.locator('[data-pick-recipe="kuerbissuppe-kaesetoast"]').click();await page.locator('#meal-form button[type=submit]').click();await page.locator('#day-card img').evaluate(img=>img.decode());
+ await page.locator('#day-card').click();await page.locator("#meal-recipe-search").fill("Kürbis");await page.locator('[data-pick-recipe="kuerbissuppe-kaesetoast"]').click();await page.locator('#meal-form button[type=submit]').click();await page.locator('#day-card img').evaluate(img=>img.decode());
  await page.screenshot({path:out+'02-iphone-image-card.png',fullPage:true});
  check('atmosphere uses only selected image',await page.locator('#app').evaluate(el=>el.style.getPropertyValue('--meal-atmosphere').includes('pumpkin-soup.webp')));
  check('dock blur is on background only',await page.locator('.bottom-nav').evaluate(el=>getComputedStyle(el).backdropFilter==='none'&&getComputedStyle(el,'::before').backdropFilter.includes('blur(30px)')));
