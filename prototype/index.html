@@ -44,7 +44,11 @@
         </div>
       </div>
       <div class="day-navigation">
-        <p id="plan-status" role="status"></p><button id="plan-restore" type="button" hidden>Sicherig wiederherstelle</button>
+        <details id="plan-review" class="plan-review" hidden>
+          <summary id="plan-review-summary" role="status"></summary>
+          <div id="plan-status" class="plan-review-list"></div>
+          <button id="plan-restore" type="button" hidden>Sicherig wiederherstelle</button>
+        </details>
         <nav id="week-strip" class="week-strip" aria-label="Tagesauswahl"></nav>
         <div class="view-switch" role="group" aria-label="Planansicht">
           <button type="button" data-view="day" aria-pressed="true"><span aria-hidden="true">‹ </span>Tag</button>
@@ -135,22 +139,21 @@
           <option value="none">Nüt plant / iichaufe</option>
         </select></label>
         <div id="meal-recipe-line" class="meal-picker">
-          <button type="button" id="meal-recipe-change">Rezept ändern</button>
-          <input id="meal-recipe-search" type="search" autocomplete="off" placeholder="Rezept sueche…">
-          <div id="meal-recipe-options" class="meal-recipe-options" role="listbox" aria-label="Rezept us em Chochchischtli"></div>
-          <output id="meal-recipe-selected" class="meal-recipe-selected" aria-live="polite">Keis Rezept gwählt</output>
+          <output id="meal-recipe-selected" class="meal-recipe-selected" aria-live="polite">Bitte es Rezept wähle</output>
+          <input id="meal-recipe-search" type="search" autocomplete="off" placeholder="Rezept sueche oder wechsle…" aria-label="Rezept suche oder wechsle">
+          <div id="meal-recipe-options" class="meal-recipe-options" role="listbox" aria-label="Passendi Rezepte"></div>
           <input id="meal-recipe" type="hidden">
         </div>
         <div id="meal-simple-portions"><p id="meal-portion-note" role="status"></p>
-<label for="meal-need">Portione für die Mahlziit</label><div class="portion-stepper"><button type="button" id="meal-minus" aria-label="Halbi Portion weniger">−</button><input id="meal-need" type="number" min="0" max="1000" step="any" inputmode="decimal"><button type="button" id="meal-plus" aria-label="Halbi Portion meh">+</button></div>
-<label><input id="meal-extra-enabled" type="checkbox"> Zusätzlich für spöter choche</label><label id="meal-extra-line" hidden>Zusätzlichi Portione<input id="meal-extra" type="number" min="0" max="1000" step="any" value="0" inputmode="decimal"></label><output id="meal-total" aria-live="polite"></output></div>
-<details id="meal-advanced"><summary>Erwiiterti Portionsplanig</summary><label id="meal-servings-line">Kochmenge (Portione)<input id="meal-servings" type="number" required min="0.001" max="1000" step="any" value="1" inputmode="decimal"></label>
-        <label id="meal-consumed-line">Verzehr bi dere Mahlziit<input id="meal-consumed" type="number" required min="0" max="1000" step="any" inputmode="decimal"></label>
-        </details><details><summary>Rezeptspezifischi Chind-Portion</summary><label>Chind-Anteil<input id="recipe-child-share" type="number" min="0" max="1000" step="any"></label><button type="button" id="recipe-share-save">Für das Rezept merke und awände</button></details>
+<label for="meal-need">Portione für die Mahlziit</label><div class="portion-stepper"><button type="button" id="meal-minus" aria-label="Halbi Portion weniger">−</button><input id="meal-need" type="text" inputmode="decimal" autocomplete="off" aria-label="Portionen für die Mahlzeit" placeholder="z. B. 2.5"><button type="button" id="meal-plus" aria-label="Halbi Portion meh">+</button></div>
+<label><input id="meal-extra-enabled" type="checkbox"> Zusätzlich für spöter choche</label><label id="meal-extra-line" hidden>Zusätzlichi Portione<input id="meal-extra" type="text" inputmode="decimal" autocomplete="off" value="0" aria-label="Zusätzliche Portionen"></label><output id="meal-total" aria-live="polite"></output></div>
+<details id="meal-advanced"><summary>Erwiiterti Portionsplanig</summary><label id="meal-servings-line">Kochmenge (Portione)<input id="meal-servings" type="text" required inputmode="decimal" autocomplete="off" value="1"></label>
+        <label id="meal-consumed-line">Verzehr bi dere Mahlziit<input id="meal-consumed" type="text" required inputmode="decimal" autocomplete="off"></label>
+        </details><details><summary>Rezeptspezifischi Chind-Portion</summary><label>Chind-Anteil<input id="recipe-child-share" type="text" inputmode="decimal" autocomplete="off"></label><button type="button" id="recipe-share-save">Für das Rezept merke und awände</button></details>
         <output id="meal-balance" aria-live="polite"></output>
         <label id="meal-manual-line" hidden>Menü<input id="meal-manual" maxlength="140" placeholder="z. B. Znacht bi de Grosseltere"></label>
         <label id="meal-source-choice-line" hidden>Verfügbari Reschte<select id="meal-source-choice"></select></label><details id="meal-source-advanced"><summary>Ursprung prüefe</summary><label id="meal-leftover-line" hidden>Reschte vom<input id="meal-leftover-source" type="date"></label>
-        <div><label>Ursprungsmahlziit<select id="meal-leftover-source-meal"><option value="">Bitte wähle</option><option value="lunch">Zmittag</option><option value="dinner">Znacht</option></select></label></div></details><div id="meal-leftover-details" hidden><label>Reschtebedarf<input id="meal-leftover-portions" type="number" min="0.001" max="1000" step="any" inputmode="decimal"></label></div>
+        <div><label>Ursprungsmahlziit<select id="meal-leftover-source-meal"><option value="">Bitte wähle</option><option value="lunch">Zmittag</option><option value="dinner">Znacht</option></select></label></div></details><div id="meal-leftover-details" hidden><label>Reschtebedarf<input id="meal-leftover-portions" type="text" inputmode="decimal" autocomplete="off"></label></div>
         <p id="meal-leftover-tip" class="editor-note" hidden>Wichtig: Bi de Kochmenge vom Ursprungstag gnueg Portione für d Reschte iiplane. Reservierige werded prüeft; d Kochmenge wird nöd automatisch erhöht.</p>
       </div>
       <p id="meal-editor-error" role="alert" hidden></p>

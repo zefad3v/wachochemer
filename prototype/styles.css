@@ -423,5 +423,17 @@ html{overscroll-behavior-y:none}
  .dialog-hero{height:100px}.dialog-body{padding:16px max(24px,env(safe-area-inset-right)) 24px max(24px,env(safe-area-inset-left))}
  .meal-editor{width:min(720px,96vw);max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px)}
 }
-#meal-recipe-change,.cooking-controls button,.portion-stepper button{min-height:44px;padding:8px 14px;border:1px solid #a8bb9166;border-radius:10px;background:#304b3b;color:#f2f4e8}
+.cooking-controls button,.portion-stepper button{min-height:44px;padding:8px 14px;border:1px solid #a8bb9166;border-radius:10px;background:#304b3b;color:#f2f4e8}
 .cooking-controls button:disabled{opacity:.5}#meal-portion-note{font-size:14px;line-height:1.5}
+
+/* M4 V2 migration: keep data safe, but never push the daily card off screen. */
+.plan-review{align-self:stretch;width:100%;max-width:100%;border:1px solid rgba(215,232,191,.34);border-radius:12px;background:rgba(29,48,35,.78);color:#e3ebd9;padding:0;margin:0 0 6px;box-sizing:border-box}
+.plan-review[hidden]{display:none!important}
+.plan-review summary{cursor:pointer;min-height:38px;display:flex;align-items:center;font-size:13px;font-weight:600;line-height:1.35;padding:8px 12px}
+#plan-status.plan-review-list{display:grid;gap:8px;white-space:normal;margin:0;padding:4px 12px 12px;font-size:12px}
+.plan-review-row{display:flex;gap:8px;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid rgba(215,232,191,.18);overflow-wrap:anywhere}
+.plan-review-row>span{flex:1;min-width:0}
+.plan-review-row button,#plan-restore{flex:none;border:1px solid rgba(215,232,191,.45);border-radius:9px;background:rgba(60,84,63,.7);color:#f0f4e6;min-height:36px;padding:5px 10px}
+#meal-recipe-selected{font-weight:700}
+#meal-recipe-search{min-height:46px}
+@media(max-width:679px){.plan-review{max-width:100%}.plan-review summary{font-size:12px}.plan-review-row{align-items:start;flex-wrap:wrap}}
