@@ -7,10 +7,10 @@ const js=readFileSync(new URL('../prototype/app.js',import.meta.url),'utf8');
 
 test('date based menu form and shopping range are visible and wired',()=>{
  for(const id of ['meal-editor','meal-kind','meal-recipe','meal-servings','meal-type','shopping-from','shopping-to','shopping-add-form'])assert(html.includes('id="'+id+'"'));
- assert.match(js,/state\.plan=normalizePlan\(readSaved\("wachochemer:mealPlanV1"/);
+ assert.match(js,/const loaded=loadPlan\(localStorage\)/);
  assert.match(js,/function persistPlan\(\)/);
  assert.match(js,/function saveMealEditor\(event\)/);
- assert.match(js,/ingredientTotals\(state\.plan\.entries,state\.recipes,from,to\)/);
+ assert.match(js,/cookingTotals\(state\.plan,state\.recipes,from,to\)/);
  assert.match(js,/byId\("shopping-from"\)\.value=state\.shopping\.from/);
  assert.match(js,/byId\("shopping-following"\)\.addEventListener/);
  assert.doesNotMatch(js,/byId\("edit-day"\)/);
@@ -19,8 +19,8 @@ test('date based menu form and shopping range are visible and wired',()=>{
 test('meal editor shows leftover reminder and does not claim failed persistence',()=>{
  assert.match(html,/id="meal-leftover-tip"/);
  assert.match(js,/byId\("meal-leftover-tip"\)\.hidden=kind!=="leftover"/);
- assert.match(js,/if\(!save\("wachochemer:mealPlanV1",state\.plan\)\)throw Error/);
- assert.match(js,/if\(previous\)state\.plan\.entries\[key\]=previous;else delete state\.plan\.entries\[key\]/);
+ assert.match(js,/storePlan\(localStorage,state\.plan\)/);
+ assert.match(js,/state\.plan=previousPlan/);
 });
 
 test('settings returns to previous tab and archive layout remains stable during search',()=>{

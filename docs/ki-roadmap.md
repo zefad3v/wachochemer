@@ -21,3 +21,8 @@ V15 (Issue #9): integrierte Glass-Mahlzeitsteuerung, direkter Karteneditor, getr
 V16 setzt M0/UI-Abnahme auf demselben PR #10 fort: kompakter scharfer Header, minimale Mahlzeitwahl, sichtbare Glas-Hintergrundebenen und explizite KI-Bild-Demo. Verifizierte eigene Rezeptbilder fehlen weiterhin. [V16-Nachweise und echte iPhone-Prüfungen](v16-ui.md). M4 bleibt nächstes Fachpaket; kein Release.
 
 V17 setzt M0 auf PR #10 fort: getrennte Header-Ebenen, kompakte Tagesansicht, sekundärer Woche-Wechsel, stärkeres Glass-Dock und gleiche Archivkacheln. [V17: Tests, Screenshots und offene iOS-PWA-Abnahme](v17-ui.md). Die echte iPhone-Schärfe bleibt ein Merge-Gate; M4 folgt nach Abnahme.
+
+Issue #11 ersetzt die bisherige Reihenfolge: UI-Korrekturen A abgeschlossen; M4 unabhängig
+von noch offener echter iPhone-Abnahme als gestapelter Draft umgesetzt.
+[M4-Modell, Migration und Tests](m4-portions-leftovers.md). M6 folgt als reine Exportvorbereitung.
+Keine Cloud-Synchronisation, kein Release.

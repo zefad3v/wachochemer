@@ -393,3 +393,9 @@ html{overscroll-behavior-y:none}
 .meal-recipe-options[hidden]{display:none}
 .meal-recipe-options button{overflow-wrap:anywhere}
 .meal-editor{overscroll-behavior:contain;scroll-padding:20px}
+
+#household-form{display:grid;gap:12px}
+#household-form label{display:grid;gap:6px}
+#household-form input{width:100%;min-height:44px;font-size:16px;box-sizing:border-box}
+#plan-status{white-space:pre-line;overflow-wrap:anywhere;font-size:13px}
+#meal-balance{font-size:13px;overflow-wrap:anywhere}

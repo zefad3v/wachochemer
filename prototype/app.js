@@ -1,7 +1,9 @@
 "use strict";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
-import {addDays,formatDay,parseDay,mealKey,mealFor,normalizePlan,validateEntry,ingredientTotals,datesBetween,shoppingWindow} from "./planner.mjs";
+import {addDays,formatDay,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
+import {householdNeed,portion,assessPlan,updateMeal,cookingTotals} from "../src/domain/planning.mjs";
+import {loadPlan,storePlan,restorePlan} from "../src/storage/meal-plan.mjs";
 const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig","Samschtig"];
 const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
 const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
@@ -11,10 +13,13 @@ let imageDemo=new URLSearchParams(location.search).get("imageDemo")==="1";
 const state={
  tab:"week",returnTab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
  recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",
- plan:{version:1,entries:{}},editingDate:null,shopping:null,extras:[],selectedMeal:null
+ plan:{version:2,entries:{}},editingDate:null,shopping:null,extras:[],selectedMeal:null
 };
 function readSaved(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
 function save(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}}
+state.household=readSaved("wachochemer:household",null);
+state.recipeShares=readSaved("wachochemer:recipeShares",{});
+state.planBlocked=false;
 state.startDay=Number(readSaved("wachochemer:weekstart",4));
 if(!Number.isInteger(state.startDay)||state.startDay<0||state.startDay>6)state.startDay=4;
 state.favorites=new Set(readSaved("wachochemer:favorites",[]));
@@ -61,10 +66,10 @@ function itemForDay(date,requestedMeal=null){
  }
  if(entry.type==="recipe"){
   const recipe=state.recipes[entry.recipeId],meta=state.archiveEntries.find(x=>x.id===entry.recipeId);
-  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,imageDemo:meta?.imageDemo||false,real:!!recipe,planned:true,mealLabel,servings:entry.servings};
+  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,imageDemo:meta?.imageDemo||false,real:!!recipe,planned:true,mealLabel,servings:entry.cookedServings??entry.servings};
  }
  if(entry.type==="manual")return {id:"manual-"+iso,title:entry.title,description:"Eigenes Menü",minutes:0,image:null,real:false,planned:true,mealLabel};
- return {id:"leftover-"+iso,title:"Reschte vom "+entry.sourceDate,description:"Scho kocht, kei zweite Iichauf nötig.",minutes:0,image:null,real:false,planned:true,mealLabel};
+ return {id:"leftover-"+iso,title:"Reschte vom "+(entry.sourceKey||entry.sourceDate||"Ursprung bitte kläre"),description:"Scho kocht, kei zweite Iichauf nötig.",minutes:0,image:null,real:false,planned:true,mealLabel};
 }
 function weekDays(){
  const start=baseWeek();
@@ -125,7 +130,7 @@ function mealSummary(date){
  const iso=localISO(date);
  return ["lunch","dinner"].map(meal=>{
   const entry=mealFor(state.plan.entries,iso,meal);
-  const title=!entry?"No nüt plant":entry.type==="recipe"?(state.recipes[entry.recipeId]?.title||"Rezept nöd verfügbar")+(entry.servings?" · "+entry.servings+" Portione":""):entry.type==="manual"?entry.title+" · Eigenes Menü":"Reschte vom "+entry.sourceDate;
+  const title=!entry?"No nüt plant":entry.type==="recipe"?(state.recipes[entry.recipeId]?.title||"Rezept nöd verfügbar")+((entry.cookedServings??entry.servings)?" · "+(entry.cookedServings??entry.servings)+" Portione":""):entry.type==="manual"?entry.title+" · Eigenes Menü":"Reschte vom "+(entry.sourceKey||entry.sourceDate||"Ursprung bitte kläre");
   return '<span>'+escapeHtml((meal==="lunch"?"Zmittag: ":"Znacht: ")+title)+'</span>';
  }).join("");
 }
@@ -180,8 +185,11 @@ function renderArchive(){
  document.querySelectorAll(".filter-chip").forEach(btn=>btn.classList.toggle("active",btn.dataset.filter===state.filter));
 }
 function persistPlan(){
- if(!save("wachochemer:mealPlanV1",state.plan))throw Error("Planig chönnt nöd gspeicheret werde. Bitte Speicherplatz und Browser-Iistellige prüefe.");
+ if(state.archiveStatus!=="ready")throw Error("Rezepte bitte zuerst vollständig lade.");
+ if(state.planBlocked)throw Error("Originalplan bitte zuerst wiederherstelle.");
+ storePlan(localStorage,state.plan);
  renderPlanner();
+ byId("plan-status").textContent=assessPlan(state.plan,state.recipes).issues.map(x=>x.key+": "+x.message).join("\n");
  if(state.tab==="shopping")renderShopping();
 }
 function openMealEditor(date,meal="dinner",recipeId=null){
@@ -202,9 +210,15 @@ function loadMealEditor(){
  byId("meal-kind").value=entry?.type||"recipe";
  byId("meal-recipe").value=entry?.recipeId||"";
  renderMealRecipeOptions();
- byId("meal-servings").value=entry?.servings||3;
+ let need;
+ try{need=householdNeed(state.household,state.recipeShares[entry?.recipeId]||{})}catch{need=state.recipes[entry?.recipeId]?.baseServings||1}
+ byId("meal-servings").value=entry?.cookedServings??entry?.servings??need;
+ byId("meal-consumed").value=entry?.consumedServings??need;
+ byId("meal-leftover-portions").value=entry?.portions??need;
+ byId("meal-leftover-source-meal").value=entry?.sourceKey?.split("|")[1]||"";
+
  byId("meal-manual").value=entry?.type==="manual"?entry.title:"";
- byId("meal-leftover-source").value=entry?.type==="leftover"?entry.sourceDate:addDays(state.editingDate,-1);
+ byId("meal-leftover-source").value=entry?.type==="leftover"?(entry.sourceKey?.split("|")[0]||entry.sourceDate||""):addDays(state.editingDate,-1);
  byId("meal-remove").disabled=!entry;
  byId("meal-editor-error").hidden=true;
  updateMealEditorFields();
@@ -221,39 +235,51 @@ function renderMealRecipeOptions(){
   '<button type="button" role="option" aria-selected="'+(item.id===selected)+'" data-pick-recipe="'+escapeHtml(item.id)+'">'+
   escapeHtml(item.title)+'</button>').join(""):'<p>Kei Rezepte gfunde</p>';
 }
+function renderMealBalance(){
+ let key=mealKey(state.editingDate,byId("meal-type").value);
+ if(byId("meal-kind").value==="leftover"){
+  try{key=mealKey(byId("meal-leftover-source").value,byId("meal-leftover-source-meal").value)}
+  catch{byId("meal-balance").textContent="Ursprungsdatum und Mahlziit wähle.";return}
+ }
+ const balance=assessPlan(state.plan,state.recipes).balances[key];
+ byId("meal-balance").textContent=balance?"Kocht: "+balance.cooked+" · Verzehrt: "+(balance.consumed??"bitte kläre")+" · Reserviert: "+balance.reserved+" · Verfügbar: "+(balance.available??"bitte kläre"):"Kei Kochmenge für die Mahlziit erfasst.";
+}
 function updateMealEditorFields(){
  const kind=byId("meal-kind").value;
  byId("meal-recipe-line").hidden=kind!=="recipe";
  byId("meal-servings-line").hidden=kind!=="recipe";
+ byId("meal-consumed-line").hidden=kind!=="recipe";
+ byId("meal-consumed").disabled=kind!=="recipe";
+ byId("meal-servings").disabled=kind!=="recipe";
+ byId("meal-leftover-details").hidden=kind!=="leftover";
  byId("meal-manual-line").hidden=kind!=="manual";
  byId("meal-leftover-line").hidden=kind!=="leftover";
  byId("meal-leftover-tip").hidden=kind!=="leftover";
+ renderMealBalance();
 }
 function saveMealEditor(event){
  event.preventDefault();
  const date=byId("meal-date").value,meal=byId("meal-type").value;
  state.editingDate=date;
  const key=mealKey(date,meal),kind=byId("meal-kind").value;
- const previous=state.plan.entries[key];
+ const previousPlan=state.plan;
  try{
-  if(kind==="none")delete state.plan.entries[key];
+  if(kind==="none")state.plan=updateMeal(state.plan,key,null,state.recipes);
   else{
    let entry;
    if(kind==="recipe"&&!state.recipes[byId("meal-recipe").value])throw Error("Bitte es gültigs Rezept ussueche.");
-   if(kind==="recipe")entry={type:"recipe",recipeId:byId("meal-recipe").value,servings:Number(byId("meal-servings").value)};
+   if(kind==="recipe")entry={type:"recipe",recipeId:byId("meal-recipe").value,cookedServings:Number(byId("meal-servings").value),consumedServings:Number(byId("meal-consumed").value)};
    if(kind==="manual")entry={type:"manual",title:byId("meal-manual").value.trim()};
    if(kind==="leftover"){
     const sourceDate=byId("meal-leftover-source").value;
-    if(sourceDate>=date)throw Error("Reschte müend vo eme früehere Tag sii.");
-    entry={type:"leftover",sourceDate};
+    entry={type:"leftover",sourceKey:mealKey(sourceDate,byId("meal-leftover-source-meal").value),portions:Number(byId("meal-leftover-portions").value)};
    }
-   validateEntry(entry,state.recipes);
-   state.plan.entries[key]=entry;
+   state.plan=updateMeal(state.plan,key,entry,state.recipes);
   }
   persistPlan();
   byId("meal-editor").close();
  }catch(err){
-  if(previous)state.plan.entries[key]=previous;else delete state.plan.entries[key];
+  state.plan=previousPlan;
   byId("meal-editor-error").hidden=false;
   byId("meal-editor-error").textContent=err.message;
   byId("meal-editor-error").scrollIntoView({block:"nearest"});
@@ -273,7 +299,7 @@ function changeShoppingRange(from,to){
 }
 function shoppingTransferText(){
  const {from,to}=state.shopping;
- const {items,skipped}=ingredientTotals(state.plan.entries,state.recipes,from,to);
+ const {items,skipped}=cookingTotals(state.plan,state.recipes,from,to);
  const days=new Set(datesBetween(from,to));
  const extra=state.extras.filter(x=>days.has(x.date));
  const lines=items.map(row=>{
@@ -290,7 +316,7 @@ function renderShopping(){
  byId("shopping-to").value=state.shopping.to;
  const {from,to}=state.shopping;
  let totals;
- try{totals=ingredientTotals(state.plan.entries,state.recipes,from,to)}
+ try{totals=cookingTotals(state.plan,state.recipes,from,to)}
  catch(err){
   byId("shopping-window-error").textContent=err.message;
   byId("shopping-window-error").hidden=false;
@@ -404,7 +430,12 @@ async function loadRecipes(){
   state.recipes=Object.fromEntries(recipes.map(recipe=>[recipe.id,recipe]));
   state.archiveEntries=archiveEntries(recipes,archiveImages).map(item=>({...item,...imageFor(item.id,imageDemo)}));
   state.archiveStatus="ready";
-  state.plan=normalizePlan(readSaved("wachochemer:mealPlanV1",null),state.recipes);
+  const loaded=loadPlan(localStorage);
+  state.planBlocked=!!loaded.error;
+  if(loaded.plan)state.plan=loaded.plan;
+  byId("plan-status").textContent=loaded.error||assessPlan(state.plan,state.recipes).issues.map(x=>x.key+": "+x.message).join("\n");
+  byId("plan-restore").hidden=!loaded.error;
+
   }catch(err){
   console.warn("Could not load canonical recipe data",err);
   state.archiveStatus="error";
@@ -417,6 +448,33 @@ async function loadRecipes(){
  if(state.tab==="archive")renderArchive();
 }
 function init(){
+ for(const id of ["meal-leftover-source","meal-leftover-source-meal"])byId(id).addEventListener("change",renderMealBalance);
+ byId("plan-restore").addEventListener("click",()=>{
+  try{state.plan=restorePlan(localStorage);state.planBlocked=false;persistPlan();byId("plan-restore").hidden=true}
+  catch(err){byId("plan-status").textContent=err.message}
+ });
+ const fields=["adults","children","babies","adultsShare","childrenShare","babiesShare"];
+ for(const field of fields)byId("household-"+field).value=state.household?.[field]??(field==="adultsShare"?1:0);
+ byId("household-form").addEventListener("submit",e=>{
+  e.preventDefault();
+  try{
+   const profile=Object.fromEntries(fields.map(f=>[f,Number(byId("household-"+f).value)]));
+   const need=householdNeed(profile);
+   if(!save("wachochemer:household",profile))throw Error("Speichere fehlgschlage.");
+   state.household=profile;byId("household-status").textContent=need+" Portione pro Mahlziit";
+  }catch(err){byId("household-status").textContent=err.message}
+ });
+ byId("recipe-share-save").addEventListener("click",()=>{
+  try{
+   const id=byId("meal-recipe").value;if(!state.recipes[id])throw Error("Zuerst es Rezept wähle.");
+   const share=Number(byId("recipe-child-share").value);portion(share,true);
+   const next={...state.recipeShares,[id]:{childrenShare:share}};
+   if(!save("wachochemer:recipeShares",next))throw Error("Speichere fehlgschlage.");
+   state.recipeShares=next;
+   const need=householdNeed(state.household,next[id]);byId("meal-consumed").value=need;byId("meal-servings").value=need;
+  }catch(err){byId("meal-editor-error").hidden=false;byId("meal-editor-error").textContent=err.message}
+ });
+
  const days=weekDays();
  const now=new Date();
  const match=days.findIndex(x=>x.date.toDateString()===now.toDateString());
@@ -445,6 +503,11 @@ function init(){
   const btn=event.target.closest("[data-pick-recipe]");
   if(!btn)return;
   byId("meal-recipe").value=btn.dataset.pickRecipe;
+  try{
+   const need=householdNeed(state.household,state.recipeShares[btn.dataset.pickRecipe]||{});
+   byId("meal-servings").value=need;byId("meal-consumed").value=need;
+  }catch{}
+
   byId("meal-recipe-search").value="";
   renderMealRecipeOptions();
  });
@@ -461,10 +524,10 @@ function init(){
  byId("meal-kind").addEventListener("change",updateMealEditorFields);
  byId("meal-remove").addEventListener("click",()=>{
   const key=mealKey(state.editingDate,byId("meal-type").value),previous=state.plan.entries[key];
-  delete state.plan.entries[key];
-  try{persistPlan();byId("meal-editor").close()}
+  const oldPlan=state.plan;
+  try{state.plan=updateMeal(state.plan,key,null,state.recipes);persistPlan();byId("meal-editor").close()}
   catch(err){
-   if(previous)state.plan.entries[key]=previous;
+   state.plan=oldPlan;
    byId("meal-editor-error").hidden=false;byId("meal-editor-error").textContent=err.message;
   }
  });
