@@ -399,3 +399,29 @@ html{overscroll-behavior-y:none}
 #household-form input{width:100%;min-height:44px;font-size:16px;box-sizing:border-box}
 #plan-status{white-space:pre-line;overflow-wrap:anywhere;font-size:13px}
 #meal-balance{font-size:13px;overflow-wrap:anywhere}
+
+
+/* Issue 15: separate reading/editing and compact, height-aware landscape. */
+#day-edit{position:absolute;right:12px;top:12px;z-index:3;width:44px;height:44px;border-radius:50%;border:1px solid #dce6ca;background:#243d30;color:#fff;font-size:24px}
+.meal-recipe-selected{display:block;font-size:18px;font-weight:700;line-height:1.4;padding:12px;border:1px solid #a8bb91;border-radius:12px}
+.portion-stepper{display:flex;gap:8px;align-items:center}.portion-stepper button,.cooking-controls button{min-width:44px;min-height:44px}
+#meal-simple-portions{display:grid;gap:12px}#meal-extra-enabled{width:24px;min-height:24px}#meal-simple-portions[hidden]{display:none}
+#cooking-mode{font-size:20px;line-height:1.6}#cooking-mode[hidden]{display:none}.cooking-controls{display:flex;gap:10px;flex-wrap:wrap}
+.is-cooking .dialog-hero{height:70px}.is-cooking #dialog-description,.is-cooking #dialog-actions,.is-cooking #dialog-category{display:none}
+.is-cooking .detail-ingredients{font-size:18px}.detail-ingredients label{min-height:32px;cursor:pointer}
+@media (orientation:landscape) and (max-height:500px) and (max-width:1099px){
+ .topbar{height:58px;min-height:58px;padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));justify-content:flex-end}
+ .topbar .brand-block,.mobile-page-title,.desktop-nav{display:none}
+ .bottom-nav{position:absolute;top:calc(4px + env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));right:auto;bottom:auto;width:240px;min-height:46px;max-width:240px}
+ .bottom-link{height:40px}.bottom-link svg{width:18px;height:18px}
+ .screen{padding:0 max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+ .screen-heading{min-height:44px;padding:0;display:flex}.screen-heading .eyebrow{display:none}.screen-heading h1{font-size:23px}
+ #screen-week .day-navigation{flex-direction:row;align-items:center;gap:10px}#plan-status:empty{display:none}
+ #screen-week .day-navigation .week-strip{flex:1;min-width:0;margin:0}#screen-week .day-navigation .view-switch{flex:none}
+ #screen-week .day-card{min-height:190px;height:190px}.day-card-content{padding:20px 70px 60px 24px}.day-card-title{font-size:28px}
+ .meal-pages{bottom:6px}.recipe-dialog{width:100%;height:100dvh;max-height:100dvh;border-radius:0}
+ .dialog-hero{height:100px}.dialog-body{padding:16px max(24px,env(safe-area-inset-right)) 24px max(24px,env(safe-area-inset-left))}
+ .meal-editor{width:min(720px,96vw);max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px)}
+}
+#meal-recipe-change,.cooking-controls button,.portion-stepper button{min-height:44px;padding:8px 14px;border:1px solid #a8bb9166;border-radius:10px;background:#304b3b;color:#f2f4e8}
+.cooking-controls button:disabled{opacity:.5}#meal-portion-note{font-size:14px;line-height:1.5}

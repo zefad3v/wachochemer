@@ -44,3 +44,9 @@ Verifizierte Bilder und opt-in Demo-Bilder sind in `prototype/recipe-images.mjs`
 ## V17-Header und Archiv
 
 `app-backdrop`, Headerhintergrund und Header-Vordergrund bilden getrennte Ebenen. Der App-Container selbst bleibt ungefiltert und untransformiert, ohne gemeinsame isolierte Compositing-Gruppe. Der Archiv-Grid nutzt gleich hohe Zeilentracks; Bild/Platzhalter füllen die ganze Kachel, Texte liegen auf einem separaten Overlay. Tag ist ohne gespeicherte Präferenz auf allen Breiten Standard; der Wechsel sitzt bei der Tagesnavigation. [V17-Abnahme](v17-ui.md), mit klarer Grenze zwischen Chromium/Safe-Area-Simulation und echtem iOS-PWA-Test.
+
+## Issue #15: Kochen und einfache Portionsplanung
+
+Geplante Rezeptkarten öffnen `openRecipe` mit unveränderten `cookedServings` (auch Dezimalwerte); ein eigener Stift öffnet den Editor. Archivportionen bleiben unabhängig. Der Kochmodus verwendet dieselben Zutaten und Anleitungen, speichert nur flüchtigen Schrittstatus und schreibt weder Plan noch Einkauf.
+
+Der Editor bildet Mahlzeitenbedarf plus optionale Zusatzmenge auf die bestehenden M4-Felder ab. Ungeklärter V1-Verzehr bleibt leer und muss ausdrücklich geklärt werden. Ohne Haushalt wird erst nach Rezeptwahl dessen Basisportionenzahl als gekennzeichneter Vorschlag gesetzt. Restenquellen stammen aus `assessPlan`, geben beim Editieren die eigene Reservierung zur Auswahl frei und werden beim Speichern weiterhin durch `updateMeal` validiert. Keine Schema- oder Speicherschlüsseländerung; Bring!-Manifest und M4-Domain bleiben unverändert.

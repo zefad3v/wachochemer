@@ -31,7 +31,7 @@ try{
  await page.locator('[data-view=week]').click();check('week view opens',await page.locator('#week-overview').isVisible());await page.locator('[data-view=day]').click();
  await page.reload();await ready(page);check('explicit day preference survives reload',await page.locator('#screen-week').getAttribute('data-view')==='day');
  // Actual recipe planning, no injected recipe data.
- await page.locator('#day-card').click();await page.locator("#meal-recipe-search").fill("Kürbis");await page.locator('[data-pick-recipe="kuerbissuppe-kaesetoast"]').click();await page.locator('#meal-form button[type=submit]').click();await page.locator('#day-card img').evaluate(img=>img.decode());
+ await page.locator('#day-edit').click();await page.locator("#meal-recipe-search").fill("Kürbis");await page.locator('[data-pick-recipe="kuerbissuppe-kaesetoast"]').click();await page.locator('#meal-form button[type=submit]').click();await page.locator('#day-card img').evaluate(img=>img.decode());
  await page.screenshot({path:out+'02-iphone-image-card.png',fullPage:true});
  check('atmosphere uses only selected image',await page.locator('#app').evaluate(el=>el.style.getPropertyValue('--meal-atmosphere').includes('pumpkin-soup.webp')));
  check('dock blur is on background only',await page.locator('.bottom-nav').evaluate(el=>getComputedStyle(el).backdropFilter==='none'&&getComputedStyle(el,'::before').backdropFilter.includes('blur(30px)')));
@@ -55,7 +55,7 @@ try{
  await page.addStyleTag({content:'.day-card-content strong{font-size:64px!important;line-height:1.2!important}'});
  check('large text grows card and allows scrolling', (await dimensions(page)).scroll);
  await page.locator('#meal-pages').scrollIntoViewIfNeeded();
- await page.locator('#choose-dinner').click();await page.locator('#day-card').click();check('card still edits selected dinner',await page.locator('#meal-type').inputValue()==='dinner');await page.locator('#meal-editor-close').click();
+ await page.locator('#choose-dinner').click();await page.locator('#day-edit').click();check('pencil edits selected dinner',await page.locator('#meal-type').inputValue()==='dinner');await page.locator('#meal-editor-close').click();
  await page.setViewportSize({width:844,height:390});await page.locator('[data-view=week]').click();await page.locator('#prepare-bring').click();check('Bring preparation remains reachable',await page.locator('#screen-shopping').isVisible());
  await page.locator('#shopping-back').click();check('sharp header after scroll/navigation',await headerSharp(page));
  // Simulate CSS env() values 59/34px on a modern iPhone; no installation claim.

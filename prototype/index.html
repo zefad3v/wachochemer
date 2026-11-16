@@ -57,6 +57,7 @@
         <section class="day-detail" aria-label="Ausgewählter Tag">
           <div class="day-card-shell">
             <button type="button" id="day-card" class="day-card"></button>
+            <button type="button" id="day-edit" aria-label="Menü bearbeiten">✎</button>
             <div id="meal-pages" class="meal-pages" role="group" aria-label="Mahlzeit für ausgewählten Tag">
               <button id="choose-lunch" type="button" data-meal-page="lunch" aria-pressed="false" aria-label="Zmittag anzeigen"><span class="meal-dot"></span><span>Zmittag</span></button>
               <button id="choose-dinner" type="button" data-meal-page="dinner" aria-pressed="true" aria-label="Znacht anzeigen"><span class="meal-dot"></span><span>Znacht</span></button>
@@ -120,7 +121,7 @@
     <button data-tab="archive" type="button" class="bottom-link" aria-label="Chochchischtli"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.8 6-1.8 9 0 3-1.8 6-1.8 9 0v14c-3-1.8-6-1.8-9 0-3-1.8-6-1.8-9 0zM12 5.5v14"/></svg><span>Chochchischtli</span></button>
   </nav>
   <dialog id="meal-editor" class="meal-editor" aria-labelledby="meal-editor-title">
-    <form id="meal-form" class="meal-form">
+    <form id="meal-form" novalidate class="meal-form">
       <div class="editor-head"><h2 id="meal-editor-title" tabindex="-1">Menü plane</h2><button type="button" id="meal-editor-close" aria-label="Schliessen">✕</button></div>
       <label class="editor-date-label" for="meal-date">Datum vom Menü
         <input id="meal-date" type="date" required>
@@ -134,19 +135,22 @@
           <option value="none">Nüt plant / iichaufe</option>
         </select></label>
         <div id="meal-recipe-line" class="meal-picker">
-          <label for="meal-recipe-search">Rezept ussueche</label>
+          <button type="button" id="meal-recipe-change">Rezept ändern</button>
           <input id="meal-recipe-search" type="search" autocomplete="off" placeholder="Rezept sueche…">
           <div id="meal-recipe-options" class="meal-recipe-options" role="listbox" aria-label="Rezept us em Chochchischtli"></div>
           <output id="meal-recipe-selected" class="meal-recipe-selected" aria-live="polite">Keis Rezept gwählt</output>
           <input id="meal-recipe" type="hidden">
         </div>
-        <label id="meal-servings-line">Kochmenge (Portione)<input id="meal-servings" type="number" required min="0.001" max="1000" step="any" value="1" inputmode="decimal"></label>
+        <div id="meal-simple-portions"><p id="meal-portion-note" role="status"></p>
+<label for="meal-need">Portione für die Mahlziit</label><div class="portion-stepper"><button type="button" id="meal-minus" aria-label="Halbi Portion weniger">−</button><input id="meal-need" type="number" min="0" max="1000" step="any" inputmode="decimal"><button type="button" id="meal-plus" aria-label="Halbi Portion meh">+</button></div>
+<label><input id="meal-extra-enabled" type="checkbox"> Zusätzlich für spöter choche</label><label id="meal-extra-line" hidden>Zusätzlichi Portione<input id="meal-extra" type="number" min="0" max="1000" step="any" value="0" inputmode="decimal"></label><output id="meal-total" aria-live="polite"></output></div>
+<details id="meal-advanced"><summary>Erwiiterti Portionsplanig</summary><label id="meal-servings-line">Kochmenge (Portione)<input id="meal-servings" type="number" required min="0.001" max="1000" step="any" value="1" inputmode="decimal"></label>
         <label id="meal-consumed-line">Verzehr bi dere Mahlziit<input id="meal-consumed" type="number" required min="0" max="1000" step="any" inputmode="decimal"></label>
-        <details><summary>Rezeptspezifischi Chind-Portion</summary><label>Chind-Anteil<input id="recipe-child-share" type="number" min="0" max="1000" step="any"></label><button type="button" id="recipe-share-save">Für das Rezept merke und awände</button></details>
+        </details><details><summary>Rezeptspezifischi Chind-Portion</summary><label>Chind-Anteil<input id="recipe-child-share" type="number" min="0" max="1000" step="any"></label><button type="button" id="recipe-share-save">Für das Rezept merke und awände</button></details>
         <output id="meal-balance" aria-live="polite"></output>
         <label id="meal-manual-line" hidden>Menü<input id="meal-manual" maxlength="140" placeholder="z. B. Znacht bi de Grosseltere"></label>
-        <label id="meal-leftover-line" hidden>Reschte vom<input id="meal-leftover-source" type="date"></label>
-        <div id="meal-leftover-details" hidden><label>Ursprungsmahlziit<select id="meal-leftover-source-meal"><option value="">Bitte wähle</option><option value="lunch">Zmittag</option><option value="dinner">Znacht</option></select></label><label>Reschtebedarf<input id="meal-leftover-portions" type="number" min="0.001" max="1000" step="any" inputmode="decimal"></label></div>
+        <label id="meal-source-choice-line" hidden>Verfügbari Reschte<select id="meal-source-choice"></select></label><details id="meal-source-advanced"><summary>Ursprung prüefe</summary><label id="meal-leftover-line" hidden>Reschte vom<input id="meal-leftover-source" type="date"></label>
+        <div><label>Ursprungsmahlziit<select id="meal-leftover-source-meal"><option value="">Bitte wähle</option><option value="lunch">Zmittag</option><option value="dinner">Znacht</option></select></label></div></details><div id="meal-leftover-details" hidden><label>Reschtebedarf<input id="meal-leftover-portions" type="number" min="0.001" max="1000" step="any" inputmode="decimal"></label></div>
         <p id="meal-leftover-tip" class="editor-note" hidden>Wichtig: Bi de Kochmenge vom Ursprungstag gnueg Portione für d Reschte iiplane. Reservierige werded prüeft; d Kochmenge wird nöd automatisch erhöht.</p>
       </div>
       <p id="meal-editor-error" role="alert" hidden></p>
@@ -166,8 +170,8 @@
         <p id="dialog-description"></p>
         <div class="detail-meta" id="dialog-meta"></div>
         <div class="detail-actions" id="dialog-actions"></div>
-        <section class="detail-section" id="dialog-ingredients-section"><div class="ingredient-heading"><h3>Zutaten</h3><div id="dialog-portion-picker" class="portion-picker" role="group" aria-label="Portionenzahl"><button type="button" id="portion-minus" aria-label="Eine Portion weniger">−</button><output id="portion-count" aria-live="polite">3 Portionen</output><button type="button" id="portion-plus" aria-label="Eine Portion mehr">+</button></div></div><ul class="detail-ingredients" id="dialog-ingredients"></ul></section>
-        <section class="detail-section" id="dialog-instructions-section"><h3>Zubereitung</h3><ol id="dialog-instructions"></ol></section>
+        <section class="detail-section" id="dialog-ingredients-section"><div class="ingredient-heading"><h3>Zutaten</h3><div id="dialog-portion-picker" class="portion-picker" role="group" aria-label="Portionenzahl"><button type="button" id="portion-minus" aria-label="Halbi Portion weniger">−</button><output id="portion-count" aria-live="polite">3 Portionen</output><button type="button" id="portion-plus" aria-label="Halbi Portion meh">+</button></div></div><ul class="detail-ingredients" id="dialog-ingredients"></ul></section>
+        <section id="cooking-mode" hidden aria-label="Kochmodus"><h3 id="cooking-status" tabindex="-1" aria-live="polite"></h3><p id="cooking-step"></p><div class="cooking-controls"><button type="button" id="cooking-prev">Zrugg</button><button type="button" id="cooking-next">Wiiter</button><button type="button" id="cooking-exit">Zum Rezept</button></div></section><section class="detail-section" id="dialog-instructions-section"><h3>Zubereitung</h3><ol id="dialog-instructions"></ol></section>
       </div>
     </div>
   </dialog>
