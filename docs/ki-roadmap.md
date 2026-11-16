@@ -26,3 +26,7 @@ Issue #11 ersetzt die bisherige Reihenfolge: UI-Korrekturen A abgeschlossen; M4 
 von noch offener echter iPhone-Abnahme als gestapelter Draft umgesetzt.
 [M4-Modell, Migration und Tests](m4-portions-leftovers.md). M6 folgt als reine Exportvorbereitung.
 Keine Cloud-Synchronisation, kein Release.
+
+M6-Vorbereitung gemäss Issue #11: [reines Exportmanifest und offizielle Einzelimporte](m6-bring-transfer-plan.md)
+implementiert. Automatischer Wochenimport und lesbarer Bring!-Zustand weiterhin unbewiesen;
+keine Frontend-Anmeldung und keine produktive Übertragung.

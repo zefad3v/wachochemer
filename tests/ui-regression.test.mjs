@@ -10,7 +10,7 @@ test('date based menu form and shopping range are visible and wired',()=>{
  assert.match(js,/const loaded=loadPlan\(localStorage\)/);
  assert.match(js,/function persistPlan\(\)/);
  assert.match(js,/function saveMealEditor\(event\)/);
- assert.match(js,/cookingTotals\(state\.plan,state\.recipes,from,to\)/);
+ assert.match(js,/buildTransferManifest\(state\.plan,state\.recipes/);
  assert.match(js,/byId\("shopping-from"\)\.value=state\.shopping\.from/);
  assert.match(js,/byId\("shopping-following"\)\.addEventListener/);
  assert.doesNotMatch(js,/byId\("edit-day"\)/);

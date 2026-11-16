@@ -93,7 +93,12 @@
         <div><input id="shopping-extra" placeholder="z. B. Milch oder Windle" maxlength="120" required><button type="submit">Hinzuefüege</button></div>
       </form>
       <p class="shopping-disclaimer">Nur gplanti Rezepte wärded zämegfasst. Eigeni Menüs ohni Zutate und Reschte erzeuged kei zweite Iichauf.</p>
+      <label><input type="checkbox" id="shopping-optional"> Optionali Zutate iischlüsse</label>
+      <p id="bring-warnings" role="status"></p>
+      <div id="bring-imports" aria-label="Offizielli Einzelrezeptimporte"></div>
+      <p>Ob es Rezept in Bring! gspeicheret isch und ob Zutate uf de Bring!-Liste stönd, isch unabhängig und da nöd prüefbar. Bi jedem Import in Bring! selber kontrolliere.</p>
       <div class="shopping-transfer">
+        <button type="button" id="shopping-manifest">Exportmanifest abelade</button>
         <button type="button" id="shopping-copy" class="main-action">Zutate für Bring! kopiere</button>
         <p id="shopping-copy-status" role="status">D Liste wird vorbereitet. Für de Import in Bring! brucht es no en bestätigte Übergabewäg.</p>
       </div>
