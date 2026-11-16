@@ -14,7 +14,8 @@ try{
  check(await page.locator('#meal-need').inputValue()==='','first run does not assume one portion');
  await page.locator('#meal-recipe-search').fill('Kürbis');await page.locator('[data-pick-recipe]').click();
  check((await page.locator('#meal-portion-note').innerText()).includes('Basisportione'),'explicit recipe fallback');
- check(!await page.locator('#meal-recipe-search').isVisible(),'selected recipe hides search');
+ check(await page.locator('#meal-recipe-search').isVisible(),'recipe remains searchable after selection');
+ check(!await page.locator('#meal-recipe-change').count(),'redundant recipe change button removed');
  await page.locator('#meal-need').fill('2.25');await page.locator('#meal-extra-enabled').check();await page.locator('#meal-extra').fill('1.5');
  await page.locator('#meal-form button[type=submit]').click();
  const saved=await page.evaluate(()=>localStorage.getItem('wachochemer:mealPlanV2'));const entry=Object.values(JSON.parse(saved).entries)[0];
