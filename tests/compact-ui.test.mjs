@@ -19,7 +19,7 @@ test('day view exposes both lunch and dinner and keeps manual override until day
  assert.match(js,/const mealForTime=\(\)=>new Date\(\)\.getHours\(\)<14\?"lunch":"dinner"/);
  assert.match(js,/function itemForDay\(date,requestedMeal=null\)/);
  assert.match(js,/state\.selectedMeal=btn\.dataset\.mealPage;renderPlanner\(\)/);
- assert.match(js,/state\.selectedMeal=null;renderPlanner\(\)/);
+ assert.match(js,/calendarDay!==localToday\(\).*state\.selectedMeal=null/);
  assert.match(js,/openMealEditor\(weekDays\(\)\[state\.current\]\.date,displayedMeal\(\)\)/);
 });
 test('compact mobile title, restored glass bar and no obsolete image placeholder glyph',()=>{
@@ -41,5 +41,5 @@ test('horizontal swipes target the two meal pages; weekdays remain directly sele
  assert.match(js,/const direction=swipeDirection\(dx,dy\);\s*if\(direction\)\{state\.selectedMeal=direction>0\?"dinner":"lunch";renderPlanner\(\)\}/);
  assert.match(html,/id="week-strip"/);
  assert.match(js,/if\(day\)setDay\(Number\(day\.dataset\.day\)\)/);
- assert.match(css,/#screen-week \.view-switch\{\s*position:absolute;right:4px;top:3px/);
+ assert.match(html,/class="day-navigation">[^]*?id="week-strip"[^]*?class="view-switch"/);
 });

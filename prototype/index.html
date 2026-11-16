@@ -13,7 +13,10 @@
 </head>
 <body>
 <div id="app">
+  <div class="app-backdrop" aria-hidden="true"></div>
   <header class="topbar">
+    <span class="header-backdrop" aria-hidden="true"></span>
+    <div id="mobile-page-title" class="mobile-page-title">Üse Wucheplan</div>
     <div class="brand-block">
       <span class="eyebrow">ÜSERI FAMILIECHUCHI</span>
       <div class="brand">Wa chochemer<span class="brand-mark">?</span></div>
@@ -40,22 +43,25 @@
           <button type="button" class="icon-btn" id="week-next" aria-label="Nächste Woche">›</button>
         </div>
       </div>
-      <div class="view-switch" role="group" aria-label="Planansicht">
-        <button type="button" data-view="day" aria-pressed="true">Tag</button>
-        <button type="button" data-view="week" aria-pressed="false">Woche</button>
+      <div class="day-navigation">
+        <nav id="week-strip" class="week-strip" aria-label="Tagesauswahl"></nav>
+        <div class="view-switch" role="group" aria-label="Planansicht">
+          <button type="button" data-view="day" aria-pressed="true"><span aria-hidden="true">‹ </span>Tag</button>
+          <button type="button" data-view="week" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="14" rx="2"/><path d="M6 2v4m8-4v4M3 8h14M7 8v9m6-9v9"/></svg>Woche</button>
+        </div>
       </div>
-      <nav id="week-strip" class="week-strip" aria-label="Tagesauswahl"></nav>
 
       <div class="planner-layout">
         <div id="week-overview" class="week-overview" aria-label="Sieben Tage im Überblick"></div>
         <section class="day-detail" aria-label="Ausgewählter Tag">
-          <button type="button" id="day-card" class="day-card"></button>
-          <div id="meal-pages" class="meal-pages" role="group" aria-label="Mahlzeit für ausgewählten Tag">
-            <button id="choose-lunch" type="button" data-meal-page="lunch" aria-pressed="false" aria-label="Zmittag anzeigen"><span class="meal-dot"></span><span>Zmittag</span></button>
-            <button id="choose-dinner" type="button" data-meal-page="dinner" aria-pressed="true" aria-label="Znacht anzeigen"><span class="meal-dot"></span><span>Znacht</span></button>
+          <div class="day-card-shell">
+            <button type="button" id="day-card" class="day-card"></button>
+            <div id="meal-pages" class="meal-pages" role="group" aria-label="Mahlzeit für ausgewählten Tag">
+              <button id="choose-lunch" type="button" data-meal-page="lunch" aria-pressed="false" aria-label="Zmittag anzeigen"><span class="meal-dot"></span><span>Zmittag</span></button>
+              <button id="choose-dinner" type="button" data-meal-page="dinner" aria-pressed="true" aria-label="Znacht anzeigen"><span class="meal-dot"></span><span>Znacht</span></button>
+            </div>
           </div>
           <div id="day-meals" class="day-meals" aria-live="polite"></div>
-          <button type="button" id="edit-day" class="main-action">Menü bearbeiten</button>
         </section>
       </div>
       <div class="planner-secondary-actions">
@@ -99,6 +105,7 @@
         <label for="start-day"><strong>Wuchebeginn</strong><span>Vo wellem Tag söll dini Wuche starte?</span></label>
         <select id="start-day"><option value="1">Mäntig</option><option value="2">Zischtig</option><option value="3">Mittwuch</option><option value="4">Dunschtig</option><option value="5">Friitig</option><option value="6">Samschtig</option><option value="0">Sunntig</option></select>
       </div>
+      <label class="image-demo-setting"><input id="image-demo" type="checkbox"> Bild-Demo aazeige <small>KI-Beispielbild, kei Foto vom tatsächliche Rezept. Dini Planig bliibt unveränderet.</small></label>
       <p class="settings-note">D Iistellig wird nume i dim Browser gspeicheret. Familienprofil, Sprachwächsel und dini eigene Rezepte chömed spöter.</p>
     </section>
   </main>

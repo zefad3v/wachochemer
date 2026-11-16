@@ -9,6 +9,9 @@ on:
       - 'tests/archive.test.mjs'
       - 'tests/ui-regression.test.mjs'
       - 'tests/responsive-planner.test.mjs'
+      - 'tests/compact-ui.test.mjs'
+      - 'tests/v15-ui.test.mjs'
+      - 'tests/v15-browser.mjs'
       - '.github/workflows/check-archive.yml'
   push:
     branches:
