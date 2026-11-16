@@ -4,6 +4,7 @@ import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-pla
 import {addDays,formatDay,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
 import {householdNeed,portion,assessPlan,updateMeal,cookingTotals} from "../src/domain/planning.mjs";
 import {loadPlan,storePlan,restorePlan} from "../src/storage/meal-plan.mjs";
+import {buildTransferManifest,serializeManifest,manifestText} from "../src/integrations/bring.mjs";
 const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig","Samschtig"];
 const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
 const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
@@ -297,32 +298,29 @@ function changeShoppingRange(from,to){
   byId("shopping-window-error").textContent=err.message;
  }
 }
-function shoppingTransferText(){
- const {from,to}=state.shopping;
- const {items,skipped}=cookingTotals(state.plan,state.recipes,from,to);
- const days=new Set(datesBetween(from,to));
- const extra=state.extras.filter(x=>days.has(x.date));
- const lines=items.map(row=>{
-  const label=state.names[row.ingredientId]||row.ingredientId;
-  const unit=units[row.unit]||row.unit;
-  const quantity=row.quantity===null?"nach Geschmack":moneyLike(Math.round(row.quantity*100)/100)+(unit?" "+unit:"");
-  return label+" — "+quantity;
+function transferManifest(){
+ if(state.planBlocked||state.archiveStatus!=="ready")throw Error("Plan/Rezeptdate bitte zuerst wiederherstelle oder lade.");
+ return buildTransferManifest(state.plan,state.recipes,state.shopping.from,state.shopping.to,{
+  includeOptional:byId("shopping-optional").checked,extras:state.extras,
+  publicRecipeUrl:recipe=>recipe.slug?"https://zefad3v.github.io/wachochemer/rezepte/"+encodeURIComponent(recipe.slug)+"/":null
  });
- return ["Wachochemer, "+from+" bis "+to,...lines,...extra.map(x=>x.title),
-  ...(skipped.length?["Achtung: Eigene Menüs ohne Zutaten: "+skipped.map(x=>x.title).join(", ")]:[])].join("\n");
 }
+function shoppingTransferText(){return manifestText(transferManifest(),state.names)}
 function renderShopping(){
  byId("shopping-from").value=state.shopping.from;
  byId("shopping-to").value=state.shopping.to;
  const {from,to}=state.shopping;
  let totals;
- try{totals=cookingTotals(state.plan,state.recipes,from,to)}
+ try{totals=transferManifest()}
  catch(err){
   byId("shopping-window-error").textContent=err.message;
   byId("shopping-window-error").hidden=false;
   return;
  }
- const {items,skipped}=totals;
+ const {items}=totals;
+ const skipped=totals.warnings;
+ byId("bring-imports").innerHTML=totals.cooking.map(row=>'<p>'+escapeHtml(row.mealKey+" · "+row.title+" · "+row.cookedServings+" Portione")+(row.officialImport?' <a target="_blank" rel="noopener noreferrer" href="'+escapeHtml(row.officialImport.importUrl)+'">Einzelrezept in Bring! öffne</a>':' · Kei Einzelimport verfügbar')+'</p>').join("");
+ byId("bring-warnings").textContent=totals.warnings.map(x=>x.key+": "+x.message).join("\n");
  const days=new Set(datesBetween(from,to));
  const extras=state.extras.filter(x=>days.has(x.date));
  byId("shopping-progress").textContent=items.length+" Rezept-Zutate · "+extras.length+" Zusatzartikel";
@@ -337,7 +335,7 @@ function renderShopping(){
   '<button type="button" class="remove-extra" data-remove-extra="'+escapeHtml(row.id)+'" aria-label="'+escapeHtml(row.title)+' entferne">✕</button></div>').join("");
  byId("shopping-items").innerHTML='<section class="shopping-group"><h3>Für Bring! vorbereite</h3>'+rows+'</section>'+
   (extraRows?'<section class="shopping-group"><h3>Zusätzlechi Sache</h3>'+extraRows+'</section>':'')+
-  (skipped.length?'<p class="shopping-disclaimer">'+skipped.length+' eigenes Menü ohni Rezept-Zutate. D Zutate bi Bedarf ergänze.</p>':'');
+  (skipped.length?'<p class="shopping-disclaimer">Warnige obe bitte prüefe.</p>':'');
  byId("shopping-items").querySelectorAll("[data-remove-extra]").forEach(btn=>btn.addEventListener("click",()=>{
   state.extras=state.extras.filter(x=>x.id!==btn.dataset.removeExtra);
   save("wachochemer:shoppingExtras",state.extras);
@@ -449,6 +447,18 @@ async function loadRecipes(){
 }
 function init(){
  for(const id of ["meal-leftover-source","meal-leftover-source-meal"])byId(id).addEventListener("change",renderMealBalance);
+ byId("shopping-optional").addEventListener("change",renderShopping);
+ byId("shopping-manifest").addEventListener("click",()=>{
+  try{
+   if(state.planBlocked)throw Error("Plan bitte zuerst wiederherstelle.");
+   const blob=new Blob([serializeManifest(transferManifest())],{type:"application/json"});
+   const url=URL.createObjectURL(blob),link=document.createElement("a");
+   link.href=url;link.download="wachochemer-bring-"+state.shopping.from+"-"+state.shopping.to+".json";link.click();
+   setTimeout(()=>URL.revokeObjectURL(url),1000);
+   byId("shopping-copy-status").textContent="Manifest vorbereitet. Nüt automatisch a Bring! übertrage.";
+  }catch(err){byId("shopping-copy-status").textContent=err.message}
+ });
+
  byId("plan-restore").addEventListener("click",()=>{
   try{state.plan=restorePlan(localStorage);state.planBlocked=false;persistPlan();byId("plan-restore").hidden=true}
   catch(err){byId("plan-status").textContent=err.message}
