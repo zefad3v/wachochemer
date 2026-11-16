@@ -3,6 +3,7 @@ import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,formatDay,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
 import {householdNeed,portion,assessPlan,updateMeal,cookingTotals} from "../src/domain/planning.mjs";
+import {parseDecimal,decimalText} from "./locale-number.mjs";
 import {loadPlan,storePlan,restorePlan} from "../src/storage/meal-plan.mjs";
 import {buildTransferManifest,serializeManifest,manifestText} from "../src/integrations/bring.mjs";
 const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig","Samschtig"];
@@ -185,12 +186,30 @@ function renderArchive(){
  }));
  document.querySelectorAll(".filter-chip").forEach(btn=>btn.classList.toggle("active",btn.dataset.filter===state.filter));
 }
+function updatePlanNotice(error=null){
+ const details=byId("plan-review"),summary=byId("plan-review-summary"),list=byId("plan-status");
+ const issues=error?[]:assessPlan(state.plan,state.recipes).issues;
+ details.hidden=!error&&issues.length===0;
+ if(details.hidden){details.open=false;list.replaceChildren();return}
+ if(error){
+  details.open=true;summary.textContent="Menüplan konnte nöd glade werde";
+  list.textContent=error;return;
+ }
+ summary.textContent=issues.length+" älteri oder unvollständigi Menüeinträg prüefe";
+ list.innerHTML=issues.map(issue=>{
+  const key=String(issue.key??""),[date,meal]=key.split("|");
+  const canEdit=/^\d{4}-\d{2}-\d{2}$/.test(date)&&["lunch","dinner"].includes(meal);
+  const label=canEdit?date.slice(8)+"."+date.slice(5,7)+"."+date.slice(0,4)+" · "+(meal==="lunch"?"Zmittag":"Znacht"):key;
+  return '<div class="plan-review-row"><span><strong>'+escapeHtml(label)+'</strong> · '+escapeHtml(issue.message)+'</span>'+
+   (canEdit?'<button type="button" data-review-key="'+escapeHtml(key)+'">Prüefe</button>':'')+'</div>';
+ }).join("");
+}
 function persistPlan(){
  if(state.archiveStatus!=="ready")throw Error("Rezepte bitte zuerst vollständig lade.");
  if(state.planBlocked)throw Error("Originalplan bitte zuerst wiederherstelle.");
  storePlan(localStorage,state.plan);
  renderPlanner();
- byId("plan-status").textContent=assessPlan(state.plan,state.recipes).issues.map(x=>x.key+": "+x.message).join("\n");
+ updatePlanNotice();
  if(state.tab==="shopping")renderShopping();
 }
 function openMealEditor(date,meal="dinner",recipeId=null){
@@ -231,8 +250,6 @@ function renderMealRecipeOptions(){
  const selected=byId("meal-recipe").value;
  const current=state.archiveEntries.find(item=>item.id===selected);
  byId("meal-recipe-selected").textContent=current?current.title:"Bitte es Rezept wähle";
- byId("meal-recipe-change").textContent=current?"Rezept ändern":"Rezept ussueche";
- byId("meal-recipe-search").hidden=!!current&&!query;
  byId("meal-recipe-options").hidden=!query;
  if(!query){byId("meal-recipe-options").innerHTML="";return}
  const matching=state.archiveEntries.filter(item=>item.title.toLocaleLowerCase("de-CH").includes(query));
@@ -251,18 +268,21 @@ function suggestMealPortions(){
  byId("meal-consumed").value=need;byId("meal-servings").value=need;reflectMealPortions();
 }
 function reflectMealPortions(){
- const consumed=byId("meal-consumed").value,cooked=Number(byId("meal-servings").value);
- byId("meal-need").value=consumed;
- const extra=consumed===""?0:Math.max(0,cooked-Number(consumed));
- byId("meal-extra").value=extra;byId("meal-extra-enabled").checked=extra>0;
+ const consumed=parseDecimal(byId("meal-consumed").value),cooked=parseDecimal(byId("meal-servings").value);
+ byId("meal-need").value=decimalText(consumed);
+ const extra=Number.isFinite(consumed)&&Number.isFinite(cooked)?Math.max(0,cooked-consumed):0;
+ byId("meal-extra").value=decimalText(extra);byId("meal-extra-enabled").checked=extra>0;
  byId("meal-extra-line").hidden=extra<=0;
- byId("meal-total").textContent="Total choche: "+cooked+" Portione";portionNote();
+ byId("meal-total").textContent=Number.isFinite(cooked)?"Total choche: "+decimalText(cooked)+" Portione":"Bitte Portione erfasse";portionNote();
 }
 function syncMealPortions(){
- const need=byId("meal-need").value,extra=byId("meal-extra-enabled").checked?Number(byId("meal-extra").value):0;
- byId("meal-extra-line").hidden=!byId("meal-extra-enabled").checked;
- byId("meal-consumed").value=need;byId("meal-servings").value=need===""?"":Number(need)+extra;
- byId("meal-total").textContent="Total choche: "+byId("meal-servings").value+" Portione";
+ const need=parseDecimal(byId("meal-need").value),enabled=byId("meal-extra-enabled").checked;
+ const extra=enabled?parseDecimal(byId("meal-extra").value):0;
+ byId("meal-extra-line").hidden=!enabled;
+ byId("meal-consumed").value=decimalText(need);
+ const valid=Number.isFinite(need)&&Number.isFinite(extra)&&need>0&&extra>=0;
+ byId("meal-servings").value=valid?decimalText(need+extra):"";
+ byId("meal-total").textContent=valid?"Total choche: "+decimalText(need+extra)+" Portione":"Bitte gültigi Portione iigäh";
 }
 function renderSourceChoices(){
  const target=mealKey(state.editingDate,byId("meal-type").value),plan=structuredClone(state.plan);
@@ -325,12 +345,12 @@ function saveMealEditor(event){
   else{
    let entry;
    if(kind==="recipe"&&!state.recipes[byId("meal-recipe").value])throw Error("Bitte es gültigs Rezept ussueche.");
-   if(kind==="recipe"&&(byId("meal-servings").value===""||byId("meal-consumed").value===""))throw Error("Bitte Kochmenge und Verzehr kläre.");
-   if(kind==="recipe")entry={type:"recipe",recipeId:byId("meal-recipe").value,cookedServings:Number(byId("meal-servings").value),consumedServings:Number(byId("meal-consumed").value)};
+   if(kind==="recipe"&&(!Number.isFinite(parseDecimal(byId("meal-servings").value))||!Number.isFinite(parseDecimal(byId("meal-consumed").value))))throw Error("Bitte gültigi Portione iigäh. Punkt oder Komma sind möglich.");
+   if(kind==="recipe")entry={type:"recipe",recipeId:byId("meal-recipe").value,cookedServings:parseDecimal(byId("meal-servings").value),consumedServings:parseDecimal(byId("meal-consumed").value)};
    if(kind==="manual")entry={type:"manual",title:byId("meal-manual").value.trim()};
    if(kind==="leftover"){
     const sourceDate=byId("meal-leftover-source").value;
-    entry={type:"leftover",sourceKey:mealKey(sourceDate,byId("meal-leftover-source-meal").value),portions:Number(byId("meal-leftover-portions").value)};
+    entry={type:"leftover",sourceKey:mealKey(sourceDate,byId("meal-leftover-source-meal").value),portions:parseDecimal(byId("meal-leftover-portions").value)};
    }
    state.plan=updateMeal(state.plan,key,entry,state.recipes);
   }
@@ -493,7 +513,7 @@ async function loadRecipes(){
   const loaded=loadPlan(localStorage);
   state.planBlocked=!!loaded.error;
   if(loaded.plan)state.plan=loaded.plan;
-  byId("plan-status").textContent=loaded.error||assessPlan(state.plan,state.recipes).issues.map(x=>x.key+": "+x.message).join("\n");
+  updatePlanNotice(loaded.error);
   byId("plan-restore").hidden=!loaded.error;
 
   }catch(err){
@@ -508,10 +528,21 @@ async function loadRecipes(){
  if(state.tab==="archive")renderArchive();
 }
 function init(){
- byId("meal-recipe-change").addEventListener("click",()=>{byId("meal-recipe-search").hidden=false;byId("meal-recipe-search").focus()});
+ byId("plan-status").addEventListener("click",event=>{
+  const button=event.target.closest("[data-review-key]");
+  if(!button)return;
+  const [date,meal]=button.dataset.reviewKey.split("|");
+  showTab("week");openMealEditor(date,meal);
+ });
+ for(const id of ["meal-need","meal-extra","meal-servings","meal-consumed","meal-leftover-portions","recipe-child-share"]){
+  byId(id).addEventListener("blur",()=>{
+   const value=parseDecimal(byId(id).value);
+   if(Number.isFinite(value))byId(id).value=decimalText(value);
+  });
+ }
  for(const id of ["meal-need","meal-extra","meal-extra-enabled"])byId(id).addEventListener("input",syncMealPortions);
  for(const id of ["meal-servings","meal-consumed"])byId(id).addEventListener("input",reflectMealPortions);
- for(const [id,delta] of [["meal-minus",-0.5],["meal-plus",0.5]])byId(id).addEventListener("click",()=>{byId("meal-need").value=Math.max(0,Math.min(1000,Number(byId("meal-need").value)+delta));syncMealPortions()});
+ for(const [id,delta] of [["meal-minus",-0.5],["meal-plus",0.5]])byId(id).addEventListener("click",()=>{byId("meal-need").value=decimalText(Math.max(0,Math.min(1000,(parseDecimal(byId("meal-need").value)||0)+delta)));syncMealPortions()});
  byId("meal-source-choice").addEventListener("change",e=>{const [date,meal]=e.target.value.split("|");byId("meal-leftover-source").value=date||"";byId("meal-leftover-source-meal").value=meal||"";renderMealBalance()});
  byId("meal-date").addEventListener("change",()=>{if(byId("meal-date").value){state.editingDate=byId("meal-date").value;renderSourceChoices()}});
  byId("cooking-prev").addEventListener("click",()=>{state.cookingStep=Math.max(0,state.cookingStep-1);renderCookingStep()});
@@ -532,7 +563,7 @@ function init(){
 
  byId("plan-restore").addEventListener("click",()=>{
   try{state.plan=restorePlan(localStorage);state.planBlocked=false;persistPlan();byId("plan-restore").hidden=true}
-  catch(err){byId("plan-status").textContent=err.message}
+  catch(err){updatePlanNotice(err.message)}
  });
  const fields=["adults","children","babies","adultsShare","childrenShare","babiesShare"];
  for(const field of fields)byId("household-"+field).value=state.household?.[field]??(field==="adultsShare"?1:0);
@@ -548,7 +579,7 @@ function init(){
  byId("recipe-share-save").addEventListener("click",()=>{
   try{
    const id=byId("meal-recipe").value;if(!state.recipes[id])throw Error("Zuerst es Rezept wähle.");
-   const share=Number(byId("recipe-child-share").value);portion(share,true);
+   const share=parseDecimal(byId("recipe-child-share").value);portion(share,true);
    const next={...state.recipeShares,[id]:{childrenShare:share}};
    if(!save("wachochemer:recipeShares",next))throw Error("Speichere fehlgschlage.");
    state.recipeShares=next;
