@@ -18,7 +18,7 @@ try{
  const source=Object.keys(data.entries)[0],next=new Date(source.slice(0,10)+'T12:00:00Z');next.setUTCDate(next.getUTCDate()+1);const day=next.toISOString().slice(0,10);
  await page.locator('#day-card').click();await page.locator('#meal-date').fill(day);await page.locator('#meal-date').dispatchEvent('change');await page.locator('#meal-type').selectOption('lunch');
  await page.locator('#meal-kind').selectOption('leftover');
- await page.locator('#meal-leftover-source').fill(source.slice(0,10));await page.locator('#meal-leftover-source-meal').selectOption('dinner');await page.locator('#meal-leftover-portions').fill('4');
+ await page.locator('#meal-leftover-source').fill(source.slice(0,10));await page.locator('#meal-leftover-source-meal').selectOption('dinner');check((await page.locator('#meal-balance').textContent()).includes('Verfügbar: 3.5'));await page.locator('#meal-leftover-portions').fill('4');
  await page.locator('#meal-form button[type=submit]').click();check((await page.locator('#meal-editor-error').textContent()).includes('Portione fehled'));
  await page.locator('#meal-leftover-portions').fill('2.5');await page.locator('#meal-form button[type=submit]').click();check(!await page.locator('#meal-editor').isVisible());
  await page.reload();await page.waitForFunction(()=>document.querySelector('#day-card').textContent.length>0);

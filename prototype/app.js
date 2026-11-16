@@ -216,8 +216,7 @@ function loadMealEditor(){
  byId("meal-consumed").value=entry?.consumedServings??need;
  byId("meal-leftover-portions").value=entry?.portions??need;
  byId("meal-leftover-source-meal").value=entry?.sourceKey?.split("|")[1]||"";
- const balance=assessPlan(state.plan,state.recipes).balances[entry?.sourceKey||mealKey(state.editingDate,byId("meal-type").value)];
- byId("meal-balance").textContent=balance?"Kocht: "+balance.cooked+" · Verzehrt: "+(balance.consumed??"bitte kläre")+" · Reserviert: "+balance.reserved+" · Verfügbar: "+(balance.available??"bitte kläre"):"";
+
  byId("meal-manual").value=entry?.type==="manual"?entry.title:"";
  byId("meal-leftover-source").value=entry?.type==="leftover"?(entry.sourceKey?.split("|")[0]||entry.sourceDate||""):addDays(state.editingDate,-1);
  byId("meal-remove").disabled=!entry;
@@ -236,6 +235,15 @@ function renderMealRecipeOptions(){
   '<button type="button" role="option" aria-selected="'+(item.id===selected)+'" data-pick-recipe="'+escapeHtml(item.id)+'">'+
   escapeHtml(item.title)+'</button>').join(""):'<p>Kei Rezepte gfunde</p>';
 }
+function renderMealBalance(){
+ let key=mealKey(state.editingDate,byId("meal-type").value);
+ if(byId("meal-kind").value==="leftover"){
+  try{key=mealKey(byId("meal-leftover-source").value,byId("meal-leftover-source-meal").value)}
+  catch{byId("meal-balance").textContent="Ursprungsdatum und Mahlziit wähle.";return}
+ }
+ const balance=assessPlan(state.plan,state.recipes).balances[key];
+ byId("meal-balance").textContent=balance?"Kocht: "+balance.cooked+" · Verzehrt: "+(balance.consumed??"bitte kläre")+" · Reserviert: "+balance.reserved+" · Verfügbar: "+(balance.available??"bitte kläre"):"Kei Kochmenge für die Mahlziit erfasst.";
+}
 function updateMealEditorFields(){
  const kind=byId("meal-kind").value;
  byId("meal-recipe-line").hidden=kind!=="recipe";
@@ -247,6 +255,7 @@ function updateMealEditorFields(){
  byId("meal-manual-line").hidden=kind!=="manual";
  byId("meal-leftover-line").hidden=kind!=="leftover";
  byId("meal-leftover-tip").hidden=kind!=="leftover";
+ renderMealBalance();
 }
 function saveMealEditor(event){
  event.preventDefault();
@@ -439,6 +448,7 @@ async function loadRecipes(){
  if(state.tab==="archive")renderArchive();
 }
 function init(){
+ for(const id of ["meal-leftover-source","meal-leftover-source-meal"])byId(id).addEventListener("change",renderMealBalance);
  byId("plan-restore").addEventListener("click",()=>{
   try{state.plan=restorePlan(localStorage);state.planBlocked=false;persistPlan();byId("plan-restore").hidden=true}
   catch(err){byId("plan-status").textContent=err.message}

@@ -39,7 +39,7 @@ Die v1-Hilfsfunktionen im Prototyp bleiben für alte Aufrufer kompatibel; aktive
 
 ## Prüfung
 46/46 Node-Einzeltests bestanden, darunter 8 M4-Domain-/Speichertests.
-Chromium: 7/7 neue M4-Abläufe und bisherige 59 UI-Prüfungen bestanden.
+Chromium: 8/8 neue M4-Abläufe und bisherige 59 UI-Prüfungen bestanden.
 Syntax, Rezeptindex-/Seitengenerator und diff-check erfolgreich; generierte Produktionsdateien
 wurden nicht übernommen.
 Manuell offen: echte iPhone-Safari/PWA-Tastatur, Rotation, grosse Schrift, Speicherbeschränkungen,
