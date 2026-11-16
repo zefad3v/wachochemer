@@ -61,7 +61,7 @@ export function ingredientTotals(entries,recipes,from,to,{includeOptional=false}
   }
   const recipe=recipes[entry.recipeId];
   if(!recipe){skipped.push({date,meal,title:'Unbekanntes Rezept'});continue}
-  if(!Number.isInteger(entry.servings)||entry.servings<1||entry.servings>24)continue;
+  if(!Number.isFinite(entry.servings)||entry.servings<=0||entry.servings>1000)continue;
   for(const row of recipe.ingredients){
    if(row.optional&&!includeOptional)continue;
    const id=row.ingredientId+'|'+row.unit;

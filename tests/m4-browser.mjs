@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+const {chromium}=createRequire(import.meta.url)('playwright');
+const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+let n=0;const check=v=>{assert(v);n++};
+try{
+ const page=await browser.newPage({viewport:{width:390,height:844}});
+ await page.goto('http://127.0.0.1:8765/prototype/');
+ await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('No nüt plant'));
+ await page.locator('[data-tab=settings]').first().click();
+ await page.locator('#household-adults').fill('2');await page.locator('#household-children').fill('1');await page.locator('#household-childrenShare').fill('0.5');
+ await page.locator('#household-form button').click();check((await page.locator('#household-status').textContent()).includes('2.5'));
+ await page.locator('#settings-back').click();await page.locator('#choose-dinner').click();await page.locator('#day-card').click();
+ await page.locator('#meal-recipe-search').fill('Kürbis');await page.locator('[data-pick-recipe]').click();
+ check(await page.locator('#meal-consumed').inputValue()==='2.5');
+ await page.locator('#meal-servings').fill('6');await page.locator('#meal-form button[type=submit]').click();
+ const data=await page.evaluate(()=>JSON.parse(localStorage.getItem('wachochemer:mealPlanV2')));
+ const source=Object.keys(data.entries)[0],next=new Date(source.slice(0,10)+'T12:00:00Z');next.setUTCDate(next.getUTCDate()+1);const day=next.toISOString().slice(0,10);
+ await page.locator('#day-card').click();await page.locator('#meal-date').fill(day);await page.locator('#meal-date').dispatchEvent('change');await page.locator('#meal-type').selectOption('lunch');
+ await page.locator('#meal-kind').selectOption('leftover');
+ await page.locator('#meal-leftover-source').fill(source.slice(0,10));await page.locator('#meal-leftover-source-meal').selectOption('dinner');await page.locator('#meal-leftover-portions').fill('4');
+ await page.locator('#meal-form button[type=submit]').click();check((await page.locator('#meal-editor-error').textContent()).includes('Portione fehled'));
+ await page.locator('#meal-leftover-portions').fill('2.5');await page.locator('#meal-form button[type=submit]').click();check(!await page.locator('#meal-editor').isVisible());
+ await page.reload();await page.waitForFunction(()=>document.querySelector('#day-card').textContent.length>0);
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('wachochemer:mealPlanV2')));
+ check(saved.entries[day+'|lunch'].sourceKey===source);
+ await page.evaluate(()=>localStorage.setItem('wachochemer:mealPlanV2','broken'));
+ await page.reload();await page.waitForFunction(()=>document.querySelector('#plan-status').textContent.includes('Original'));
+ check(await page.locator('#plan-restore').isVisible());await page.locator('#plan-restore').click();check(!await page.locator('#plan-restore').isVisible());
+ console.log(n+' M4 browser checks passed');
+}finally{await browser.close()}
