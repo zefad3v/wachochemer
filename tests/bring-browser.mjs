@@ -9,9 +9,9 @@ try{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8765/prototype/');
  await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('No nüt plant'));
- await page.locator('#choose-dinner').click();await page.locator('#day-card').click();
+ await page.locator('#choose-dinner').click();await page.locator('#day-edit').click();
  await page.locator('#meal-recipe-search').fill('Fajitas');await page.locator('[data-pick-recipe]').click();
- await page.locator('#meal-servings').fill('5.5');await page.locator('#meal-consumed').fill('2.5');await page.locator('#meal-form button[type=submit]').click();
+ await page.locator('#meal-advanced').evaluate(el=>el.open=true);await page.locator('#meal-servings').fill('5.5');await page.locator('#meal-consumed').fill('2.5');await page.locator('#meal-form button[type=submit]').click();
  await page.locator('[data-view=week]').click();await page.locator('#prepare-bring').click();
  const href=await page.locator('#bring-imports a').getAttribute('href');check(new URL(href).searchParams.get('requestedQuantity')==='5.5');
  const downloadPromise=page.waitForEvent('download');await page.locator('#shopping-manifest').click();

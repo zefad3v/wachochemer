@@ -28,12 +28,12 @@ try{
   assert.equal(await page.locator('#week-strip [aria-current=date]').getAttribute('aria-pressed'),'true');
  });
  await check('card edits selected meal and persists recipe and portions',async()=>{
-  await page.locator('#choose-dinner').click();await page.locator('#day-card').click();
+  await page.locator('#choose-dinner').click();await page.locator('#day-edit').click();
   assert.equal(await page.locator('#meal-type').inputValue(),'dinner');
   assert.equal(await page.locator('#meal-date').inputValue(),'2026-12-31');
-  await page.locator('#meal-recipe-search').fill('Kürbis');await page.locator('[data-pick-recipe]').click();await page.locator('#meal-servings').fill('6');await page.locator('#meal-form button[type=submit]').click();
+  await page.locator('#meal-recipe-search').fill('Kürbis');await page.locator('[data-pick-recipe]').click();await page.locator('#meal-advanced').evaluate(el=>el.open=true);await page.locator('#meal-servings').fill('6');await page.locator('#meal-form button[type=submit]').click();
   await page.reload();await page.waitForFunction(()=>document.querySelector('#day-card').textContent.length>0);
-  await page.locator('#choose-dinner').click();await page.locator('#day-card').click();
+  await page.locator('#choose-dinner').click();await page.locator('#day-edit').click();
   assert.equal(await page.locator('#meal-servings').inputValue(),'6');
   assert.equal(await page.locator('#recipe-dialog[open]').count(),0);
   await page.locator('#meal-editor-close').click();

@@ -30,3 +30,5 @@ Keine Cloud-Synchronisation, kein Release.
 M6-Vorbereitung gemäss Issue #11: [reines Exportmanifest und offizielle Einzelimporte](m6-bring-transfer-plan.md)
 implementiert. Automatischer Wochenimport und lesbarer Bring!-Zustand weiterhin unbewiesen;
 keine Frontend-Anmeldung und keine produktive Übertragung.
+
+Issue #15 (M0/M4-Alltagsbedienung): direkter Rezept-/Kochmodus, einfache Portionsplanung und höhenabhängiges Landscape-Layout auf PR #13 aufgebaut. [Nachweise und offene iPhone-Abnahme](issue15-cooking-ux.md). Kein Merge/Deployment; reale Safari-/PWA-Abnahme vor Integration.

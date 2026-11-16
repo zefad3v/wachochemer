@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=name=>readFileSync(new URL('../prototype/'+name,import.meta.url),'utf8');
 const js=read('app.js'),css=read('styles.css'),html=read('index.html');
-test('V15 removes the obsolete edit binding and always edits cards',()=>{
+test('Issue 15 separates recipe reading and explicit editing',()=>{
  assert.doesNotMatch(js,/byId\("edit-day"\)/);
  assert.doesNotMatch(html,/id="edit-day"/);
  const click=js.split('byId("day-card").addEventListener("click",')[1].split('\n')[0];
- assert.match(click,/lastSwipeAt<420/);assert.match(click,/openMealEditor/);assert.doesNotMatch(click,/openRecipe/);
+ assert.match(click,/lastSwipeAt<420/);assert.match(click,/openMealEditor/);assert.match(click,/openRecipe/);
 });
 test('V15 meal controls live in the card shell and reserve title space',()=>{
  assert.match(html,/class="day-card-shell">\s*<button[^>]*id="day-card"[^]*?id="meal-pages"/);

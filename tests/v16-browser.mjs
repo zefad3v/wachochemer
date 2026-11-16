@@ -14,7 +14,7 @@ try{
  await page.clock.install({time:new Date('2026-11-15T12:00:00+01:00')});
  await page.goto(base+'/prototype/?imageDemo=1');
  await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('No nüt plant'));
- await page.locator('#day-card').click();
+ await page.locator('#day-edit').click();
  await page.locator("#meal-recipe-search").fill("Kürbis");await page.locator('[data-pick-recipe="kuerbissuppe-kaesetoast"]').click();
  await page.locator('#meal-form button[type=submit]').click();
  await page.locator('#day-card img').evaluate(img=>img.decode());
@@ -30,7 +30,7 @@ try{
  await page.screenshot({path:out+'01-iphone-planned-image.png',fullPage:true});
  await page.locator('#choose-dinner').click();
  await page.screenshot({path:out+'02-iphone-unplanned.png',fullPage:true});
- await page.locator('#day-card').click();await page.locator("#meal-recipe-search").fill("Kürbis");await page.locator('[data-pick-recipe="kuerbissuppe-kaesetoast"]').click();await page.locator('#meal-form button[type=submit]').click();
+ await page.locator('#day-edit').click();await page.locator("#meal-recipe-search").fill("Kürbis");await page.locator('[data-pick-recipe="kuerbissuppe-kaesetoast"]').click();await page.locator('#meal-form button[type=submit]').click();
  await page.locator('#day-card img').evaluate(img=>img.decode());
  await page.screenshot({path:out+'03-iphone-dinner.png',fullPage:true});
  await page.reload();await page.waitForFunction(()=>document.querySelector('#week-strip [aria-current=date][aria-pressed=true]'));
