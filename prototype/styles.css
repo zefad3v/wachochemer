@@ -406,8 +406,7 @@ html{overscroll-behavior-y:none}
 .meal-recipe-selected{display:block;font-size:18px;font-weight:700;line-height:1.4;padding:12px;border:1px solid #a8bb91;border-radius:12px}
 .portion-stepper{display:flex;gap:8px;align-items:center}.portion-stepper button,.cooking-controls button{min-width:44px;min-height:44px}
 #meal-simple-portions{display:grid;gap:12px}#meal-extra-enabled{width:24px;min-height:24px}#meal-simple-portions[hidden]{display:none}
-#cooking-mode{font-size:20px;line-height:1.6}#cooking-mode[hidden]{display:none}.cooking-controls{display:flex;gap:10px;flex-wrap:wrap}
-.is-cooking .dialog-hero{height:70px}.is-cooking #dialog-description,.is-cooking #dialog-actions,.is-cooking #dialog-category{display:none}
+.is-cooking #dialog-description,.is-cooking #dialog-actions,.is-cooking #dialog-category{display:none}
 .is-cooking .detail-ingredients{font-size:18px}.detail-ingredients label{min-height:32px;cursor:pointer}
 @media (orientation:landscape) and (max-height:500px) and (max-width:1099px){
  .topbar{height:58px;min-height:58px;padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));justify-content:flex-end}
@@ -437,3 +436,26 @@ html{overscroll-behavior-y:none}
 #meal-recipe-selected{font-weight:700}
 #meal-recipe-search{min-height:46px}
 @media(max-width:679px){.plan-review{max-width:100%}.plan-review summary{font-size:12px}.plan-review-row{align-items:start;flex-wrap:wrap}}
+
+
+/* V20: one scroll surface, in-flow controls and shared cooking content. */
+.recipe-dialog:focus{outline:none}
+.dialog-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) 12px max(18px,env(safe-area-inset-left))}
+.dialog-toolbar .back-btn,.dialog-toolbar .fav-btn{position:relative;inset:auto;flex:none}
+.dialog-toolbar [hidden]{display:none}
+#cooking-exit{min-height:44px;padding:10px 14px;border:1px solid var(--stroke);border-radius:12px;background:#304130;color:var(--cream);font:inherit}
+.dialog-hero{height:0}
+.dialog-hero.has-image{height:min(34dvh,300px)}
+.dialog-body{margin:0 auto;padding:12px max(23px,env(safe-area-inset-right)) 24px max(23px,env(safe-area-inset-left))}
+.dialog-body h2{overflow-wrap:anywhere;line-height:1.12}
+.is-cooking .dialog-hero{display:none}
+.is-cooking .dialog-body h2{font-size:clamp(24px,5vw,34px)}
+.is-cooking #dialog-meta{display:none}
+.portion-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.portion-picker button{min-width:44px;min-height:44px;border:1px solid var(--stroke);border-radius:10px;background:#304130;color:var(--cream);font:inherit}
+.portion-picker[hidden]{display:none}
+#portion-session-note{font-size:14px;color:#d2dacc}
+#ingredients-summary{font-size:24px;min-height:44px;cursor:pointer}
+.is-cooking #dialog-instructions{font-size:20px;line-height:1.7}
+.is-cooking #dialog-instructions li{padding:0 0 28px 10px}
+.detail-ingredients li.done label{text-decoration:line-through;color:#a6b0a0}

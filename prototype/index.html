@@ -161,20 +161,24 @@
       <p class="editor-note">Dini Planig isch lokal uf däm Grät gspeicheret. Reschte chaufsch nöd doppelt ii.</p>
     </form>
   </dialog>
-  <dialog id="recipe-dialog" class="recipe-dialog" aria-labelledby="dialog-title">
+  <dialog id="recipe-dialog" class="recipe-dialog" tabindex="-1" autofocus aria-labelledby="dialog-title">
     <div class="dialog-scroll">
-      <div class="dialog-hero" id="dialog-hero">
+      <header class="dialog-toolbar">
+        <button type="button" id="cooking-exit" hidden>← Zurück zum Rezept</button>
         <button type="button" id="dialog-close" class="back-btn" aria-label="Rezept schliessen">←</button>
         <button type="button" id="dialog-favourite" class="fav-btn" aria-label="Favorit umschalten">♡</button>
-      </div>
+      </header>
+      <div class="dialog-hero" id="dialog-hero" aria-hidden="true"></div>
       <div class="dialog-body">
         <span class="eyebrow" id="dialog-category"></span>
-        <h2 id="dialog-title" tabindex="-1"></h2>
+        <h2 id="dialog-title"></h2>
         <p id="dialog-description"></p>
         <div class="detail-meta" id="dialog-meta"></div>
         <div class="detail-actions" id="dialog-actions"></div>
-        <section class="detail-section" id="dialog-ingredients-section"><div class="ingredient-heading"><h3>Zutaten</h3><div id="dialog-portion-picker" class="portion-picker" role="group" aria-label="Portionenzahl"><button type="button" id="portion-minus" aria-label="Halbi Portion weniger">−</button><output id="portion-count" aria-live="polite">3 Portionen</output><button type="button" id="portion-plus" aria-label="Halbi Portion meh">+</button></div></div><ul class="detail-ingredients" id="dialog-ingredients"></ul></section>
-        <section id="cooking-mode" hidden aria-label="Kochmodus"><h3 id="cooking-status" tabindex="-1" aria-live="polite"></h3><p id="cooking-step"></p><div class="cooking-controls"><button type="button" id="cooking-prev">Zrugg</button><button type="button" id="cooking-next">Wiiter</button><button type="button" id="cooking-exit">Zum Rezept</button></div></section><section class="detail-section" id="dialog-instructions-section"><h3>Zubereitung</h3><ol id="dialog-instructions"></ol></section>
+        <div id="dialog-portion-picker" class="portion-picker" role="group" aria-label="Portionenzahl"><button type="button" id="portion-minus" aria-label="Halbi Portion weniger">−</button><output id="portion-count" aria-live="polite">3 Portionen</output><button type="button" id="portion-plus" aria-label="Halbi Portion meh">+</button></div>
+        <p id="portion-session-note" hidden>Nur für diese Zubereitung</p>
+        <details class="detail-section" id="dialog-ingredients-section" open><summary id="ingredients-summary">Zutaten</summary><ul class="detail-ingredients" id="dialog-ingredients"></ul></details>
+        <section class="detail-section" id="dialog-instructions-section"><h3>Zubereitung</h3><ol id="dialog-instructions"></ol></section>
       </div>
     </div>
   </dialog>

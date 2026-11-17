@@ -13,7 +13,7 @@ import {recipeImages,imageFor} from "./recipe-images.mjs";
 const archiveImages=recipeImages;
 let imageDemo=new URLSearchParams(location.search).get("imageDemo")==="1";
 const state={
- tab:"week",returnTab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,servings:{},
+ tab:"week",returnTab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,plannedServings:null,recipeViewServings:null,servings:{},
  recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",
  plan:{version:2,entries:{}},editingDate:null,shopping:null,extras:[],selectedMeal:null
 };
@@ -294,17 +294,20 @@ function renderSourceChoices(){
  byId("meal-source-choice").innerHTML='<option value="">Reschte bewusst wähle</option>'+sources.map(([key,b])=>'<option value="'+escapeHtml(key)+'">'+escapeHtml(key.slice(0,10)+' · '+(key.endsWith('lunch')?'Zmittag':'Znacht')+' · '+state.recipes[plan.entries[key].recipeId].title+' · '+b.available+' frei')+'</option>').join('');
  byId("meal-source-choice").value=sources.some(([key])=>key===selected)?selected:"";
 }
-function setCookingMode(active){
- byId("cooking-mode").hidden=!active;byId("dialog-instructions-section").hidden=active;
- byId("recipe-dialog").classList.toggle("is-cooking",active);
- if(active){renderCookingStep();byId("cooking-status").focus()}else byId("dialog-title").focus();
+function focusRecipeStart(){
+ const dialog=byId("recipe-dialog"),scroll=dialog.querySelector(".dialog-scroll");
+ dialog.focus({preventScroll:true});
+ scroll.scrollTop=0;
+ // Safari can restore a previous scroll offset during the modal's opening frame.
+ requestAnimationFrame(()=>{if(dialog.open)scroll.scrollTop=0});
 }
-function renderCookingStep(){
- const steps=state.recipes[state.activeRecipeId]?.instructions?.["de-CH"]||[];
- byId("cooking-status").textContent=steps.length?"Schritt "+(state.cookingStep+1)+" vo "+steps.length:"Kei Zuebereitig erfasst";
- byId("cooking-step").textContent=steps[state.cookingStep]||"";
- byId("cooking-prev").disabled=state.cookingStep===0;
- byId("cooking-next").textContent=state.cookingStep>=steps.length-1?"Fertig – zum Rezept":"Wiiter";
+function setCookingMode(active){
+ byId("recipe-dialog").classList.toggle("is-cooking",active);
+ byId("cooking-exit").hidden=!active;
+ byId("dialog-close").hidden=active;
+ byId("dialog-favourite").hidden=active;
+ byId("dialog-ingredients-section").open=!active;
+ focusRecipeStart();
 }
 function renderMealBalance(){
  let key=mealKey(state.editingDate,byId("meal-type").value);
@@ -420,6 +423,7 @@ function renderShopping(){
  }));
 }
 function currentServings(recipe){
+ if(state.recipeViewServings!==null)return state.recipeViewServings;
  if(state.plannedServings!==null)return state.plannedServings;
  const value=Number(state.servings[recipe.id]);
  return Number.isFinite(value)&&value>0&&value<=1000?value:recipe.baseServings;
@@ -427,9 +431,10 @@ function currentServings(recipe){
 function renderPortions(recipe){
  const count=currentServings(recipe),factor=count/recipe.baseServings;
  byId("portion-count").textContent=count+" "+(count===1?"Portion":"Portionen");
- byId("portion-minus").disabled=state.plannedServings!==null||count<=0.5;
- byId("portion-plus").disabled=state.plannedServings!==null||count>=1000;
+ byId("portion-minus").disabled=count<=0.5;
+ byId("portion-plus").disabled=count>=1000;
  byId("dialog-meta").innerHTML='<span>◷ '+(recipe.prepMinutes+recipe.cookMinutes)+' Min.</span><span>♙ '+count+' '+(count===1?'Portion':'Portionen')+'</span>';
+ byId("portion-session-note").hidden=state.plannedServings===null||count===state.plannedServings;
  const list=byId("dialog-ingredients");
  const checked=new Set([...list.querySelectorAll('input:checked')].map(el=>Number(el.dataset.index)));
  list.innerHTML=recipe.ingredients.map((row,i)=>'<li class="'+(checked.has(i)?'done':'')+'"><input type="checkbox" data-index="'+i+'" aria-label="'+escapeHtml(formatIngredient(row,factor))+'" id="ingredient-check-'+i+'"'+(checked.has(i)?' checked':'')+'><label for="ingredient-check-'+i+'">'+escapeHtml(formatIngredient(row,factor))+'</label></li>').join("");
@@ -437,10 +442,13 @@ function renderPortions(recipe){
 }
 function adjustPortions(delta){
  const id=state.activeRecipeId,recipe=state.recipes[id];
- if(!recipe||state.plannedServings!==null)return;
+ if(!recipe)return;
  const next=Math.max(0.5,Math.min(1000,currentServings(recipe)+delta));
- state.servings[id]=next;
- save("wachochemer:recipeServings",state.servings);
+ state.recipeViewServings=next;
+ if(state.plannedServings===null){
+  state.servings[id]=next;
+  save("wachochemer:recipeServings",state.servings);
+ }
  renderPortions(recipe);
 }
 function bringIcon(){
@@ -452,11 +460,15 @@ function openRecipe(item){
  const recipe=state.recipes[item.id];
  state.activeRecipeId=item.id;
  state.plannedServings=item.planned?item.servings:null;
- state.cookingStep=0;
- byId("cooking-mode").hidden=true;
+ state.recipeViewServings=null;
+ byId("cooking-exit").hidden=true;
+ byId("dialog-close").hidden=false;
+ byId("dialog-favourite").hidden=false;
+ byId("dialog-ingredients-section").open=true;
  byId("recipe-dialog").classList.remove("is-cooking");
  const dialog=byId("recipe-dialog");
  previouslyFocused=document.activeElement;
+ byId("dialog-hero").classList.toggle("has-image",Boolean(item.image));
  byId("dialog-hero").style.backgroundImage=item.image?"url('"+item.image+"')":"linear-gradient(135deg,#35442f,#19231b)";
  byId("dialog-category").textContent=recipe?(item.imageDemo?"FAMILIENREZEPT · BILD-DEMO (KI)":"FAMILIENREZEPT"):item.real?"REZEPT NICHT VERFÜGBAR":"DESIGNBEISPIEL";
  byId("dialog-title").textContent=recipe?.title||item.title;
@@ -475,11 +487,13 @@ function openRecipe(item){
   planBtn.type="button";
   planBtn.className="plan-recipe-action";
   planBtn.textContent="I Wucheplan";
-  actions.append(planBtn);
+  if(!item.planned)actions.append(planBtn);
   planBtn.addEventListener("click",()=>{
    closeRecipe();
    openMealEditor(weekDays()[state.current].date,displayedMeal(),recipe.id);
   });
+  byId("dialog-portion-picker").hidden=false;
+  byId("ingredients-summary").textContent="Zutaten ("+recipe.ingredients.length+")";
   byId("dialog-ingredients").innerHTML="";
   renderPortions(recipe);
   const steps=recipe.instructions?.["de-CH"]||[];
@@ -487,17 +501,21 @@ function openRecipe(item){
   byId("dialog-ingredients-section").hidden=false;
   byId("dialog-instructions-section").hidden=false;
  }else{
+  byId("dialog-portion-picker").hidden=true;
+  byId("portion-session-note").hidden=true;
   actions.innerHTML='<div class="notice">'+(item.real?'Das Rezept isch zur Ziit nöd verfügbar. Bitte lade d Siite neu.':'Das isch es Designbeispiel. S vollständige Rezept isch no nöd im Chochchischtli erfasst.')+'</div>';
   byId("dialog-ingredients-section").hidden=true;
   byId("dialog-instructions-section").hidden=true;
  }
- dialog.showModal();
  dialog.querySelector(".dialog-scroll").scrollTop=0;
- // Focus the recipe title rather than the first dialog button, which iOS outlines.
- // This also closes the keyboard when a recipe is opened from search.
- byId("dialog-title").focus({preventScroll:true});
+ dialog.showModal();
+ focusRecipeStart();
 }
-function closeRecipe(){byId("recipe-dialog").close();previouslyFocused?.focus()}
+function closeRecipe(){byId("recipe-dialog").close();resetRecipeSession();previouslyFocused?.focus({preventScroll:true})}
+function resetRecipeSession(){
+ state.recipeViewServings=null;
+ state.plannedServings=null;
+}
 async function fetchJson(path){
  const response=await fetch(path,{cache:"no-store"});
  if(!response.ok)throw new Error(path+" returned "+response.status);
@@ -545,8 +563,6 @@ function init(){
  for(const [id,delta] of [["meal-minus",-0.5],["meal-plus",0.5]])byId(id).addEventListener("click",()=>{byId("meal-need").value=decimalText(Math.max(0,Math.min(1000,(parseDecimal(byId("meal-need").value)||0)+delta)));syncMealPortions()});
  byId("meal-source-choice").addEventListener("change",e=>{const [date,meal]=e.target.value.split("|");byId("meal-leftover-source").value=date||"";byId("meal-leftover-source-meal").value=meal||"";renderMealBalance()});
  byId("meal-date").addEventListener("change",()=>{if(byId("meal-date").value){state.editingDate=byId("meal-date").value;renderSourceChoices()}});
- byId("cooking-prev").addEventListener("click",()=>{state.cookingStep=Math.max(0,state.cookingStep-1);renderCookingStep()});
- byId("cooking-next").addEventListener("click",()=>{const steps=state.recipes[state.activeRecipeId].instructions["de-CH"];if(state.cookingStep>=steps.length-1)setCookingMode(false);else{state.cookingStep++;renderCookingStep()}});
  byId("cooking-exit").addEventListener("click",()=>setCookingMode(false));
  for(const id of ["meal-leftover-source","meal-leftover-source-meal"])byId(id).addEventListener("change",renderMealBalance);
  byId("shopping-optional").addEventListener("change",renderShopping);
@@ -708,6 +724,7 @@ function init(){
  byId("portion-minus").addEventListener("click",()=>adjustPortions(-0.5));
  byId("portion-plus").addEventListener("click",()=>adjustPortions(0.5));
  byId("dialog-close").addEventListener("click",closeRecipe);
+ byId("recipe-dialog").addEventListener("close",resetRecipeSession);
  byId("recipe-dialog").addEventListener("click",e=>{if(e.target===byId("recipe-dialog"))closeRecipe()});
  byId("dialog-favourite").addEventListener("click",()=>{
   const id=byId("dialog-favourite").dataset.id;

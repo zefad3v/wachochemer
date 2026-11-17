@@ -50,3 +50,7 @@ Verifizierte Bilder und opt-in Demo-Bilder sind in `prototype/recipe-images.mjs`
 Geplante Rezeptkarten öffnen `openRecipe` mit unveränderten `cookedServings` (auch Dezimalwerte); ein eigener Stift öffnet den Editor. Archivportionen bleiben unabhängig. Der Kochmodus verwendet dieselben Zutaten und Anleitungen, speichert nur flüchtigen Schrittstatus und schreibt weder Plan noch Einkauf.
 
 Der Editor bildet Mahlzeitenbedarf plus optionale Zusatzmenge auf die bestehenden M4-Felder ab. Ungeklärter V1-Verzehr bleibt leer und muss ausdrücklich geklärt werden. Ohne Haushalt wird erst nach Rezeptwahl dessen Basisportionenzahl als gekennzeichneter Vorschlag gesetzt. Restenquellen stammen aus `assessPlan`, geben beim Editieren die eigene Reservierung zur Auswahl frei und werden beim Speichern weiterhin durch `updateMeal` validiert. Keine Schema- oder Speicherschlüsseländerung; Bring!-Manifest und M4-Domain bleiben unverändert.
+
+## V20: gemeinsame Rezept- und Kochansicht
+
+Der Dialog nutzt eine Scrollfläche, eine Zutatencheckliste und eine nummerierte Anleitung für beide Ansichten. `recipeViewServings` ist ein flüchtiger Override vor `plannedServings` und Archivpräferenz. Nur Archivänderungen speichern weiterhin die vorhandene Präferenz; geplante Kochsitzungen schreiben keinen Speicher. Öffnen/Schliessen setzt den Override zurück. Headercontrols stehen vor dem Titel im Dokumentfluss, Fokus liegt beim Einstieg auf dem benannten Dialog. [Abnahme](issue18-cooking-view.md).
