@@ -80,6 +80,19 @@ try{
  await page.keyboard.press('Tab');
  check(await page.locator('#dialog-close').evaluate(el=>el===document.activeElement),'keyboard focus reaches back button');
  await page.screenshot({path:out+'/'+width+'-large-type.png',fullPage:false});
+ await page.goto('http://127.0.0.1:8765/prototype/?imageDemo=1');
+ await page.locator('.bottom-nav [data-tab=archive]').click();
+ await page.locator('[data-recipe=kuerbissuppe-kaesetoast]').click();
+ const photo=page.locator('#dialog-image');
+ await page.waitForFunction(()=>document.querySelector('#dialog-image').naturalWidth>0);
+ check(await photo.evaluate(img=>{
+  const box=img.getBoundingClientRect();
+  const toolbar=document.querySelector('.dialog-toolbar').getBoundingClientRect();
+  return box.top>=toolbar.bottom&&Math.abs(box.width-box.height*img.naturalWidth/img.naturalHeight)<2;
+ }),'photo fits at its original ratio below the toolbar');
+ await page.screenshot({path:out+'/'+width+'-full-photo.png',fullPage:false});
+ await page.locator('#jump-to-ingredients').click();
+ check(!await photo.isVisible(),'recipe photo stays out of cooking mode');
  check(!errors.length,'no browser errors');await page.close();
  }
  console.log(n+' Issue 15 browser checks passed');

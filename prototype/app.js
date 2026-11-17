@@ -1,13 +1,14 @@
 "use strict";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
-import {addDays,formatDay,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
+import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
 import {householdNeed,portion,assessPlan,updateMeal,cookingTotals} from "../src/domain/planning.mjs";
 import {parseDecimal,decimalText} from "./locale-number.mjs";
 import {loadPlan,storePlan,restorePlan} from "../src/storage/meal-plan.mjs";
 import {buildTransferManifest,serializeManifest,manifestText} from "../src/integrations/bring.mjs";
 const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig","Samschtig"];
 const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
+const mealLabels={lunch:"Zmittag",dinner:"Znacht"};
 const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
 import {recipeImages,imageFor} from "./recipe-images.mjs";
 const archiveImages=recipeImages;
@@ -51,6 +52,27 @@ function formatIngredient(row,factor=1){
  return amount+" "+(plurals[row.ingredientId]||name)+(row.optional?" (optional)":"");
 }
 function niceDate(date){return new Intl.DateTimeFormat("de-CH",{day:"numeric",month:"short"}).format(date)}
+const planDateFormat=new Intl.DateTimeFormat("de-CH",{day:"numeric",month:"short",timeZone:"UTC"});
+function planDateLabel(date){
+ try{return planDateFormat.format(parseDay(date))}catch{return ""}
+}
+function mealKeyLabel(key){
+ const [date,meal,...rest]=String(key??"").split("|");
+ const day=planDateLabel(date);
+ return day&&Object.hasOwn(mealLabels,meal)&&!rest.length?day+" · "+mealLabels[meal]:"";
+}
+function leftoverDisplay(entry){
+ const origin=mealKeyLabel(entry.sourceKey);
+ const source=origin?state.plan.entries[entry.sourceKey]:null;
+ const recipe=source?.type==="recipe"?state.archiveEntries.find(item=>item.id===source.recipeId):null;
+ const date=origin||planDateLabel(entry.sourceDate);
+ return {
+  title:recipe?"Reschte · "+recipe.title:"Reschte",
+  description:date?"Vom "+date:"Ursprung bitte kläre",
+  image:recipe?.image??null,
+  imageDemo:recipe?.imageDemo??false
+ };
+}
 function baseWeek(){
  const now=new Date();
  const anchor=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12,0,0);
@@ -58,11 +80,11 @@ function baseWeek(){
  return anchor;
 }
 function itemForDay(date,requestedMeal=null){
- const iso=formatDay(new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate(),12)));
+ const iso=localISO(date);
  const dinner=mealFor(state.plan.entries,iso,"dinner");
  const lunch=mealFor(state.plan.entries,iso,"lunch");
  const entry=requestedMeal?(requestedMeal==="lunch"?lunch:dinner):dinner||lunch;
- const mealLabel=requestedMeal?(requestedMeal==="lunch"?"Zmittag":"Znacht"):(dinner?"Znacht":"Zmittag");
+ const mealLabel=mealLabels[requestedMeal||(dinner?"dinner":"lunch")];
  if(!entry){
   return {id:"empty-"+iso,title:"No nüt plant",description:"Wähl es Rezept, es eigenes Menü oder Reschte.",minutes:0,image:null,real:false,planned:false,mealLabel:""};
  }
@@ -71,7 +93,7 @@ function itemForDay(date,requestedMeal=null){
   return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,imageDemo:meta?.imageDemo||false,real:!!recipe,planned:true,mealLabel,servings:entry.cookedServings??entry.servings};
  }
  if(entry.type==="manual")return {id:"manual-"+iso,title:entry.title,description:"Eigenes Menü",minutes:0,image:null,real:false,planned:true,mealLabel};
- return {id:"leftover-"+iso,title:"Reschte vom "+(entry.sourceKey||entry.sourceDate||"Ursprung bitte kläre"),description:"Scho kocht, kei zweite Iichauf nötig.",minutes:0,image:null,real:false,planned:true,mealLabel};
+ return {id:"leftover-"+iso,...leftoverDisplay(entry),minutes:0,real:false,planned:true,mealLabel};
 }
 function weekDays(){
  const start=baseWeek();
@@ -129,11 +151,10 @@ function setDay(idx){
  state.current=next.current;state.weekOffset=next.weekOffset;renderPlanner();
 }
 function mealSummary(date){
- const iso=localISO(date);
  return ["lunch","dinner"].map(meal=>{
-  const entry=mealFor(state.plan.entries,iso,meal);
-  const title=!entry?"No nüt plant":entry.type==="recipe"?(state.recipes[entry.recipeId]?.title||"Rezept nöd verfügbar")+((entry.cookedServings??entry.servings)?" · "+(entry.cookedServings??entry.servings)+" Portione":""):entry.type==="manual"?entry.title+" · Eigenes Menü":"Reschte vom "+(entry.sourceKey||entry.sourceDate||"Ursprung bitte kläre");
-  return '<span>'+escapeHtml((meal==="lunch"?"Zmittag: ":"Znacht: ")+title)+'</span>';
+  const item=itemForDay(date,meal);
+  const detail=item.servings?item.servings+" Portione":item.planned&&!item.real?item.description:"";
+  return '<span>'+escapeHtml(mealLabels[meal]+": "+item.title+(detail?" · "+detail:""))+'</span>';
  }).join("");
 }
 function localISO(date){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-")}
@@ -291,7 +312,7 @@ function renderSourceChoices(){
  const order=k=>k.slice(0,10)+(k.endsWith("|lunch")?"0":"1");
  const selected=byId("meal-leftover-source").value+"|"+byId("meal-leftover-source-meal").value;
  const sources=Object.entries(balances).filter(([key,b])=>order(key)<order(target)&&b.available>0&&!issues.some(i=>i.key===key));
- byId("meal-source-choice").innerHTML='<option value="">Reschte bewusst wähle</option>'+sources.map(([key,b])=>'<option value="'+escapeHtml(key)+'">'+escapeHtml(key.slice(0,10)+' · '+(key.endsWith('lunch')?'Zmittag':'Znacht')+' · '+state.recipes[plan.entries[key].recipeId].title+' · '+b.available+' frei')+'</option>').join('');
+ byId("meal-source-choice").innerHTML='<option value="">Reschte bewusst wähle</option>'+sources.map(([key,b])=>'<option value="'+escapeHtml(key)+'">'+escapeHtml(mealKeyLabel(key)+' · '+state.recipes[plan.entries[key].recipeId].title+' · '+b.available+' frei')+'</option>').join('');
  byId("meal-source-choice").value=sources.some(([key])=>key===selected)?selected:"";
 }
 function focusRecipeStart(){
@@ -468,8 +489,10 @@ function openRecipe(item){
  byId("recipe-dialog").classList.remove("is-cooking");
  const dialog=byId("recipe-dialog");
  previouslyFocused=document.activeElement;
- byId("dialog-hero").classList.toggle("has-image",Boolean(item.image));
- byId("dialog-hero").style.backgroundImage=item.image?"url('"+item.image+"')":"linear-gradient(135deg,#35442f,#19231b)";
+ const image=byId("dialog-image");
+ byId("dialog-hero").hidden=!item.image;
+ if(item.image)image.src=item.image;
+ else image.removeAttribute("src");
  byId("dialog-category").textContent=recipe?(item.imageDemo?"FAMILIENREZEPT · BILD-DEMO (KI)":"FAMILIENREZEPT"):item.real?"REZEPT NICHT VERFÜGBAR":"DESIGNBEISPIEL";
  byId("dialog-title").textContent=recipe?.title||item.title;
  byId("dialog-description").textContent=recipe?.description||item.description;
@@ -545,6 +568,54 @@ async function loadRecipes(){
  if(state.tab==="shopping")renderShopping();
  if(state.tab==="archive")renderArchive();
 }
+function bindHouseholdForm(){
+ const form=byId("household-form"),total=byId("household-total"),status=byId("household-status");
+ const groups=["adults","children","babies"];
+ const countInput=group=>byId("household-"+group);
+ const shareInput=group=>byId("household-"+group+"Share");
+ const portionLabel=need=>new Intl.NumberFormat("de-CH",{maximumFractionDigits:12,useGrouping:false}).format(need)+(need===1?" Portion":" Portione")+" pro Mahlziit";
+ function readForm(){
+  const profile={};
+  for(const group of groups){
+   profile[group]=countInput(group).valueAsNumber;
+   profile[group+"Share"]=parseDecimal(shareInput(group).value);
+  }
+  return profile;
+ }
+ function showTotal(){
+  try{total.textContent=portionLabel(householdNeed(readForm()))}
+  catch{total.textContent="Bitte Persone und Portione erfasse."}
+ }
+ function onEdit(){status.textContent="";showTotal()}
+ for(const group of groups){
+  countInput(group).value=state.household?.[group]??0;
+  const defaultShare=group==="adults"||(!state.household&&group==="children")?1:0;
+  const input=shareInput(group);
+  input.value=state.household?.[group+"Share"]??defaultShare;
+  input.addEventListener("blur",()=>{
+   const value=parseDecimal(input.value);
+   if(Number.isFinite(value))input.value=decimalText(value);
+  });
+ }
+ for(const button of form.querySelectorAll("[data-count]"))button.addEventListener("click",()=>{
+  const input=countInput(button.dataset.count);
+  const next=Math.trunc(input.valueAsNumber||0)+Number(button.dataset.step);
+  input.value=Math.max(0,Math.min(100,next));
+  onEdit();
+ });
+ form.addEventListener("input",onEdit);
+ form.addEventListener("submit",event=>{
+  event.preventDefault();
+  try{
+   const profile=readForm();
+   householdNeed(profile);
+   if(!save("wachochemer:household",profile))throw Error("Speichere fehlgschlage.");
+   state.household=profile;
+   status.textContent="Gspeicheret.";
+  }catch(err){status.textContent=err.message}
+ });
+ showTotal();
+}
 function init(){
  byId("plan-status").addEventListener("click",event=>{
   const button=event.target.closest("[data-review-key]");
@@ -581,17 +652,7 @@ function init(){
   try{state.plan=restorePlan(localStorage);state.planBlocked=false;persistPlan();byId("plan-restore").hidden=true}
   catch(err){updatePlanNotice(err.message)}
  });
- const fields=["adults","children","babies","adultsShare","childrenShare","babiesShare"];
- for(const field of fields)byId("household-"+field).value=state.household?.[field]??(field==="adultsShare"?1:0);
- byId("household-form").addEventListener("submit",e=>{
-  e.preventDefault();
-  try{
-   const profile=Object.fromEntries(fields.map(f=>[f,Number(byId("household-"+f).value)]));
-   const need=householdNeed(profile);
-   if(!save("wachochemer:household",profile))throw Error("Speichere fehlgschlage.");
-   state.household=profile;byId("household-status").textContent=need+" Portione pro Mahlziit";
-  }catch(err){byId("household-status").textContent=err.message}
- });
+ bindHouseholdForm();
  byId("recipe-share-save").addEventListener("click",()=>{
   try{
    const id=byId("meal-recipe").value;if(!state.recipes[id])throw Error("Zuerst es Rezept wähle.");

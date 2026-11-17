@@ -110,14 +110,55 @@
       <div id="shopping-progress" class="shopping-progress"></div>
       <div id="shopping-items" class="shopping-items"></div>
     </section>
-    <section class="screen" id="screen-settings" aria-labelledby="settings-title"><form id="household-form" class="settings-card"><h2>Haushalt</h2><label>Erwachseni<input id="household-adults" type="number" min="0" max="100" step="1" required></label><label>Chind<input id="household-children" type="number" min="0" max="100" step="1" required></label><label>Babys<input id="household-babies" type="number" min="0" max="100" step="1" required></label><label>Erwachseni-Anteil<input id="household-adultsShare" type="number" min="0" max="1000" step="any" required></label><label>Chind-Anteil<input id="household-childrenShare" type="number" min="0" max="1000" step="any" required></label><label>Baby-Anteil<input id="household-babiesShare" type="number" min="0" max="1000" step="any" required></label><button type="submit">Haushalt speichere</button><output id="household-status" role="status"></output></form>
-      <div class="section-title"><button type="button" id="settings-back" class="settings-back">‹ Zrugg</button><span class="eyebrow">NUR EINMAL IISTELLE</span><h1 id="settings-title">Iistellige</h1><p>Dini persönleche Wuche, ohni Schalter im Wucheplan.</p></div>
+    <section class="screen" id="screen-settings" aria-labelledby="settings-title">
+      <div class="section-title"><button type="button" id="settings-back" class="settings-back">‹ Zrugg</button><h1 id="settings-title">Iistellige</h1></div>
+      <form id="household-form" class="settings-card" novalidate>
+        <h2>Haushalt</h2>
+        <output id="household-total" for="household-adults household-children household-babies household-adultsShare household-childrenShare household-babiesShare"></output>
+        <p class="household-hint">Die Portione schlägt de Wucheplan bi neue Menüs vor.</p>
+        <fieldset class="household-counts">
+          <legend>Wer isst mit?</legend>
+          <div class="household-row">
+            <label for="household-adults">Erwachseni</label>
+            <div class="household-stepper">
+              <button type="button" data-count="adults" data-step="-1" aria-label="Ein Erwachsene weniger">−</button>
+              <input id="household-adults" type="number" inputmode="numeric" min="0" max="100" step="1" required>
+              <button type="button" data-count="adults" data-step="1" aria-label="Ein Erwachsene meh">+</button>
+            </div>
+          </div>
+          <div class="household-row">
+            <label for="household-children">Chind</label>
+            <div class="household-stepper">
+              <button type="button" data-count="children" data-step="-1" aria-label="Es Chind weniger">−</button>
+              <input id="household-children" type="number" inputmode="numeric" min="0" max="100" step="1" required>
+              <button type="button" data-count="children" data-step="1" aria-label="Es Chind meh">+</button>
+            </div>
+          </div>
+          <div class="household-row">
+            <label for="household-babies">Babys</label>
+            <div class="household-stepper">
+              <button type="button" data-count="babies" data-step="-1" aria-label="Es Baby weniger">−</button>
+              <input id="household-babies" type="number" inputmode="numeric" min="0" max="100" step="1" required>
+              <button type="button" data-count="babies" data-step="1" aria-label="Es Baby meh">+</button>
+            </div>
+          </div>
+        </fieldset>
+        <details class="household-shares">
+          <summary>Portione pro Person aapasse</summary>
+          <p class="household-hint" id="household-share-hint">1 isch e ganzi Portion, 0.5 e halbi, 0 zählt nöd mit.</p>
+          <div class="household-row"><label for="household-adultsShare">Pro Erwachsene</label><input id="household-adultsShare" type="text" inputmode="decimal" autocomplete="off" aria-describedby="household-share-hint"></div>
+          <div class="household-row"><label for="household-childrenShare">Pro Chind</label><input id="household-childrenShare" type="text" inputmode="decimal" autocomplete="off" aria-describedby="household-share-hint"></div>
+          <div class="household-row"><label for="household-babiesShare">Pro Baby</label><input id="household-babiesShare" type="text" inputmode="decimal" autocomplete="off" aria-describedby="household-share-hint"></div>
+        </details>
+        <button type="submit" class="main-action">Haushalt speichere</button>
+        <output id="household-status" role="status"></output>
+      </form>
       <div class="settings-card">
         <label for="start-day"><strong>Wuchebeginn</strong><span>Vo wellem Tag söll dini Wuche starte?</span></label>
         <select id="start-day"><option value="1">Mäntig</option><option value="2">Zischtig</option><option value="3">Mittwuch</option><option value="4">Dunschtig</option><option value="5">Friitig</option><option value="6">Samschtig</option><option value="0">Sunntig</option></select>
       </div>
       <label class="image-demo-setting"><input id="image-demo" type="checkbox"> Bild-Demo aazeige <small>KI-Beispielbild, kei Foto vom tatsächliche Rezept. Dini Planig bliibt unveränderet.</small></label>
-      <p class="settings-note">D Iistellig wird nume i dim Browser gspeicheret. Familienprofil, Sprachwächsel und dini eigene Rezepte chömed spöter.</p>
+      <p class="settings-note">D Iistellige werded i dim Browser gspeicheret.</p>
     </section>
   </main>
   <nav class="bottom-nav" aria-label="Hauptnavigation">
@@ -168,7 +209,7 @@
         <button type="button" id="dialog-close" class="back-btn" aria-label="Rezept schliessen">←</button>
         <button type="button" id="dialog-favourite" class="fav-btn" aria-label="Favorit umschalten">♡</button>
       </header>
-      <div class="dialog-hero" id="dialog-hero" aria-hidden="true"></div>
+      <div class="dialog-hero" id="dialog-hero" hidden><img id="dialog-image" alt="" decoding="async"></div>
       <div class="dialog-body">
         <span class="eyebrow" id="dialog-category"></span>
         <h2 id="dialog-title"></h2>
