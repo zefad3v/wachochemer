@@ -32,3 +32,5 @@ implementiert. Automatischer Wochenimport und lesbarer Bring!-Zustand weiterhin 
 keine Frontend-Anmeldung und keine produktive Übertragung.
 
 Issue #15 (M0/M4-Alltagsbedienung): direkter Rezept-/Kochmodus, einfache Portionsplanung und höhenabhängiges Landscape-Layout auf PR #13 aufgebaut. [Nachweise und offene iPhone-Abnahme](issue15-cooking-ux.md). Kein Merge/Deployment; reale Safari-/PWA-Abnahme vor Integration.
+
+Issue #18 / V20 setzt M0/M4-Alltagsbedienung auf PR #17 fort: korrigierter Rezeptheader/Fokus, temporäre Kochportionen und scrollbare Kochansicht mit einklappbaren Zutaten. [Prüfungen und offene iPhone-Abnahme](issue18-cooking-view.md). Keine Schemaänderung, kein Merge/Deployment.

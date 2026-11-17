@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {mkdirSync} from 'node:fs';
-const {chromium}=createRequire(import.meta.url)('playwright');
-const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
+const {chromium,webkit}=createRequire(import.meta.url)('playwright');
+const browser=process.env.BROWSER==='webkit'?await webkit.launch():await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
 let n=0;const check=(v,label)=>{assert(v,label);n++;console.log('PASS '+label)};
 const out=process.env.SCREENSHOT_DIR||'/tmp/issue15-screenshots';mkdirSync(out,{recursive:true});
 try{
@@ -25,11 +25,37 @@ try{
  if(width>height)check(await page.evaluate(()=>{const a=document.querySelector('.bottom-nav').getBoundingClientRect(),b=document.querySelector('.header-settings').getBoundingClientRect(),c=document.querySelector('.screen-heading').getBoundingClientRect();return a.right<=b.left&&a.bottom<=c.top}),'landscape dock avoids controls and heading');
  await page.locator('#day-card').click();check((await page.locator('#portion-count').innerText()).includes('3.75'),'planned decimal recipe portions');
  check((await page.locator('#dialog-ingredients').innerText()).includes("1'000 g"),'scaled pumpkin quantity');
- await page.locator('#jump-to-ingredients').click();check(await page.locator('#cooking-mode').isVisible(),'cooking mode');
- await page.screenshot({path:out+'/'+width+'-cooking.png',fullPage:true});
- const first=await page.locator('#cooking-step').innerText();await page.locator('#cooking-next').click();check(first!==await page.locator('#cooking-step').innerText(),'next step');await page.locator('#cooking-prev').click();check(first===await page.locator('#cooking-step').innerText(),'previous step');
- while(await page.locator('#cooking-mode').isVisible()){await page.locator('#cooking-next').focus();await page.keyboard.press('Enter')}
- check(await page.locator('#dialog-title').evaluate(el=>el===document.activeElement),'finish returns focus to recipe');
+
+ check(await page.locator('#recipe-dialog').evaluate(el=>el===document.activeElement),'dialog receives focus without title outline');
+ check(await page.locator('.dialog-scroll').evaluate(el=>el.scrollTop===0),'opens at scroll start');
+ check(await page.locator('#dialog-hero').evaluate(el=>el.offsetHeight===0),'missing photo has no empty hero');
+ check(!await page.locator('.plan-recipe-action').count(),'planned recipe hides redundant plan button');
+ const storage=await page.evaluate(()=>JSON.stringify({...localStorage}));
+ await page.locator('#portion-plus').click();
+ check((await page.locator('#portion-count').innerText()).includes('4.25'),'planned portions can increase by 0.5');
+ check((await page.locator('#dialog-ingredients').innerText()).includes("1'133 g"),'temporary scaling updates ingredients');
+ check(await page.locator('#portion-session-note').isVisible(),'temporary override explained');
+ await page.locator('#ingredient-check-0').check();
+ await page.locator('.dialog-scroll').evaluate(el=>el.scrollTop=0);
+ await page.screenshot({path:out+'/'+width+'-detail.png',fullPage:false});
+ const steps=await page.locator('#dialog-instructions li').allTextContents();
+ await page.locator('#jump-to-ingredients').click();
+ check(await page.locator('#recipe-dialog').evaluate(el=>el.classList.contains('is-cooking')),'cooking mode');
+ check(!await page.locator('#dialog-ingredients-section').evaluate(el=>el.open),'cooking ingredients initially collapsed');
+ check((await page.locator('#dialog-instructions li').allTextContents()).join()===steps.join()&&steps.length>1,'all steps share the original list');
+ await page.locator('#portion-plus').click();
+ await page.locator('#ingredients-summary').click();
+ check(await page.locator('#ingredient-check-0').isChecked(),'ingredient checklist survives mode and portion changes');
+ check((await page.locator('#dialog-ingredients').innerText()).includes("1'267 g"),'cooking portions scale the same list');
+ check(await page.locator('#dialog-ingredients-section').evaluate(el=>el.open),'portion changes keep disclosure state');
+ await page.locator('#ingredients-summary').click();
+ await page.screenshot({path:out+'/'+width+'-cooking.png',fullPage:false});
+ await page.locator('#dialog-instructions li').last().scrollIntoViewIfNeeded();
+ check(await page.locator('.dialog-scroll').evaluate(el=>el.scrollTop>0),'last step reachable by scrolling');
+ await page.locator('#cooking-exit').click();
+ check(await page.locator('#recipe-dialog').evaluate(el=>el===document.activeElement),'back returns focus to recipe dialog');
+ check(await page.locator('.dialog-scroll').evaluate(el=>el.scrollTop===0),'back returns to top');
+ check(storage===await page.evaluate(()=>JSON.stringify({...localStorage})),'planned cooking changes no persistent storage, including manifest and archive preference');
  await page.locator('#dialog-close').click();
  check(saved===await page.evaluate(()=>localStorage.getItem('wachochemer:mealPlanV2')),'reading never mutates plan');
  await page.locator('#day-edit').click();check(await page.locator('#meal-need').inputValue()==='2.25'&&await page.locator('#meal-extra').inputValue()==='1.5','reopening preserves difference');
@@ -40,8 +66,33 @@ try{
  await page.locator('[data-recipe=kuerbissuppe-kaesetoast]').click();await page.locator('#portion-plus').click();
  check((await page.locator('#portion-count').innerText()).includes('3.5'),'archive uses independent decimal portions');
  await page.locator('#dialog-close').click();await page.locator('.bottom-nav [data-tab=week]').click();await page.locator('#choose-dinner').click();await page.locator('#day-card').click();
- check((await page.locator('#portion-count').innerText()).includes('3.75'),'planned quantity unaffected by archive');
+ check((await page.locator('#portion-count').innerText()).includes('3.75'),'planned quantity resets after closing and is unaffected by archive');
+ await page.keyboard.press('Escape');
+ await page.locator('#day-card').click();
+ check((await page.locator('#portion-count').innerText()).includes('3.75'),'Escape also clears session override');
  await page.locator('#dialog-close').click();
+ await page.locator('.bottom-nav [data-tab=archive]').click();
+ await page.locator('[data-recipe=kuerbissuppe-kaesetoast]').click();
+ check((await page.locator('#portion-count').innerText()).includes('3.5'),'archive preference persists across sessions');
+ await page.addStyleTag({content:'.dialog-body h2{font-size:64px!important}.dialog-body{font-size:24px} .dialog-toolbar{padding-top:59px;padding-left:47px;padding-right:47px}.dialog-scroll{padding-bottom:64px}'});
+ check(await page.locator('#dialog-title').evaluate(el=>el.getBoundingClientRect().top>=document.querySelector('.dialog-toolbar').getBoundingClientRect().bottom),'large title stays below controls with simulated safe areas');
+ check(await page.locator('.dialog-scroll').evaluate(el=>el.scrollWidth<=el.clientWidth),'large type has no horizontal dialog overflow');
+ await page.keyboard.press('Tab');
+ check(await page.locator('#dialog-close').evaluate(el=>el===document.activeElement),'keyboard focus reaches back button');
+ await page.screenshot({path:out+'/'+width+'-large-type.png',fullPage:false});
+ await page.goto('http://127.0.0.1:8765/prototype/?imageDemo=1');
+ await page.locator('.bottom-nav [data-tab=archive]').click();
+ await page.locator('[data-recipe=kuerbissuppe-kaesetoast]').click();
+ const photo=page.locator('#dialog-image');
+ await page.waitForFunction(()=>document.querySelector('#dialog-image').naturalWidth>0);
+ check(await photo.evaluate(img=>{
+  const box=img.getBoundingClientRect();
+  const toolbar=document.querySelector('.dialog-toolbar').getBoundingClientRect();
+  return box.top>=toolbar.bottom&&Math.abs(box.width-box.height*img.naturalWidth/img.naturalHeight)<2;
+ }),'photo fits at its original ratio below the toolbar');
+ await page.screenshot({path:out+'/'+width+'-full-photo.png',fullPage:false});
+ await page.locator('#jump-to-ingredients').click();
+ check(!await photo.isVisible(),'recipe photo stays out of cooking mode');
  check(!errors.length,'no browser errors');await page.close();
  }
  console.log(n+' Issue 15 browser checks passed');
