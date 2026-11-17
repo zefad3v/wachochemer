@@ -29,7 +29,8 @@ try{
  await page.locator('#meal-source-advanced').evaluate(el=>el.open=true);await page.locator('#meal-leftover-source').fill(source.slice(0,10));await page.locator('#meal-leftover-source-meal').selectOption('dinner');check((await page.locator('#meal-balance').textContent()).includes('Verfügbar: 3.5'));await page.locator('#meal-leftover-portions').fill('4');
  await page.locator('#meal-form button[type=submit]').click();check((await page.locator('#meal-editor-error').textContent()).includes('Portione fehled'));
  await page.locator('#meal-leftover-portions').fill('2.5');await page.locator('#meal-form button[type=submit]').click();check(!await page.locator('#meal-editor').isVisible());
- await page.reload();await page.waitForFunction(()=>document.querySelector('#day-card').textContent.length>0);
+ await page.reload();
+ await page.waitForFunction(()=>Boolean(document.querySelector('#week-strip .plan-dot[data-planned="true"]')));
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('wachochemer:mealPlanV2')));
  check(saved.entries[day+'|lunch'].sourceKey===source);
  await page.locator('[data-view=week]').click();
