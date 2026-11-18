@@ -17,7 +17,7 @@ Die App unter `prototype/` verwendet Supabase Auth und PostgreSQL, sobald `proto
 
 ## Einrichtung eines eigenen Wachochemer-Projekts
 
-Die Einrichtung benötigt ein Supabase-Projekt und einen Mailversand. Projekt und Verbindung sind noch nicht eingerichtet. Keine Zugangsdaten anderer Projekte wiederverwenden.
+Das Projekt `wachochemer` ist in der Organisation `zefad3v` eingerichtet, Region Zürich (`eu-central-2`), Projekt-Ref `gikbeszvxvqqobdqujzz`. Die öffentliche Browserkonfiguration verweist auf dieses Projekt. Beide Migrationen wurden am 18. November 2026 angewandt. Der gemeinsame Onlinebetrieb ist noch nicht veröffentlicht, da die Auth-Konfiguration und die echte Anmeldung noch ausstehen. Keine Zugangsdaten anderer Projekte wiederverwenden.
 
 1. Ein separates Supabase-Projekt für Wachochemer auswählen oder erstellen. Die Migrationen in `migrations/` nach Dateiname aufsteigend anwenden. Nur `public` als Anwendungsschema exponieren; `wachochemer_private` bleibt intern. Bei Verwendung der Supabase CLI zuerst `supabase init` und `supabase link --project-ref <wachochemer-ref>` ausführen, dann `supabase db push`. Alternativ können die beiden Transaktionsdateien im SQL Editor des bestätigten Projekts ausgeführt werden.
 2. Unter Auth Hooks den PostgreSQL-Hook **Before User Created** auf `public.before_user_created` setzen und aktivieren. Die Migration allein aktiviert den Hook im Auth-Dienst nicht. Damit sind Registrierungen nur für die interne Freigabeliste oder eine noch gültige Haushaltseinladung möglich.
@@ -43,7 +43,15 @@ Die Einrichtung benötigt ein Supabase-Projekt und einen Mailversand. Projekt un
    Das Skript akzeptiert einen Publishable Key oder einen alten `anon`-JWT. Secret Keys, `service_role`-JWTs und URLs mit eingebetteten Zugangsdaten werden zurückgewiesen. Die erzeugte Datei ist bewusst öffentlich; den Datenzugriff sichern die serverseitigen Prüfungen.
 8. Den konfigurierten Stand auf der bestätigten HTTPS-Adresse veröffentlichen. Das erste Konto registrieren, E-Mail bestätigen, Haushalt erstellen und Personen erfassen. Anschliessend eine zweite Person einladen und gemeinsam prüfen. Wer beide Authenticator-Zugänge verliert, benötigt die administrative Wiederherstellung im Supabase-Projekt.
 
-Die genaue Produktionsadresse, Supabase-Projektzuordnung, erste Login-Adresse und SMTP-Konfiguration sind noch offen. Keine Migration oder Auth-Konfiguration wurde bisher in einem echten Supabase-Projekt ausgeführt.
+Die endgültige Produktionsadresse, erste Login-Adresse und SMTP-Konfiguration sind noch offen. Der Dashboard-Zugriff für Auth-Hook, Redirects und Mailversand erfordert eine zusätzliche Anmeldung im Browser. Die Supabase-Verbindung in ChatGPT unterstützt diese Auth-Einstellungen nicht direkt. Die Projektkonfiguration wurde deshalb noch nicht als betriebsbereit freigegeben.
+
+## Abnahme der eingerichteten Datenbank
+
+Die SQL-Regressionen `shared_households.sql` und `online_app.sql` liefen erfolgreich auf dem echten Supabase PostgreSQL 17.12. Die Prüfungen enthalten Haushalte mit mehreren Konten, fremde Haushalte, bestätigte und unbestätigte E-Mails, AAL1/AAL2, Einladungen, Entzug der Mitgliedschaft, Versionskonflikte, Restenreservierungen und atomaren Import. Sämtliche Fixtures wurden zurückgerollt; danach waren `auth.users`, Haushalte, Mitgliedschaften und Mahlzeiten leer.
+
+Mit dem tatsächlichen öffentlichen Publishable Key wurden die REST-Zugriffe auf alle vier Anwendungstabellen und der Snapshot-RPC ohne Anmeldung geprüft. Alle fünf Zugriffe wurden mit `42501` abgewiesen. Auf allen öffentlichen Anwendungstabellen ist RLS aktiviert. Die private Freigabeliste ist weder für `anon` noch für `authenticated` lesbar oder beschreibbar; sämtliche Tabellenrechte wurden explizit entzogen. Der pauschale Hinweis von `list_tables` auf fehlendes RLS in diesem privaten Schema ist daher kein Beleg für öffentliche Erreichbarkeit. Die Supabase-Sicherheits- und Performance-Advisors meldeten nach den Migrationen keine Befunde.
+
+Diese Prüfung verwendet SQL-Testkonten innerhalb zurückgerollter Transaktionen. Die echte Registrierung, E-Mail-Zustellung, Authenticator-Einrichtung und gemeinsame Nutzung mit zwei regulären Logins stehen weiter aus.
 
 ## Lokal prüfen
 

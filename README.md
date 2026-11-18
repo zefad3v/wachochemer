@@ -24,7 +24,7 @@ Der Rezeptgenerator benötigt keine npm-Installation. Für die Entwicklung der g
 
 ## Gemeinsamer Haushalt
 
-Der Prototyp enthält E-Mail-Anmeldung, optionale 2FA, Einladungen und einen gemeinsamen Wochenplan mit Supabase. Die Projektverbindung und die echte Dienstabnahme stehen noch aus. Einrichtung, Verhalten und Tests sind in [supabase/README.md](supabase/README.md) beschrieben.
+Der Prototyp enthält E-Mail-Anmeldung, optionale 2FA, Einladungen und einen gemeinsamen Wochenplan mit Supabase. Das eigene Projekt in Zürich und die geprüfte Datenbank sind eingerichtet. Auth-Konfiguration, Mailversand und die Abnahme mit regulären Logins stehen noch aus. Einrichtung, Verhalten und Tests sind in [supabase/README.md](supabase/README.md) beschrieben.
 
 ## Webseite
 

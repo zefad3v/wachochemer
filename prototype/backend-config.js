@@ -1,2 +1,5 @@
-// Public project configuration. Never put a secret or service_role key here.
-export const backendConfig = {url: '', publishableKey: ''};
+// Public connection settings. Database policies enforce access.
+export const backendConfig = {
+  "url": "https://gikbeszvxvqqobdqujzz.supabase.co",
+  "publishableKey": "sb_publishable_xaGhCjtIKQ6ndLSbNuTnLQ_bUJk0yRc"
+};
