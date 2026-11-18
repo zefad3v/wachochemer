@@ -1,19 +1,86 @@
 # Gemeinsamer Haushalt
 
-Ein Konto hat pro Haushalt eine Mitgliedschaft. Die Portionsvorgaben sind am Haushalt gespeichert und zählen unabhängig vom Login. Alle Mitglieder haben dieselben Rechte. Der Onlinebetrieb verwendet eine Zeile pro Haushalt, Kalendertag und Mahlzeit mit einer Revision für konkurrierende Änderungen. Eine Restenreservierung verweist auf eine frühere Mahlzeit desselben Haushalts.
+Die App unter `prototype/` verwendet Supabase Auth und PostgreSQL, sobald `prototype/backend-config.js` eine Projekt-URL und einen öffentlichen Schlüssel enthält. Ohne Konfiguration bleibt die bisherige lokale Vorschau verfügbar. Eine teilweise Konfiguration sperrt die App mit einer Fehlermeldung.
 
-Die Migration in `migrations/` setzt Supabase Auth voraus. Row Level Security schränkt Lesezugriffe und Änderungen der Haushaltseinstellungen auf Mitglieder ein. Schreibfunktionen für Mitgliedschaften, Einladungen und Mahlzeiten prüfen den Zugriff in der Datenbank. Die private Funktionsebene liegt ausserhalb der exponierten API-Schemas. Konten mit aktivierter 2FA müssen eine verifizierte Sitzung vorweisen.
+## Verhalten
+
+- Anmeldung mit E-Mail und Passwort, E-Mail-Bestätigung und Passwortreset.
+- Optionale TOTP-Zwei-Faktor-Anmeldung. Wer einen verifizierten Faktor aktiviert hat, braucht für jeden Haushaltszugriff eine AAL2-Sitzung. Ein zweiter Authenticator kann als Ersatz eingerichtet werden. Es werden keine eigenen Recovery-Codes erzeugt.
+- Mehrere Logins pro Haushalt und mehrere Haushalte pro Konto. Alle Mitglieder können planen, Einstellungen ändern, einladen und Mitglieder entfernen. Das letzte Mitglied kann den Haushalt nicht verlassen.
+- Personenanzahl und Portionsvorgaben sind unabhängig von der Anzahl der Logins.
+- Einladungen sind an die bestätigte E-Mail-Adresse gebunden und sieben Tage gültig. Die App erzeugt einen Link zum manuellen Teilen. Die Bestätigungsmail und der Passwortreset werden durch Supabase Auth versandt.
+- Wucheplan, Portionsvorgaben pro Rezept und zusätzliche Einkaufsartikel werden gemeinsam gespeichert. Die App lädt Änderungen bei Fensterfokus und spätestens beim nächsten 10-Sekunden-Intervall, solange kein Menüeditor geöffnet ist. Es gibt keinen Offline-Schreibpuffer.
+- Jede Mahlzeit und die Haushaltseinstellungen haben eine Versionsnummer. Veraltete Änderungen werden abgewiesen. Der Entwurf bleibt erhalten; „Aktuelle Stand lade“ bietet einen ausdrücklichen Neustart der Bearbeitung an.
+- Resten reservieren Mengen einer früheren Mahlzeit desselben Haushalts. Eine Transaktion verhindert doppelte Reservierungen oder das Löschen einer weiterhin verwendeten Quelle.
+- „Lokale Plan übernäh“ importiert den vorhandenen Browserplan ausdrücklich in einen leeren gemeinsamen Plan. Ein fehlgeschlagener Import wird vollständig zurückgerollt, ein identischer Wiederholungsversuch bleibt folgenlos. Ungeklärte Legacy-Portionen müssen vorher im lokalen Prototyp bereinigt werden. Lokale Personen-/Portionsvorgaben und Einkaufszusätze werden dabei nicht automatisch übernommen.
+- Rezepttexte und Bilder bleiben die öffentlichen, versionierten JSON-/Bilddateien im Repository. Resten verwenden die Bildreferenz des Ursprungsrezepts. Favoriten, Archivportionen und Anzeigevorlieben bleiben browserbezogen.
+
+## Einrichtung eines eigenen Wachochemer-Projekts
+
+Die Einrichtung benötigt ein Supabase-Projekt und einen Mailversand. Projekt und Verbindung sind noch nicht eingerichtet. Keine Zugangsdaten anderer Projekte wiederverwenden.
+
+1. Ein separates Supabase-Projekt für Wachochemer auswählen oder erstellen. Die Migrationen in `migrations/` nach Dateiname aufsteigend anwenden. Nur `public` als Anwendungsschema exponieren; `wachochemer_private` bleibt intern. Bei Verwendung der Supabase CLI zuerst `supabase init` und `supabase link --project-ref <wachochemer-ref>` ausführen, dann `supabase db push`. Alternativ können die beiden Transaktionsdateien im SQL Editor des bestätigten Projekts ausgeführt werden.
+2. Unter Auth Hooks den PostgreSQL-Hook **Before User Created** auf `public.before_user_created` setzen und aktivieren. Die Migration allein aktiviert den Hook im Auth-Dienst nicht. Damit sind Registrierungen nur für die interne Freigabeliste oder eine noch gültige Haushaltseinladung möglich.
+3. Die E-Mail des ersten Kontos administrativ freigeben. Im folgenden SQL den Platzhalter ersetzen und die Adresse korrekt als SQL-String quoten. Diese Liste ist nicht über die öffentliche API erreichbar.
+
+   ```sql
+   insert into wachochemer_private.signup_allowlist (email)
+   values (lower(btrim('deine-adresse@example.invalid')))
+   on conflict do nothing;
+   ```
+
+4. Auth mit E-Mail/Passwort aktivieren, E-Mail-Bestätigung verlangen und eine Mindestpasswortlänge von mindestens 8 setzen. TOTP Enrollment und Verification aktivieren. Die private Anwendung erlaubt die Registrierung über den Hook; `enable_signup` darf deshalb nicht global ausgeschaltet werden.
+5. Die endgültige HTTPS-Adresse des Prototyps als Site URL setzen. Die exakten Rücksprungpfade samt Einladungsparameter in die erlaubten Redirect URLs aufnehmen, beispielsweise `https://<host>/wachochemer/prototype/` und `https://<host>/wachochemer/prototype/?invite=*`. Die Registrierung mit Link, E-Mail-Bestätigung auf einem zweiten Gerät und Passwortreset müssen mit der tatsächlichen Adresse geprüft werden. Entwicklungsadressen separat und eng begrenzt freigeben.
+6. Einen eigenen SMTP-Absender für Bestätigungen und Passwortreset einrichten. Der Standard-Maildienst von Supabase ist für den regulären Versand an Haushaltsmitglieder nicht ausreichend. SMTP-Zugangsdaten bleiben in Supabase und gehören nicht ins Repository.
+7. Die öffentlichen Verbindungswerte setzen und die Browserkonfiguration erzeugen.
+
+   ```sh
+   export WACHOCHEMER_SUPABASE_URL='https://<wachochemer-ref>.supabase.co'
+   export WACHOCHEMER_SUPABASE_PUBLISHABLE_KEY='sb_publishable_<public-key>'
+   npm run configure:backend
+   ```
+
+   Das Skript akzeptiert einen Publishable Key oder einen alten `anon`-JWT. Secret Keys, `service_role`-JWTs und URLs mit eingebetteten Zugangsdaten werden zurückgewiesen. Die erzeugte Datei ist bewusst öffentlich; den Datenzugriff sichern die serverseitigen Prüfungen.
+8. Den konfigurierten Stand auf der bestätigten HTTPS-Adresse veröffentlichen. Das erste Konto registrieren, E-Mail bestätigen, Haushalt erstellen und Personen erfassen. Anschliessend eine zweite Person einladen und gemeinsam prüfen. Wer beide Authenticator-Zugänge verliert, benötigt die administrative Wiederherstellung im Supabase-Projekt.
+
+Die genaue Produktionsadresse, Supabase-Projektzuordnung, erste Login-Adresse und SMTP-Konfiguration sind noch offen. Keine Migration oder Auth-Konfiguration wurde bisher in einem echten Supabase-Projekt ausgeführt.
 
 ## Lokal prüfen
 
-Auf einer lokalen Supabase Datenbank mit angewandter Migration:
-
 ```sh
-psql "$WACHOCHEMER_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f supabase/tests/shared_households.sql
+npm ci
+npm test
+npm run test:database
+npm run test:online
+npm run build:auth
 ```
 
-Die Prüfung legt Testkonten und Haushalte in einer Transaktion an und setzt sie am Ende zurück. Sie deckt Zugriffe zwischen zwei Haushalten, eingeladene Mitglieder, 2FA, entzogene Mitgliedschaften, veraltete Mahlzeitenrevisionen und doppelte Restenreservierungen ab.
+`test:database` führt die Migrationen und SQL-Regressionstests in echtem PostgreSQL über PGlite aus. Die Tabellen und JWT-Funktionen von Supabase Auth sind dort Test-Fixtures. Geprüft werden getrennte Haushalte, Einladungen, bestätigte E-Mails, AAL1/AAL2, Mitgliedsentzug, Schreibrevisionen, Restenreservierungen, atomarer Import und Registrierungshook.
 
-## Anbindung des Prototyps
+`test:online` führt die tatsächlichen App-Module in einer DOM-Testumgebung aus. Supabase Auth und RPC-Transport sind simuliert. Die Prüfung umfasst Login, Haushalt, wiederholte Speicherung, Versionskonflikte mit Neuladen, Einladung, Authenticator-Abbruch, 2FA-Challenge, Passwortreset und verspätete Schreibantworten nach dem Abmelden.
 
-Für den privaten Start werden Konten per Einladung eingerichtet. Eine Haushaltseinladung ist an die bestätigte E-Mail-Adresse des eingeladenen Kontos gebunden. Die Datenbank erzeugt und prüft den Einladungsschlüssel. Die App braucht noch den E-Mail-Login mit Passwortreset, die TOTP-Einrichtung, den Einladungsablauf und die Online-Anbindung des Wochenplans. Die Übernahme eines vorhandenen Browserplans wird explizit aus dem bestehenden Gerät ausgelöst.
+Die Workflow-Datei `check-backend.yml` führt diese Prüfungen aus und kontrolliert den reproduzierbaren Browser-SDK-Build. Der Rezeptgenerator und die App benötigen zur Laufzeit keinen Buildserver. Nur für Entwicklung und Tests ist `npm ci` nötig.
+
+Für eine wegwerfbare Supabase-Testdatenbank können die SQL-Dateien zusätzlich mit `psql -X -v ON_ERROR_STOP=1 -f <datei>` ausgeführt werden. Jede Datei verwendet eine Transaktion mit abschliessendem Rollback. Keine Testkonten in einer produktiven Datenbank anlegen.
+
+## Noch erforderliche echte Abnahme
+
+Die lokalen Tests ersetzen die Dienstintegration nicht. Nach der Projektverbindung sind diese Abläufe mit zwei echten Konten zu prüfen.
+
+- Registrierung mit und ohne Einladung, E-Mail-Bestätigung, Passwortreset.
+- Zwei Mitglieder sehen und ändern denselben Plan. Ein fremder Haushalt bleibt unzugänglich.
+- Gleichzeitige Änderung derselben Mahlzeit und gleichzeitige Restenreservierungen.
+- Mitglied entfernen, Einladungslink widerrufen oder ablaufen lassen.
+- TOTP aktivieren, neu anmelden, falschen Code ablehnen, Ersatzfaktor und Deaktivierung prüfen.
+- Netzverlust beim Speichern, erneutes Laden und Import nach einem Verbindungsabbruch.
+- iPhone/Safari im Hoch- und Querformat, insbesondere Anmeldung, Dialogscrollen und Rezeptbild.
+
+Die gemeinsame Browserumgebung konnte den lokalen Vorschauport nicht erreichen. Die DOM-Prüfung ist erfolgreich, eine visuelle Browserabnahme dieses Online-Standes ist deshalb noch ausstehend.
+
+## Referenzen
+
+- [Passwort-Anmeldung](https://supabase.com/docs/guides/auth/passwords)
+- [TOTP](https://supabase.com/docs/guides/auth/auth-mfa/totp)
+- [Registrierungshook](https://supabase.com/docs/guides/auth/auth-hooks/before-user-created-hook)
+- [Auth Hooks](https://supabase.com/docs/guides/auth/auth-hooks)
+- [Eigener SMTP-Versand](https://supabase.com/docs/guides/auth/auth-smtp)

@@ -30,7 +30,7 @@ Die GitHub Action `.github/workflows/generate.yml` soll bei Änderungen an Rezep
 
 * Die Startseite ist derzeit die erste Rezeptdetailseite, keine Archivübersicht.
 * Die Benennung mancher Einheiten und Pluralformen ist derzeit pragmatisch. Für mehr Rezepte benötigen wir Tests mit Mengen, Zutatenvarianten und Übersetzungen.
-* Die Rezepte sind öffentlich. Persönliche Wochenpläne und Familienprofile gehören später in einen separaten privaten Datenbereich.
+* Die Rezepte sind öffentlich. Persönliche Wochenpläne und Haushaltsprofile verwenden nach Aktivierung der Supabase-Konfiguration einen durch Mitgliedschaften geschützten Datenbereich.
 * Die Browseroberfläche und das Design werden im nächsten Schritt überarbeitet.
 
 ## V15-Bedienung

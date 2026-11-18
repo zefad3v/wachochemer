@@ -7,8 +7,8 @@ const js=readFileSync(new URL('../prototype/app.js',import.meta.url),'utf8');
 
 test('date based menu form and shopping range are visible and wired',()=>{
  for(const id of ['meal-editor','meal-kind','meal-recipe','meal-servings','meal-type','shopping-from','shopping-to','shopping-add-form'])assert(html.includes('id="'+id+'"'));
- assert.match(js,/const loaded=loadPlan\(localStorage\)/);
- assert.match(js,/function persistPlan\(\)/);
+ assert.match(js,/loadPlan\(localStorage\)/);
+ assert.match(js,/function persistPlan\(key\)/);
  assert.match(js,/function saveMealEditor\(event\)/);
  assert.match(js,/buildTransferManifest\(state\.plan,state\.recipes/);
  assert.match(js,/byId\("shopping-from"\)\.value=state\.shopping\.from/);

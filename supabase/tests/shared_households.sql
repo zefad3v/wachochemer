@@ -51,8 +51,11 @@ begin
   assert not exists (select 1 from public.household_meals where household_id = target);
   assert not exists (select 1 from public.household_members where household_id = target);
   assert not exists (select 1 from public.household_invitations where household_id = target);
-  update public.households set name = 'Fremder Zugriff' where id = target;
-  assert not found;
+  begin
+    update public.households set name = 'Fremder Zugriff' where id = target;
+    raise exception 'Direct settings updates must use the versioned RPC';
+  exception when insufficient_privilege then null;
+  end;
   begin
     perform public.accept_household_invitation(invitation);
     raise exception 'An invitation is usable only by its email account';
@@ -79,8 +82,9 @@ begin
   assert public.accept_household_invitation(invitation) = target;
   assert (select count(*) from public.household_members where household_id = target) = 2;
   assert (select entry from public.household_meals where household_id = target and day = meal_date and slot = 'lunch') = original;
-  update public.households set adults = 2, children = 1, children_share = 0.5 where id = target;
-  assert found;
+  perform public.save_household_settings(target, 1,
+    '{"name":"Üse Haushalt","adults":2,"children":1,"babies":0,"adultsShare":1,"childrenShare":0.5,"babiesShare":0,"recipeShares":{},"extras":[]}');
+  assert (public.household_snapshot(target)->'household'->>'revision') = '2';
   dinner_revision := public.save_household_meal(target, meal_date, 'dinner', 0, leftovers);
   assert dinner_revision > lunch_revision;
   next_invitation := public.invite_household_member(target, 'planner-three@example.test');

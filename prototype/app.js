@@ -1,4 +1,5 @@
 "use strict";
+import {cloudEnabled,startAccount} from "./account.mjs";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -20,8 +21,8 @@ const state={
 };
 function readSaved(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
 function save(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}}
-state.household=readSaved("wachochemer:household",null);
-state.recipeShares=readSaved("wachochemer:recipeShares",{});
+state.household=cloudEnabled?null:readSaved("wachochemer:household",null);
+state.recipeShares=cloudEnabled?{}:readSaved("wachochemer:recipeShares",{});
 state.planBlocked=false;
 state.startDay=Number(readSaved("wachochemer:weekstart",4));
 if(!Number.isInteger(state.startDay)||state.startDay<0||state.startDay>6)state.startDay=4;
@@ -34,7 +35,7 @@ function safeShoppingRange(value){
 }
 state.shopping=safeShoppingRange(readSaved("wachochemer:shoppingRange",null));
 const savedExtras=readSaved("wachochemer:shoppingExtras",[]);
-state.extras=Array.isArray(savedExtras)?savedExtras.filter(x=>x&&typeof x.id==="string"&&typeof x.title==="string").slice(0,200):[];
+state.extras=!cloudEnabled&&Array.isArray(savedExtras)?savedExtras.filter(x=>x&&typeof x.id==="string"&&typeof x.title==="string").slice(0,200):[];
 const byId=id=>document.getElementById(id);
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 function moneyLike(n){return Number(n).toLocaleString("de-CH",{maximumFractionDigits:2})}
@@ -225,15 +226,25 @@ function updatePlanNotice(error=null){
    (canEdit?'<button type="button" data-review-key="'+escapeHtml(key)+'">Prüefe</button>':'')+'</div>';
  }).join("");
 }
-function persistPlan(){
+let account;
+let householdDirty=false,settingsRevision=null,sessionEpoch=0;
+function disableFormWhileSaving(form){
+ const controls=[...form.querySelectorAll("input,select,button")],disabled=controls.map(control=>control.disabled);
+ controls.forEach(control=>{control.disabled=true});form.setAttribute("aria-busy","true");
+ return ()=>{controls.forEach((control,index)=>{control.disabled=disabled[index]});form.removeAttribute("aria-busy")};
+}
+async function persistPlan(key){
  if(state.archiveStatus!=="ready")throw Error("Rezepte bitte zuerst vollständig lade.");
  if(state.planBlocked)throw Error("Originalplan bitte zuerst wiederherstelle.");
- storePlan(localStorage,state.plan);
+ if(cloudEnabled) await account.saveMeal(key,state.plan.entries[key]??null,state.editorRevisions?.[key]??"0");
+ else storePlan(localStorage,state.plan);
  renderPlanner();
  updatePlanNotice();
  if(state.tab==="shopping")renderShopping();
 }
 function openMealEditor(date,meal="dinner",recipeId=null){
+ if(cloudEnabled&&state.planBlocked)return;
+ state.editorRevisions={...state.revisions};
  const localDate=typeof date==="string"?date:[date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-");
  state.editingDate=localDate;
  state.editorRecipeId=recipeId;
@@ -264,6 +275,7 @@ function loadMealEditor(){
  byId("meal-leftover-source").value=entry?.type==="leftover"?(entry.sourceKey?.split("|")[0]||entry.sourceDate||""):addDays(state.editingDate,-1);
  byId("meal-remove").disabled=!entry;
  byId("meal-editor-error").hidden=true;
+ byId("meal-reload").hidden=true;
  updateMealEditorFields();
 }
 function renderMealRecipeOptions(){
@@ -357,11 +369,15 @@ function updateMealEditorFields(){
  byId("meal-leftover-tip").hidden=kind!=="leftover";
  renderMealBalance();
 }
-function saveMealEditor(event){
+async function saveMealEditor(event){
  event.preventDefault();
  const date=byId("meal-date").value,meal=byId("meal-type").value;
  state.editingDate=date;
  const kind=byId("meal-kind").value;
+ if(state.savingMeal)return;
+ state.savingMeal=true;
+ const epoch=sessionEpoch;
+ const enableForm=disableFormWhileSaving(byId("meal-form"));
  const previousPlan=state.plan;
  try{
   const key=mealKey(date,meal);
@@ -378,14 +394,17 @@ function saveMealEditor(event){
    }
    state.plan=updateMeal(state.plan,key,entry,state.recipes);
   }
-  persistPlan();
+  await persistPlan(key);
+  if(epoch!==sessionEpoch)return;
   byId("meal-editor").close();
  }catch(err){
+  if(epoch!==sessionEpoch)return;
   state.plan=previousPlan;
   byId("meal-editor-error").hidden=false;
   byId("meal-editor-error").textContent=err.message;
+  byId("meal-reload").hidden=!cloudEnabled;
   byId("meal-editor-error").scrollIntoView({block:"nearest"});
- }
+ }finally{state.savingMeal=false;enableForm()}
 }
 function changeShoppingRange(from,to){
  try{
@@ -437,10 +456,15 @@ function renderShopping(){
  byId("shopping-items").innerHTML='<section class="shopping-group"><h3>Für Bring! vorbereite</h3>'+rows+'</section>'+
   (extraRows?'<section class="shopping-group"><h3>Zusätzlechi Sache</h3>'+extraRows+'</section>':'')+
   (skipped.length?'<p class="shopping-disclaimer">Warnige obe bitte prüefe.</p>':'');
- byId("shopping-items").querySelectorAll("[data-remove-extra]").forEach(btn=>btn.addEventListener("click",()=>{
-  state.extras=state.extras.filter(x=>x.id!==btn.dataset.removeExtra);
-  save("wachochemer:shoppingExtras",state.extras);
-  renderShopping();
+ byId("shopping-items").querySelectorAll("[data-remove-extra]").forEach(btn=>btn.addEventListener("click",async()=>{
+  const epoch=sessionEpoch;
+  const extras=state.extras.filter(x=>x.id!==btn.dataset.removeExtra);
+  try{
+   if(cloudEnabled)await saveSharedSettings({extras});
+   else{state.extras=extras;save("wachochemer:shoppingExtras",state.extras)}
+   if(epoch!==sessionEpoch)return;
+   renderShopping();
+  }catch(err){if(epoch===sessionEpoch)byId("shopping-copy-status").textContent=err.message}
  }));
 }
 function currentServings(recipe){
@@ -551,8 +575,8 @@ async function loadRecipes(){
   state.recipes=Object.fromEntries(recipes.map(recipe=>[recipe.id,recipe]));
   state.archiveEntries=archiveEntries(recipes,archiveImages).map(item=>({...item,...imageFor(item.id,imageDemo)}));
   state.archiveStatus="ready";
-  const loaded=loadPlan(localStorage);
-  state.planBlocked=!!loaded.error;
+  const loaded=cloudEnabled?{plan:{version:2,entries:{}},error:null}:loadPlan(localStorage);
+  state.planBlocked=cloudEnabled||!!loaded.error;
   if(loaded.plan)state.plan=loaded.plan;
   updatePlanNotice(loaded.error);
   byId("plan-restore").hidden=!loaded.error;
@@ -568,6 +592,47 @@ async function loadRecipes(){
  if(state.tab==="shopping")renderShopping();
  if(state.tab==="archive")renderArchive();
 }
+
+function lockSharedPlan(){
+ sessionEpoch++;
+ state.planBlocked=true;state.plan={version:2,entries:{}};state.revisions={};
+ state.householdId=null;
+ state.household=null;state.recipeShares={};state.extras=[];
+ householdDirty=false;settingsRevision=null;
+ for(const dialog of document.querySelectorAll("dialog[open]"))dialog.close();
+ for(const input of byId("household-form").querySelectorAll("input"))input.value="";
+ byId("household-total").textContent="";byId("household-status").textContent="";
+ byId("shopping-items").replaceChildren();
+ renderPlanner();
+}
+function applySharedSnapshot(snapshot){
+ Object.assign(state,snapshot);
+ state.planBlocked=false;
+ if(!householdDirty){
+  for(const field of ["adults","children","babies","adultsShare","childrenShare","babiesShare"])
+   byId("household-"+field).value=state.household[field];
+  byId("household-form").dispatchEvent(new Event("household-refresh"));
+  settingsRevision=state.householdRevision;
+ }
+ renderPlanner();updatePlanNotice();
+ if(state.tab==="shopping")renderShopping();
+}
+async function saveSharedSettings(changes,revision=state.householdRevision){
+ const household={...state.household,...changes.household};
+ await account.saveSettings({...household,recipeShares:changes.recipeShares??state.recipeShares,extras:changes.extras??state.extras},revision);
+}
+async function importLocalPlan(shared){
+ const loaded=loadPlan(localStorage);
+ if(loaded.error)throw Error(loaded.error);
+ const issues=assessPlan(loaded.plan,state.recipes).issues;
+ if(issues.length)throw Error("De lokale Plan enthält ungeklärti Portione oder Reschte. Bitte zuerst im lokale Prototyp prüefe.");
+ if(!Object.keys(loaded.plan.entries).length)throw Error("Uf däm Grät isch kei lokale Plan vorhanden.");
+ const key="wachochemer:import:"+shared.id;
+ let id=localStorage.getItem(key);
+ if(!id){id=crypto.randomUUID();localStorage.setItem(key,id)}
+ await shared.importPlan(loaded.plan.entries,id);
+}
+
 function bindHouseholdForm(){
  const form=byId("household-form"),total=byId("household-total"),status=byId("household-status");
  const groups=["adults","children","babies"];
@@ -586,7 +651,11 @@ function bindHouseholdForm(){
   try{total.textContent=portionLabel(householdNeed(readForm()))}
   catch{total.textContent="Bitte Persone und Portione erfasse."}
  }
- function onEdit(){status.textContent="";showTotal()}
+ function onEdit(){
+  if(!householdDirty)settingsRevision=state.householdRevision;
+  householdDirty=true;status.textContent="";showTotal();
+ }
+ form.addEventListener("household-refresh",showTotal);
  for(const group of groups){
   countInput(group).value=state.household?.[group]??0;
   const defaultShare=group==="adults"||(!state.household&&group==="children")?1:0;
@@ -604,15 +673,23 @@ function bindHouseholdForm(){
   onEdit();
  });
  form.addEventListener("input",onEdit);
- form.addEventListener("submit",event=>{
+ form.addEventListener("submit",async event=>{
   event.preventDefault();
+  if(form.getAttribute("aria-busy")==="true")return;
+  const enableForm=disableFormWhileSaving(form);
+  const epoch=sessionEpoch;
   try{
    const profile=readForm();
    householdNeed(profile);
-   if(!save("wachochemer:household",profile))throw Error("Speichere fehlgschlage.");
-   state.household=profile;
+   if(cloudEnabled)await saveSharedSettings({household:profile},settingsRevision??state.householdRevision);
+   else if(!save("wachochemer:household",profile))throw Error("Speichere fehlgschlage.");
+   if(epoch!==sessionEpoch)return;
+   householdDirty=false;
+   state.household={...state.household,...profile};
+   settingsRevision=state.householdRevision;
    status.textContent="Gspeicheret.";
-  }catch(err){status.textContent=err.message}
+  }catch(err){if(epoch===sessionEpoch)status.textContent=err.message}
+  finally{enableForm()}
  });
  showTotal();
 }
@@ -648,20 +725,36 @@ function init(){
   }catch(err){byId("shopping-copy-status").textContent=err.message}
  });
 
- byId("plan-restore").addEventListener("click",()=>{
-  try{state.plan=restorePlan(localStorage);state.planBlocked=false;persistPlan();byId("plan-restore").hidden=true}
+ byId("plan-restore").addEventListener("click",async()=>{
+  if(cloudEnabled)return;
+  try{state.plan=restorePlan(localStorage);state.planBlocked=false;await persistPlan();byId("plan-restore").hidden=true}
   catch(err){updatePlanNotice(err.message)}
  });
  bindHouseholdForm();
- byId("recipe-share-save").addEventListener("click",()=>{
+ byId("household-reload").hidden=!cloudEnabled;
+ byId("household-reload").addEventListener("click",async()=>{
+  if(householdDirty&&!confirm("Ungspeichereti Iistellige verwerfe und de aktuelle Stand lade?"))return;
+  householdDirty=false;
+  try{await account.refresh();byId("household-status").textContent="Aktuelle Stand glade."}
+  catch(err){byId("household-status").textContent=err.message}
+ });
+ byId("meal-reload").addEventListener("click",async()=>{
+  if(!confirm("Dä Entwurf verwerfe und de aktuelle Stand lade?"))return;
+  try{await account.refresh();state.editorRevisions={...state.revisions};loadMealEditor()}
+  catch(err){byId("meal-editor-error").textContent=err.message}
+ });
+ byId("recipe-share-save").addEventListener("click",async()=>{
+  const epoch=sessionEpoch;
   try{
    const id=byId("meal-recipe").value;if(!state.recipes[id])throw Error("Zuerst es Rezept wähle.");
    const share=parseDecimal(byId("recipe-child-share").value);portion(share,true);
    const next={...state.recipeShares,[id]:{childrenShare:share}};
-   if(!save("wachochemer:recipeShares",next))throw Error("Speichere fehlgschlage.");
+   if(cloudEnabled)await saveSharedSettings({recipeShares:next});
+   else if(!save("wachochemer:recipeShares",next))throw Error("Speichere fehlgschlage.");
+   if(epoch!==sessionEpoch)return;
    state.recipeShares=next;
    const need=householdNeed(state.household,next[id]);byId("meal-consumed").value=need;byId("meal-servings").value=need;reflectMealPortions();
-  }catch(err){byId("meal-editor-error").hidden=false;byId("meal-editor-error").textContent=err.message}
+  }catch(err){if(epoch===sessionEpoch){byId("meal-editor-error").hidden=false;byId("meal-editor-error").textContent=err.message}}
  });
 
  const days=weekDays();
@@ -709,14 +802,19 @@ function init(){
  byId("meal-form").addEventListener("submit",saveMealEditor);
  byId("meal-type").addEventListener("change",()=>{if(!state.editorRecipeId)loadMealEditor()});
  byId("meal-kind").addEventListener("change",updateMealEditorFields);
- byId("meal-remove").addEventListener("click",()=>{
+ byId("meal-remove").addEventListener("click",async()=>{
+  if(state.savingMeal)return;state.savingMeal=true;
+  const epoch=sessionEpoch;
+  const enableForm=disableFormWhileSaving(byId("meal-form"));
   const key=mealKey(state.editingDate,byId("meal-type").value),previous=state.plan.entries[key];
   const oldPlan=state.plan;
-  try{state.plan=updateMeal(state.plan,key,null,state.recipes);persistPlan();byId("meal-editor").close()}
+  try{state.plan=updateMeal(state.plan,key,null,state.recipes);await persistPlan(key);if(epoch===sessionEpoch)byId("meal-editor").close()}
   catch(err){
+   if(epoch!==sessionEpoch)return;
    state.plan=oldPlan;
    byId("meal-editor-error").hidden=false;byId("meal-editor-error").textContent=err.message;
-  }
+   byId("meal-reload").hidden=!cloudEnabled;
+  }finally{state.savingMeal=false;enableForm()}
  });
  for(const id of ["shopping-from","shopping-to"]){
   byId(id).addEventListener("change",()=>changeShoppingRange(byId("shopping-from").value,byId("shopping-to").value));
@@ -738,13 +836,18 @@ function init(){
   const local=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
   changeShoppingRange(local(days[0].date),local(days[6].date));
  });
- byId("shopping-add-form").addEventListener("submit",e=>{
+ byId("shopping-add-form").addEventListener("submit",async e=>{
   e.preventDefault();
+  const epoch=sessionEpoch;
   const input=byId("shopping-extra"),title=input.value.trim();
   if(!title)return;
-  state.extras.push({id:String(Date.now())+"-"+Math.random().toString(36).slice(2,8),date:state.shopping.from,title});
-  save("wachochemer:shoppingExtras",state.extras);
-  input.value="";renderShopping();
+  const extras=[...state.extras,{id:crypto.randomUUID(),date:state.shopping.from,title}];
+  try{
+   if(cloudEnabled)await saveSharedSettings({extras});
+   else{state.extras=extras;save("wachochemer:shoppingExtras",extras)}
+   if(epoch!==sessionEpoch)return;
+   input.value="";renderShopping();
+  }catch(err){if(epoch===sessionEpoch)byId("shopping-copy-status").textContent=err.message}
  });
  const shell=byId("day-card");
  let startX=0,startY=0,tracking=false;
@@ -795,6 +898,8 @@ function init(){
   byId("dialog-favourite").classList.toggle("liked",state.favorites.has(id));
   if(state.tab==="archive")renderArchive();
  });
- showTab("week");loadRecipes();
+ showTab("week");
+ loadRecipes().then(async()=>{if(cloudEnabled)account=await startAccount({onSnapshot:applySharedSnapshot,onLock:lockSharedPlan,onImport:importLocalPlan})});
 }
+if(cloudEnabled)document.getElementById("app").hidden=true;
 init();
