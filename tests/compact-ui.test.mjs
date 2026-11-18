@@ -38,7 +38,7 @@ test('search results become text suggestions with stable search header',()=>{
 });
 
 test('horizontal swipes target the two meal pages; weekdays remain directly selectable',()=>{
- assert.match(js,/const direction=swipeDirection\(dx,dy\);\s*if\(direction\)\{state\.selectedMeal=direction>0\?"dinner":"lunch";renderPlanner\(\)\}/);
+ assert.match(js,/const direction=swipeDirection\(dx,dy\);\s*if\(direction\)\{lastSwipeAt=Date\.now\(\);state\.selectedMeal=direction>0\?"dinner":"lunch";renderPlanner\(\)\}/);
  assert.match(html,/id="week-strip"/);
  assert.match(js,/if\(day\)setDay\(Number\(day\.dataset\.day\)\)/);
  assert.match(html,/class="day-navigation">[^]*?id="week-strip"[^]*?class="view-switch"/);

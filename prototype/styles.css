@@ -491,4 +491,12 @@ html{overscroll-behavior-y:none}
 #account-settings{margin-bottom:16px}
 #account-household-list{display:grid;gap:8px;margin-block:12px}
 
-#screen-week .day-navigation .view-switch #plan-next-week{min-width:44px;min-height:44px;padding:0 10px;border-left:1px solid rgba(191,203,186,.2);border-radius:0;color:var(--muted);font-size:24px;font-weight:400}
+#screen-week .day-navigation .view-switch #plan-next-week{min-width:44px;min-height:44px;padding:0 10px;border-left:1px solid rgba(191,203,186,.2);border-radius:0;color:var(--muted);font-size:12px;font-weight:400}
+
+/* Keep the standalone status area outside the scrolling content. */
+@media (display-mode:standalone) and (max-width:679px){
+ #app{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+ .topbar{flex:none;width:100%;background:#1d3129}
+ .header-backdrop{display:none}
+ #main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior-y:contain}
+}

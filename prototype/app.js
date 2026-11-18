@@ -124,6 +124,7 @@ function showTab(tab){
  if(tab==="week")renderPlanner();
  if(tab==="archive")renderArchive();
  if(tab==="shopping")renderShopping();
+ byId("main").scrollTop=0;
  window.scrollTo({top:0,behavior:"instant"});
 }
 function weekLabel(){
@@ -143,7 +144,8 @@ const viewPreferences=savedViews&&typeof savedViews==="object"&&!Array.isArray(s
 let currentClass="",plannerView="day",lastSwipeAt=0;
 function updateDisplay(){
  const next=displayClass(document.documentElement.clientWidth);
- if(next!==currentClass){currentClass=next;plannerView=viewForClass(next,viewPreferences)}
+ if(next===currentClass)return;
+ currentClass=next;plannerView=viewForClass(next,viewPreferences);
  renderPlanner();
 }
 function setWeekOffset(inc){state.weekOffset+=inc;renderPlanner()}
@@ -166,6 +168,7 @@ function renderPlanner(){
  const atmosphere=byId("app");
  if(item.image)atmosphere.style.setProperty("--meal-atmosphere",'url("'+item.image+'")');else atmosphere.style.removeProperty("--meal-atmosphere");
  byId("screen-week").dataset.view=plannerView;
+ byId("plan-next-week").hidden=plannerView==="week";
  document.querySelectorAll("button[data-view]").forEach(btn=>btn.setAttribute("aria-pressed",String(btn.dataset.view===plannerView)));
  byId("week-strip").innerHTML=days.map(({date,item},i)=>'<button type="button" data-day="'+i+'" aria-pressed="'+(i===state.current)+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-label="'+escapeHtml(weekdays[date.getDay()]+', '+niceDate(date)+(item.planned?', Menü geplant':', ungeplant'))+'"><span>'+weekdayShort[date.getDay()]+'</span><strong>'+date.getDate()+'</strong><span class="plan-dot" data-planned="'+item.planned+'" aria-hidden="true"></span></button>').join("");
  byId("week-overview").innerHTML=days.map(({date,item},i)=>'<article class="week-row'+(i===state.current?' selected':'')+'"><button type="button" class="day-select" data-day="'+i+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-pressed="'+(i===state.current)+'">'+picture(item)+'<span class="row-content"><strong>'+escapeHtml(weekdays[date.getDay()]+" · "+niceDate(date))+'</strong>'+mealSummary(date)+(item.imageDemo?'<span class="demo-tag">Bild-Demo · KI-Beispiel</span>':'')+'</span></button><button type="button" class="row-edit" data-edit-day="'+i+'" aria-label="Menü für '+escapeHtml(weekdays[date.getDay()])+ ' bearbeiten">✎</button></article>').join("");
@@ -858,16 +861,15 @@ function init(){
  });
  const shell=byId("day-card");
  let startX=0,startY=0,tracking=false;
- shell.addEventListener("touchstart",e=>{tracking=e.touches.length===1;if(tracking){startX=e.touches[0].clientX;startY=e.touches[0].clientY}},{passive:true});
+ shell.addEventListener("touchstart",e=>{tracking=e.touches.length===1;if(tracking){lastSwipeAt=0;startX=e.touches[0].clientX;startY=e.touches[0].clientY}},{passive:true});
  shell.addEventListener("touchmove",e=>{if(e.touches.length!==1)tracking=false},{passive:true});
  shell.addEventListener("touchend",e=>{
   if(!tracking)return;tracking=false;
   const dx=e.changedTouches[0].clientX-startX,dy=e.changedTouches[0].clientY-startY;
-  if(Math.max(Math.abs(dx),Math.abs(dy))>7)lastSwipeAt=Date.now();
   const direction=swipeDirection(dx,dy);
-  if(direction){state.selectedMeal=direction>0?"dinner":"lunch";renderPlanner()}
+  if(direction){lastSwipeAt=Date.now();state.selectedMeal=direction>0?"dinner":"lunch";renderPlanner()}
  },{passive:true});
- shell.addEventListener("touchcancel",()=>{tracking=false;lastSwipeAt=Date.now()});
+ shell.addEventListener("touchcancel",()=>{tracking=false;lastSwipeAt=0});
  window.addEventListener("keydown",e=>{
   if(state.tab!=="week"||document.querySelector("dialog[open]")||e.target.closest("input,select,textarea,[contenteditable]"))return;
   if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();setDay(state.current+(e.key==="ArrowRight"?1:-1))}
