@@ -912,3 +912,24 @@ function init(){
 }
 if(cloudEnabled)document.getElementById("app").hidden=true;
 init();
+
+// Re-enter the sampling zone on launch and after resuming the installed app.
+if ((matchMedia("(display-mode: standalone)").matches || navigator.standalone) &&
+    (/iPhone|iPad|iPod/.test(navigator.userAgent) ||
+     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1))) {
+ document.documentElement.classList.add("ios-standalone");
+ const surface=document.querySelector(".pwa-status-surface");
+ let frame;
+ function refreshStatusSurface(){
+  if(document.hidden)return;
+  cancelAnimationFrame(frame);
+  surface.style.top="5px";
+  frame=requestAnimationFrame(()=>{
+   frame=requestAnimationFrame(()=>{surface.style.top="4px"});
+  });
+ }
+ window.addEventListener("pageshow",refreshStatusSurface);
+ document.addEventListener("visibilitychange",refreshStatusSurface);
+ window.addEventListener("orientationchange",refreshStatusSurface);
+ refreshStatusSurface();
+}
