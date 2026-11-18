@@ -113,7 +113,23 @@ assert.equal(el('account-identity').textContent,'one@example.test · Üse Hausha
 // The shortcut targets next calendar week regardless of the browsed week and performs no writes.
 const beforeShortcut=JSON.stringify(data);
 await click('week-prev');await click('week-prev');
+w.document.querySelector('button[data-view=day]').click();
+assert.equal(el('plan-next-week').hidden,false);
+const card=el('day-card');
+function gesture(dx){
+ for(const [type,touches,changedTouches] of [
+  ['touchstart',[{clientX:10,clientY:10}],[]],
+  ['touchend',[],[{clientX:10+dx,clientY:10}]]
+ ])card.dispatchEvent(Object.assign(new w.Event(type),{touches,changedTouches}));
+ card.click();
+}
+gesture(85);
+assert.equal(el('meal-editor').open,false);
+gesture(8);
+assert.equal(el('meal-editor').open,true);
+await click('meal-editor-close');
 await click('plan-next-week');
+assert.equal(el('plan-next-week').hidden,true);
 const targetRange=el('week-range').textContent;
 const nextThursday=new Date();
 nextThursday.setDate(nextThursday.getDate()+((4-nextThursday.getDay()+7)%7||7));
@@ -121,9 +137,10 @@ assert.equal(el('week-strip').querySelector('[data-day="0"] strong').textContent
 assert.equal(el('screen-week').dataset.view,'week');
 assert.equal(el('week-strip').querySelector('[data-day="0"]').getAttribute('aria-pressed'),'true');
 assert.equal(w.document.activeElement,el('week-range'));
+await click('week-next');
+w.document.querySelector('button[data-view=day]').click();
+assert.equal(el('plan-next-week').hidden,false);
 await click('plan-next-week');
-assert.equal(el('week-range').textContent,targetRange);
-await click('week-next');await click('plan-next-week');
 assert.equal(el('week-range').textContent,targetRange);
 assert.equal(JSON.stringify(data),beforeShortcut);
 w.document.querySelector('[data-tab=settings]').click();

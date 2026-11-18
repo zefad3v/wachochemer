@@ -119,13 +119,17 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   function bind(id, event, handler) {
     el(id).addEventListener(event, e => { e.preventDefault(); action(() => handler(e)); });
   }
-  async function refresh() {
+  async function refresh(onlyChanges = false) {
     if (!shared?.id) return;
     const version = generation, target = shared.id, request = ++refreshSequence;
     const snapshot = await shared.load();
     if (generation !== version || shared.id !== target || request !== refreshSequence) return;
-    currentSnapshot = snapshot;
     el('account-connection').hidden = true;
+    if (onlyChanges && currentSnapshot &&
+        currentSnapshot.householdRevision === snapshot.householdRevision &&
+        JSON.stringify(currentSnapshot.revisions) === JSON.stringify(snapshot.revisions) &&
+        JSON.stringify(currentSnapshot.plan) === JSON.stringify(snapshot.plan)) return;
+    currentSnapshot = snapshot;
     onSnapshot(snapshot);
     el('account-identity').textContent = user.email + ' · ' + snapshot.household.name;
   }
@@ -310,7 +314,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     const poll = async () => {
       if (busy || document.hidden || !shared.id || !gate.hidden || document.querySelector('dialog[open]')) return;
       const version = generation;
-      try { await refresh(); }
+      try { await refresh(true); }
       catch (error) {
         if (version !== generation) return;
         if (error.code === '42501' || error.code === 'PGRST301') {
