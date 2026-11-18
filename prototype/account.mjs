@@ -14,6 +14,12 @@ const html = `
       <button type="button" id="account-register">Konto mit Iiladig erstelle</button>
       <button type="button" id="account-reset">Passwort vergesse</button>
     </form>
+    <section id="account-confirmation" hidden>
+      <h2 id="account-confirmation-title" tabindex="-1">Bitte E-Mail bestätige</h2>
+      <p>Öffne d Bestätigungsmail für <strong id="account-confirmation-email"></strong> und tippe uf «E-Mail bestätige».</p>
+      <p>Falls d Mail fehlt, lueg au im Spam-Ordner.</p>
+      <button type="button" id="account-back-to-login">Zrugg zur Aameldig</button>
+    </section>
     <form id="account-password" hidden>
       <label>Neus Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
       <button class="main-action">Passwort speichere</button>
@@ -92,7 +98,8 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     onLock();
   }
   function stage(name) {
-    for (const id of ['login', 'password', 'challenge', 'households']) el('account-' + id).hidden = id !== name;
+    for (const id of ['login', 'confirmation', 'password', 'challenge', 'households']) el('account-' + id).hidden = id !== name;
+    el('account-retry').hidden = name === 'confirmation';
   }
   function clearEnrollment() {
     enrollment = null; el('account-enrollment').hidden = true;
@@ -244,8 +251,11 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
       unwrap(await client.auth.signUp({email: form.elements.email.value, password: form.elements.password.value,
         options: {emailRedirectTo: url.href}}));
       form.elements.password.value = '';
-      status('Bitte dini E-Mail öffne und s Konto bestätige.');
+      el('account-confirmation-email').textContent = form.elements.email.value;
+      stage('confirmation');
+      el('account-confirmation-title').focus();
     });
+    bind('account-back-to-login', 'click', () => { stage('login'); el('account-login').elements.password.focus(); });
     bind('account-reset', 'click', async () => {
       const email = el('account-login').elements.email;
       if (!email.reportValidity()) return;
