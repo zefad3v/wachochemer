@@ -500,3 +500,10 @@ html{overscroll-behavior-y:none}
  .header-backdrop{display:none}
  #main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior-y:contain}
 }
+
+/* A real fixed element lets iOS sample an opaque status-area colour.
+   Experimental WebKit workaround, see Modern Web Weekly #80. */
+.pwa-status-surface{display:none;pointer-events:none}
+@media (display-mode:standalone){
+ .pwa-status-surface{display:block;position:fixed;top:0;left:0;width:100%;height:11px;background-color:#1d3129;z-index:100}
+}
