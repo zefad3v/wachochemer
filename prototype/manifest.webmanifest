@@ -1,0 +1,25 @@
+{
+  "id": "./",
+  "name": "Wa chochemer?",
+  "short_name": "Wa chochemer?",
+  "lang": "gsw-CH",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1d3129",
+  "theme_color": "#19231b",
+  "icons": [
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

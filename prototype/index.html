@@ -4,6 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#19231b">
+  <meta name="apple-mobile-web-app-title" content="Wa chochemer?">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="./assets/icons/favicon-48.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="description" content="Wa chochemer? Mobiler Designprototyp für Wucheplan, Chochchischtli und Iichaufslischte.">
@@ -39,7 +43,7 @@
         </div>
         <div class="week-controls" aria-label="Wochenwechsel">
           <button type="button" class="icon-btn" id="week-prev" aria-label="Vorherige Woche">‹</button>
-          <span id="week-range" aria-live="polite"></span>
+          <span id="week-range" tabindex="-1" aria-live="polite"></span>
           <button type="button" class="icon-btn" id="week-next" aria-label="Nächste Woche">›</button>
         </div>
       </div>
@@ -54,6 +58,7 @@
           <button type="button" data-view="day" aria-pressed="true"><span aria-hidden="true">‹ </span>Tag</button>
           <button type="button" data-view="week" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="14" rx="2"/><path d="M6 2v4m8-4v4M3 8h14M7 8v9m6-9v9"/></svg>Woche</button>
         </div>
+        <button type="button" id="plan-next-week" class="plan-next-week">Nächsti Wuche plane</button>
       </div>
 
       <div class="planner-layout">
