@@ -51,7 +51,7 @@ jobs:
           import {readFileSync} from 'node:fs';
           const html=readFileSync('prototype/index.html','utf8');
           const app=readFileSync('prototype/app.js','utf8');
-          assert(html.includes('src="./app.js"'));
+          assert.match(html,/src="\.\/app\.js(?:\?[^"]*)?"/);
           assert(html.includes('id="recipe-grid"'));
           assert(app.includes('fetchArchiveData(fetchJson)'));
           assert(!app.includes('FALLBACK_RECIPES'));
