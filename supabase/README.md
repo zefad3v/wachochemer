@@ -49,7 +49,7 @@ Der Auth-Hook `public.before_user_created` ist im Dashboard aktiviert. E-Mail/Pa
 
 Ein tatsächlicher Registrierungsversuch ohne Freigabe/Einladung über den öffentlichen Auth-Endpunkt wurde mit HTTP 403 und „Für die Registrierung brauchst du eine Haushaltseinladung.“ abgewiesen. Dabei wurde kein Konto angelegt. Damit ist auch die Anbindung des Hooks an Supabase Auth geprüft.
 
-Die erste Login-Adresse und SMTP-Konfiguration sind noch offen. Custom SMTP ist im Dashboard ausgeschaltet. Eine Absenderadresse und der zugehörige Maildienst müssen vom Nutzer benannt werden. SMTP-Passwörter direkt und sicher im Dashboard erfassen, niemals in Chat oder Repository. Die Projektkonfiguration wurde bis zur Prüfung der echten Mailzustellung und Logins noch nicht als betriebsbereit freigegeben.
+Die erste Login-Adresse ist freigegeben. Custom SMTP ist mit Infomaniak und einem Gerätepasswort eingerichtet. Mailzustellung, Bestätigung und gemeinsame Nutzung mit zwei regulären Konten sind noch zu prüfen.
 
 ## Abnahme der eingerichteten Datenbank
 
