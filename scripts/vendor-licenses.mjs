@@ -12,6 +12,6 @@ for (const [path, info] of Object.entries(lock.packages)) {
   if (files.length) notice = files.map(name => readFileSync(path + '/' + name, 'utf8')).join('\n');
   else if (pkg.name.startsWith('@supabase/')) notice = readFileSync('node_modules/@supabase/auth-js/LICENSE', 'utf8');
   else throw Error('License notice missing for ' + pkg.name);
-  notices.push(pkg.name + ' ' + pkg.version + '\n\n' + notice.trim());
+  notices.push(pkg.name + ' ' + pkg.version + '\n\n' + notice.replace(/\r\n?/g, '\n').trim());
 }
 writeFileSync('prototype/vendor/THIRD_PARTY_LICENSES.txt', notices.join('\n\n' + '='.repeat(72) + '\n\n') + '\n');
