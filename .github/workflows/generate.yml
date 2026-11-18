@@ -6,6 +6,8 @@ on:
       - 'data/**'
       - 'locales/**'
       - 'scripts/build.mjs'
+      - 'scripts/build-recipe-index.mjs'
+      - 'src/domain/model.mjs'
       - '.github/workflows/generate.yml'
   workflow_dispatch:
 permissions:
@@ -21,12 +23,14 @@ jobs:
         with:
           node-version: '22'
       - name: Generate pages
-        run: node scripts/build.mjs
+        run: |
+          node scripts/build.mjs
+          node scripts/build-recipe-index.mjs
       - name: Commit generated files if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html rezepte/
+          git add index.html rezepte/ data/recipe-index.json
           if ! git diff --cached --quiet; then
             git commit -m "Generate recipe pages from JSON"
             git push

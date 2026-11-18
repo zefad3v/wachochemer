@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#19231b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Wa chochemer? Mobiler Designprototyp für Wucheplan, Chochchischtli und Iichaufslischte.">
+  <title>Wa chochemer? · Mobiler Prototyp</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" type="module"></script>
+</head>
+<body>
+<div id="app">
+  <div class="app-backdrop" aria-hidden="true"></div>
+  <header class="topbar">
+    <span class="header-backdrop" aria-hidden="true"></span>
+    <div id="mobile-page-title" class="mobile-page-title">Üse Wucheplan</div>
+    <div class="brand-block">
+      <span class="eyebrow">ÜSERI FAMILIECHUCHI</span>
+      <div class="brand">Wa chochemer<span class="brand-mark">?</span></div>
+    </div>
+    <nav class="desktop-nav" aria-label="Hauptnavigation">
+      <button type="button" data-tab="week" class="nav-btn active">Wucheplan</button>
+      <button type="button" data-tab="archive" class="nav-btn">Chochchischtli</button>
+      <button type="button" data-tab="shopping" class="nav-btn">Iichaufslischte</button>
+    </nav>
+    <button type="button" data-tab="settings" class="header-settings" aria-label="Iistellige" title="Iistellige">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M9.9 3h4.2l.7 2.2 1.4.8 2.3-.5 2.1 3.6-1.6 1.7v1.6l1.6 1.7-2.1 3.6-2.3-.5-1.4.8-.7 2.2H9.9l-.7-2.2-1.4-.8-2.3.5-2.1-3.6L5 12.4v-1.6L3.4 9.1l2.1-3.6 2.3.5 1.4-.8z"/></svg>
+    </button>
+  </header>
+  <main id="main">
+    <section class="screen active" id="screen-week" aria-labelledby="week-title">
+      <div class="screen-heading">
+        <div>
+          <span class="eyebrow muted">WOCHE FÜR WOCHE. EINFACH.</span>
+          <h1 id="week-title">Üse Wucheplan</h1>
+        </div>
+        <div class="week-controls" aria-label="Wochenwechsel">
+          <button type="button" class="icon-btn" id="week-prev" aria-label="Vorherige Woche">‹</button>
+          <span id="week-range" aria-live="polite"></span>
+          <button type="button" class="icon-btn" id="week-next" aria-label="Nächste Woche">›</button>
+        </div>
+      </div>
+      <div class="day-navigation">
+        <details id="plan-review" class="plan-review" hidden>
+          <summary id="plan-review-summary" role="status"></summary>
+          <div id="plan-status" class="plan-review-list"></div>
+          <button id="plan-restore" type="button" hidden>Sicherig wiederherstelle</button>
+        </details>
+        <nav id="week-strip" class="week-strip" aria-label="Tagesauswahl"></nav>
+        <div class="view-switch" role="group" aria-label="Planansicht">
+          <button type="button" data-view="day" aria-pressed="true"><span aria-hidden="true">‹ </span>Tag</button>
+          <button type="button" data-view="week" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="14" rx="2"/><path d="M6 2v4m8-4v4M3 8h14M7 8v9m6-9v9"/></svg>Woche</button>
+        </div>
+      </div>
+
+      <div class="planner-layout">
+        <div id="week-overview" class="week-overview" aria-label="Sieben Tage im Überblick"></div>
+        <section class="day-detail" aria-label="Ausgewählter Tag">
+          <div class="day-card-shell">
+            <button type="button" id="day-card" class="day-card"></button>
+            <button type="button" id="day-edit" aria-label="Menü bearbeiten">✎</button>
+            <div id="meal-pages" class="meal-pages" role="group" aria-label="Mahlzeit für ausgewählten Tag">
+              <button id="choose-lunch" type="button" data-meal-page="lunch" aria-pressed="false" aria-label="Zmittag anzeigen"><span class="meal-dot"></span><span>Zmittag</span></button>
+              <button id="choose-dinner" type="button" data-meal-page="dinner" aria-pressed="true" aria-label="Znacht anzeigen"><span class="meal-dot"></span><span>Znacht</span></button>
+            </div>
+          </div>
+          <div id="day-meals" class="day-meals" aria-live="polite"></div>
+        </section>
+      </div>
+      <div class="planner-secondary-actions">
+        <button type="button" id="open-week-overview">Wuche aaluege</button>
+        <button type="button" id="prepare-bring">Für Bring! vorbereite</button>
+      </div>
+    </section>
+    <section class="screen" id="screen-archive" aria-labelledby="archive-title">
+      <div class="section-title"><span class="eyebrow">FÜR JEDÄ TAG</span><h1 id="archive-title">Chochchischtli</h1><p>Alli Rezepte a eim Ort. Klari Bilder, eifachi Suche.</p></div>
+      <label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="recipe-search" placeholder="Rezepte sueche…" autocomplete="off" aria-label="Rezepte suchen"></label>
+      <div class="filter-row" id="recipe-filters" aria-label="Rezeptfilter"></div>
+      <div class="recipe-grid" id="recipe-grid"></div>
+    </section>
+    <section class="screen" id="screen-shopping" aria-labelledby="shopping-title">
+      <div class="section-title"><button type="button" id="shopping-back" class="settings-back">‹ Zrugg zum Wucheplan</button><span class="eyebrow">EINKAUF VORBEREITEN</span><h1 id="shopping-title">Für Bring!</h1><p>Dini Zutate prüefe. De offizielli Gesamtimport isch no nöd verfügbar.</p></div>
+      <div class="shopping-date-panel" role="group" aria-label="Einkaufszeitraum">
+        <label>Vo <input id="shopping-from" type="date" aria-label="Einkaufen ab Datum"></label>
+        <label>Bis <input id="shopping-to" type="date" aria-label="Einkaufen bis Datum"></label>
+        <div class="shopping-shortcuts">
+          <button type="button" id="shopping-seven">Ab hüt 7 Täg</button>
+          <button type="button" id="shopping-following">Nächsti 7 Täg</button>
+          <button type="button" id="shopping-plan-week">Aazeigti Wuche</button>
+        </div>
+        <p id="shopping-window-error" role="alert" hidden></p>
+      </div>
+      <form id="shopping-add-form" class="shopping-add-form">
+        <label for="shopping-extra">Zuesätzlich iichaufe</label>
+        <div><input id="shopping-extra" placeholder="z. B. Milch oder Windle" maxlength="120" required><button type="submit">Hinzuefüege</button></div>
+      </form>
+      <p class="shopping-disclaimer">Nur gplanti Rezepte wärded zämegfasst. Eigeni Menüs ohni Zutate und Reschte erzeuged kei zweite Iichauf.</p>
+      <label><input type="checkbox" id="shopping-optional"> Optionali Zutate iischlüsse</label>
+      <p id="bring-warnings" role="status"></p>
+      <div id="bring-imports" aria-label="Offizielli Einzelrezeptimporte"></div>
+      <p>Ob es Rezept in Bring! gspeicheret isch und ob Zutate uf de Bring!-Liste stönd, isch unabhängig und da nöd prüefbar. Bi jedem Import in Bring! selber kontrolliere.</p>
+      <div class="shopping-transfer">
+        <button type="button" id="shopping-manifest">Exportmanifest abelade</button>
+        <button type="button" id="shopping-copy" class="main-action">Zutate für Bring! kopiere</button>
+        <p id="shopping-copy-status" role="status">D Liste wird vorbereitet. Für de Import in Bring! brucht es no en bestätigte Übergabewäg.</p>
+      </div>
+      <div id="shopping-progress" class="shopping-progress"></div>
+      <div id="shopping-items" class="shopping-items"></div>
+    </section>
+    <section class="screen" id="screen-settings" aria-labelledby="settings-title">
+      <div class="section-title"><button type="button" id="settings-back" class="settings-back">‹ Zrugg</button><h1 id="settings-title">Iistellige</h1></div>
+      <form id="household-form" class="settings-card" novalidate>
+        <h2>Haushalt</h2>
+        <output id="household-total" for="household-adults household-children household-babies household-adultsShare household-childrenShare household-babiesShare"></output>
+        <p class="household-hint">Die Portione schlägt de Wucheplan bi neue Menüs vor.</p>
+        <fieldset class="household-counts">
+          <legend>Wer isst mit?</legend>
+          <div class="household-row">
+            <label for="household-adults">Erwachseni</label>
+            <div class="household-stepper">
+              <button type="button" data-count="adults" data-step="-1" aria-label="Ein Erwachsene weniger">−</button>
+              <input id="household-adults" type="number" inputmode="numeric" min="0" max="100" step="1" required>
+              <button type="button" data-count="adults" data-step="1" aria-label="Ein Erwachsene meh">+</button>
+            </div>
+          </div>
+          <div class="household-row">
+            <label for="household-children">Chind</label>
+            <div class="household-stepper">
+              <button type="button" data-count="children" data-step="-1" aria-label="Es Chind weniger">−</button>
+              <input id="household-children" type="number" inputmode="numeric" min="0" max="100" step="1" required>
+              <button type="button" data-count="children" data-step="1" aria-label="Es Chind meh">+</button>
+            </div>
+          </div>
+          <div class="household-row">
+            <label for="household-babies">Babys</label>
+            <div class="household-stepper">
+              <button type="button" data-count="babies" data-step="-1" aria-label="Es Baby weniger">−</button>
+              <input id="household-babies" type="number" inputmode="numeric" min="0" max="100" step="1" required>
+              <button type="button" data-count="babies" data-step="1" aria-label="Es Baby meh">+</button>
+            </div>
+          </div>
+        </fieldset>
+        <details class="household-shares">
+          <summary>Portione pro Person aapasse</summary>
+          <p class="household-hint" id="household-share-hint">1 isch e ganzi Portion, 0.5 e halbi, 0 zählt nöd mit.</p>
+          <div class="household-row"><label for="household-adultsShare">Pro Erwachsene</label><input id="household-adultsShare" type="text" inputmode="decimal" autocomplete="off" aria-describedby="household-share-hint"></div>
+          <div class="household-row"><label for="household-childrenShare">Pro Chind</label><input id="household-childrenShare" type="text" inputmode="decimal" autocomplete="off" aria-describedby="household-share-hint"></div>
+          <div class="household-row"><label for="household-babiesShare">Pro Baby</label><input id="household-babiesShare" type="text" inputmode="decimal" autocomplete="off" aria-describedby="household-share-hint"></div>
+        </details>
+        <button type="submit" class="main-action">Haushalt speichere</button>
+        <button type="button" id="household-reload" hidden>Aktuelle Stand lade</button>
+        <output id="household-status" role="status"></output>
+      </form>
+      <div class="settings-card">
+        <label for="start-day"><strong>Wuchebeginn</strong><span>Vo wellem Tag söll dini Wuche starte?</span></label>
+        <select id="start-day"><option value="1">Mäntig</option><option value="2">Zischtig</option><option value="3">Mittwuch</option><option value="4">Dunschtig</option><option value="5">Friitig</option><option value="6">Samschtig</option><option value="0">Sunntig</option></select>
+      </div>
+      <label class="image-demo-setting"><input id="image-demo" type="checkbox"> Bild-Demo aazeige <small>KI-Beispielbild, kei Foto vom tatsächliche Rezept. Dini Planig bliibt unveränderet.</small></label>
+      <p class="settings-note">D Iistellige werded i dim Browser gspeicheret.</p>
+    </section>
+  </main>
+  <nav class="bottom-nav" aria-label="Hauptnavigation">
+    <button data-tab="week" type="button" class="bottom-link active" aria-label="Wucheplan"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 10h18m-12 4h6m-6 4h4"/></svg><span>Wucheplan</span></button>
+    <button data-tab="archive" type="button" class="bottom-link" aria-label="Chochchischtli"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.8 6-1.8 9 0 3-1.8 6-1.8 9 0v14c-3-1.8-6-1.8-9 0-3-1.8-6-1.8-9 0zM12 5.5v14"/></svg><span>Chochchischtli</span></button>
+  </nav>
+  <dialog id="meal-editor" class="meal-editor" aria-labelledby="meal-editor-title">
+    <form id="meal-form" novalidate class="meal-form">
+      <div class="editor-head"><h2 id="meal-editor-title" tabindex="-1">Menü plane</h2><button type="button" id="meal-editor-close" aria-label="Schliessen">✕</button></div>
+      <label class="editor-date-label" for="meal-date">Datum vom Menü
+        <input id="meal-date" type="date" required>
+      </label>
+      <div class="editor-fields">
+        <label>Mahlziit<select id="meal-type"><option value="dinner">Znacht</option><option value="lunch">Zmittag</option></select></label>
+        <label>Was gits?<select id="meal-kind">
+          <option value="recipe">Rezept us em Chochchischtli</option>
+          <option value="manual">Eigenes Menü / öppis usserhalb</option>
+          <option value="leftover">Reschte vom Vortag</option>
+          <option value="none">Nüt plant / iichaufe</option>
+        </select></label>
+        <div id="meal-recipe-line" class="meal-picker">
+          <output id="meal-recipe-selected" class="meal-recipe-selected" aria-live="polite">Bitte es Rezept wähle</output>
+          <input id="meal-recipe-search" type="search" autocomplete="off" placeholder="Rezept sueche oder wechsle…" aria-label="Rezept suche oder wechsle">
+          <div id="meal-recipe-options" class="meal-recipe-options" role="listbox" aria-label="Passendi Rezepte"></div>
+          <input id="meal-recipe" type="hidden">
+        </div>
+        <div id="meal-simple-portions"><p id="meal-portion-note" role="status"></p>
+<label for="meal-need">Portione für die Mahlziit</label><div class="portion-stepper"><button type="button" id="meal-minus" aria-label="Halbi Portion weniger">−</button><input id="meal-need" type="text" inputmode="decimal" autocomplete="off" aria-label="Portionen für die Mahlzeit" placeholder="z. B. 2.5"><button type="button" id="meal-plus" aria-label="Halbi Portion meh">+</button></div>
+<label><input id="meal-extra-enabled" type="checkbox"> Zusätzlich für spöter choche</label><label id="meal-extra-line" hidden>Zusätzlichi Portione<input id="meal-extra" type="text" inputmode="decimal" autocomplete="off" value="0" aria-label="Zusätzliche Portionen"></label><output id="meal-total" aria-live="polite"></output></div>
+<details id="meal-advanced"><summary>Erwiiterti Portionsplanig</summary><label id="meal-servings-line">Kochmenge (Portione)<input id="meal-servings" type="text" required inputmode="decimal" autocomplete="off" value="1"></label>
+        <label id="meal-consumed-line">Verzehr bi dere Mahlziit<input id="meal-consumed" type="text" required inputmode="decimal" autocomplete="off"></label>
+        </details><details><summary>Rezeptspezifischi Chind-Portion</summary><label>Chind-Anteil<input id="recipe-child-share" type="text" inputmode="decimal" autocomplete="off"></label><button type="button" id="recipe-share-save">Für das Rezept merke und awände</button></details>
+        <output id="meal-balance" aria-live="polite"></output>
+        <label id="meal-manual-line" hidden>Menü<input id="meal-manual" maxlength="140" placeholder="z. B. Znacht bi de Grosseltere"></label>
+        <label id="meal-source-choice-line" hidden>Verfügbari Reschte<select id="meal-source-choice"></select></label><details id="meal-source-advanced"><summary>Ursprung prüefe</summary><label id="meal-leftover-line" hidden>Reschte vom<input id="meal-leftover-source" type="date"></label>
+        <div><label>Ursprungsmahlziit<select id="meal-leftover-source-meal"><option value="">Bitte wähle</option><option value="lunch">Zmittag</option><option value="dinner">Znacht</option></select></label></div></details><div id="meal-leftover-details" hidden><label>Reschtebedarf<input id="meal-leftover-portions" type="text" inputmode="decimal" autocomplete="off"></label></div>
+        <p id="meal-leftover-tip" class="editor-note" hidden>Wichtig: Bi de Kochmenge vom Ursprungstag gnueg Portione für d Reschte iiplane. Reservierige werded prüeft; d Kochmenge wird nöd automatisch erhöht.</p>
+      </div>
+      <p id="meal-editor-error" role="alert" hidden></p>
+      <button type="button" id="meal-reload" hidden>Aktuelle Stand lade</button>
+      <div class="meal-editor-actions"><button type="button" id="meal-remove">Entferne</button><button type="submit" class="main-action">Speichere</button></div>
+      <p class="editor-note">Dini Planig isch lokal uf däm Grät gspeicheret. Reschte chaufsch nöd doppelt ii.</p>
+    </form>
+  </dialog>
+  <dialog id="recipe-dialog" class="recipe-dialog" tabindex="-1" autofocus aria-labelledby="dialog-title">
+    <div class="dialog-scroll">
+      <header class="dialog-toolbar">
+        <button type="button" id="cooking-exit" hidden>← Zurück zum Rezept</button>
+        <button type="button" id="dialog-close" class="back-btn" aria-label="Rezept schliessen">←</button>
+        <button type="button" id="dialog-favourite" class="fav-btn" aria-label="Favorit umschalten">♡</button>
+      </header>
+      <div class="dialog-hero" id="dialog-hero" hidden><img id="dialog-image" alt="" decoding="async"></div>
+      <div class="dialog-body">
+        <span class="eyebrow" id="dialog-category"></span>
+        <h2 id="dialog-title"></h2>
+        <p id="dialog-description"></p>
+        <div class="detail-meta" id="dialog-meta"></div>
+        <div class="detail-actions" id="dialog-actions"></div>
+        <div id="dialog-portion-picker" class="portion-picker" role="group" aria-label="Portionenzahl"><button type="button" id="portion-minus" aria-label="Halbi Portion weniger">−</button><output id="portion-count" aria-live="polite">3 Portionen</output><button type="button" id="portion-plus" aria-label="Halbi Portion meh">+</button></div>
+        <p id="portion-session-note" hidden>Nur für diese Zubereitung</p>
+        <details class="detail-section" id="dialog-ingredients-section" open><summary id="ingredients-summary">Zutaten</summary><ul class="detail-ingredients" id="dialog-ingredients"></ul></details>
+        <section class="detail-section" id="dialog-instructions-section"><h3>Zubereitung</h3><ol id="dialog-instructions"></ol></section>
+      </div>
+    </div>
+  </dialog>
+</div>
+</body>
+</html>
