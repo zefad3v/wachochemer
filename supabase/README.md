@@ -17,7 +17,7 @@ Die App unter `prototype/` verwendet Supabase Auth und PostgreSQL, sobald `proto
 
 ## Einrichtung eines eigenen Wachochemer-Projekts
 
-Das Projekt `wachochemer` ist in der Organisation `zefad3v` eingerichtet, Region Zürich (`eu-central-2`), Projekt-Ref `gikbeszvxvqqobdqujzz`. Die öffentliche Browserkonfiguration verweist auf dieses Projekt. Beide Migrationen wurden am 18. November 2026 angewandt. Der gemeinsame Onlinebetrieb ist noch nicht veröffentlicht, da die Auth-Konfiguration und die echte Anmeldung noch ausstehen. Keine Zugangsdaten anderer Projekte wiederverwenden.
+Das Projekt `wachochemer` ist in der Organisation `zefad3v` eingerichtet, Region Zürich (`eu-central-2`), Projekt-Ref `gikbeszvxvqqobdqujzz`. Die öffentliche Browserkonfiguration verweist auf dieses Projekt. Beide Migrationen wurden am 18. November 2026 angewandt. Der gemeinsame Onlinebetrieb ist noch nicht veröffentlicht, da Mailversand, erste Login-Adresse und die echte Anmeldung noch ausstehen. Keine Zugangsdaten anderer Projekte wiederverwenden.
 
 1. Ein separates Supabase-Projekt für Wachochemer auswählen oder erstellen. Die Migrationen in `migrations/` nach Dateiname aufsteigend anwenden. Nur `public` als Anwendungsschema exponieren; `wachochemer_private` bleibt intern. Bei Verwendung der Supabase CLI zuerst `supabase init` und `supabase link --project-ref <wachochemer-ref>` ausführen, dann `supabase db push`. Alternativ können die beiden Transaktionsdateien im SQL Editor des bestätigten Projekts ausgeführt werden.
 2. Unter Auth Hooks den PostgreSQL-Hook **Before User Created** auf `public.before_user_created` setzen und aktivieren. Die Migration allein aktiviert den Hook im Auth-Dienst nicht. Damit sind Registrierungen nur für die interne Freigabeliste oder eine noch gültige Haushaltseinladung möglich.
@@ -43,7 +43,13 @@ Das Projekt `wachochemer` ist in der Organisation `zefad3v` eingerichtet, Region
    Das Skript akzeptiert einen Publishable Key oder einen alten `anon`-JWT. Secret Keys, `service_role`-JWTs und URLs mit eingebetteten Zugangsdaten werden zurückgewiesen. Die erzeugte Datei ist bewusst öffentlich; den Datenzugriff sichern die serverseitigen Prüfungen.
 8. Den konfigurierten Stand auf der bestätigten HTTPS-Adresse veröffentlichen. Das erste Konto registrieren, E-Mail bestätigen, Haushalt erstellen und Personen erfassen. Anschliessend eine zweite Person einladen und gemeinsam prüfen. Wer beide Authenticator-Zugänge verliert, benötigt die administrative Wiederherstellung im Supabase-Projekt.
 
-Die endgültige Produktionsadresse, erste Login-Adresse und SMTP-Konfiguration sind noch offen. Der Dashboard-Zugriff für Auth-Hook, Redirects und Mailversand erfordert eine zusätzliche Anmeldung im Browser. Die Supabase-Verbindung in ChatGPT unterstützt diese Auth-Einstellungen nicht direkt. Die Projektkonfiguration wurde deshalb noch nicht als betriebsbereit freigegeben.
+Als App-Adresse ist `https://zefad3v.github.io/wachochemer/prototype/` im Dashboard gespeichert. Die erlaubten Rücksprünge sind exakt diese Adresse und dieselbe Adresse mit `?invite=*`. Das ist die vorgesehene Zieladresse nach Veröffentlichung; die Änderungen auf PR #20 sind noch nicht auf GitHub Pages veröffentlicht.
+
+Der Auth-Hook `public.before_user_created` ist im Dashboard aktiviert. E-Mail/Passwort und E-Mail-Bestätigung sind eingeschaltet, die Mindestpasswortlänge wurde auf acht Zeichen gesetzt. Anonyme Anmeldungen sind ausgeschaltet. TOTP ist aktiviert; bis zu zehn Faktoren pro Konto sind erlaubt. Die AAL1-Sitzungsbegrenzung nach Anmeldung bei aktiviertem MFA ist eingeschaltet.
+
+Ein tatsächlicher Registrierungsversuch ohne Freigabe/Einladung über den öffentlichen Auth-Endpunkt wurde mit HTTP 403 und „Für die Registrierung brauchst du eine Haushaltseinladung.“ abgewiesen. Dabei wurde kein Konto angelegt. Damit ist auch die Anbindung des Hooks an Supabase Auth geprüft.
+
+Die erste Login-Adresse und SMTP-Konfiguration sind noch offen. Custom SMTP ist im Dashboard ausgeschaltet. Eine Absenderadresse und der zugehörige Maildienst müssen vom Nutzer benannt werden. SMTP-Passwörter direkt und sicher im Dashboard erfassen, niemals in Chat oder Repository. Die Projektkonfiguration wurde bis zur Prüfung der echten Mailzustellung und Logins noch nicht als betriebsbereit freigegeben.
 
 ## Abnahme der eingerichteten Datenbank
 
