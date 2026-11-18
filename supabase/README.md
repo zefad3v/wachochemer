@@ -49,7 +49,7 @@ Der Auth-Hook `public.before_user_created` ist im Dashboard aktiviert. E-Mail/Pa
 
 Ein tatsächlicher Registrierungsversuch ohne Freigabe/Einladung über den öffentlichen Auth-Endpunkt wurde mit HTTP 403 und „Für die Registrierung brauchst du eine Haushaltseinladung.“ abgewiesen. Dabei wurde kein Konto angelegt. Damit ist auch die Anbindung des Hooks an Supabase Auth geprüft.
 
-Die erste Login-Adresse ist freigegeben. Custom SMTP ist mit Infomaniak und einem Gerätepasswort eingerichtet. Mailzustellung, Bestätigung und gemeinsame Nutzung mit zwei regulären Konten sind noch zu prüfen.
+Die erste Login-Adresse ist freigegeben. Custom SMTP ist mit Infomaniak und einem Gerätepasswort eingerichtet. Die erste Bestätigungsmail ist beim Nutzer angekommen. Bestätigung und gemeinsame Nutzung mit zwei regulären Konten sind noch zu prüfen. Die Registrierungsvorlage ist im Dashboard auf Schweizerdeutsch gespeichert. Der Betreff lautet «Wa chochemer? Bitte E-Mail bestätige», der Inhalt liegt in templates/confirmation.html. Der Bestätigungslink verwendet weiterhin {{ .ConfirmationURL }}.
 
 ## Abnahme der eingerichteten Datenbank
 
