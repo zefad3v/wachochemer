@@ -490,3 +490,5 @@ html{overscroll-behavior-y:none}
 #account-qr{max-width:220px;width:100%;background:white}
 #account-settings{margin-bottom:16px}
 #account-household-list{display:grid;gap:8px;margin-block:12px}
+
+.plan-next-week{display:block;min-height:44px;margin:0 auto 12px;padding:10px 18px;border:1px solid var(--lime);border-radius:14px;background:var(--lime);color:#192b1e;font:inherit;font-weight:600}

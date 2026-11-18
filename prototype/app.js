@@ -764,6 +764,13 @@ function init(){
  document.querySelectorAll("[data-tab]").forEach(btn=>btn.addEventListener("click",()=>showTab(btn.dataset.tab)));
  byId("week-prev").addEventListener("click",()=>setWeekOffset(-1));
  byId("week-next").addEventListener("click",()=>setWeekOffset(1));
+ byId("plan-next-week").addEventListener("click",()=>{
+  state.weekOffset=1;state.current=0;
+  plannerView="week";viewPreferences[currentClass]=plannerView;
+  save("wachochemer:plannerViews",viewPreferences);
+  renderPlanner();
+  byId("week-range").focus({preventScroll:true});
+ });
  byId("screen-week").addEventListener("click",event=>{
   const day=event.target.closest("[data-day]"),edit=event.target.closest("[data-edit-day]"),view=event.target.closest("button[data-view]");
   if(day)setDay(Number(day.dataset.day));
