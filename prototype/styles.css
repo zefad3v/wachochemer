@@ -493,27 +493,18 @@ html{overscroll-behavior-y:none}
 
 #screen-week .day-navigation .view-switch #plan-next-week{min-width:44px;min-height:44px;padding:0 10px;border-left:1px solid rgba(191,203,186,.2);border-radius:0;color:var(--muted);font-size:12px;font-weight:400}
 
-/* Keep the standalone status area outside the scrolling content. */
+
+/* The installed portrait shell uses one layout viewport and an in-flow dock.
+   Keeping the document stationary avoids offset fixed controls after a modal. */
 @media (display-mode:standalone) and (max-width:679px){
- #app{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+ html,body{height:100%;min-height:0;overflow:hidden;overscroll-behavior-y:auto}
+ #app{height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
  .topbar{flex:none;width:100%}
  .header-backdrop{display:none}
  #main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior-y:contain}
-}
-
-
-/* iOS samples a painted fixed element after it enters the top 4px.
-   Experimental device report: reddit.com/r/PWA/comments/1w5mqj1/ (16 Nov 2026). */
-.pwa-status-surface{display:none;pointer-events:none}
-html.ios-standalone .pwa-status-surface{
- display:block;position:fixed;top:5px;left:0;right:0;height:30px;z-index:1;
- background:linear-gradient(to right,#19231b 8px,transparent 8px,transparent calc(100% - 8px),#19231b calc(100% - 8px));
-}
-html.ios-standalone #app{z-index:2;background:#19231b}
-
-/* Size the day card from the remaining space instead of adding viewport estimates. */
-@media (display-mode:standalone) and (max-width:679px){
- #screen-week[data-view=day].active{display:flex;flex-direction:column;height:100%;min-height:min-content;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+ .screen{padding-bottom:12px}
+ .bottom-nav{position:relative;inset:auto;flex:none;width:calc(100% - 34px);margin:6px auto calc(6px + env(safe-area-inset-bottom))}
+ #screen-week[data-view=day].active{display:flex;flex-direction:column;height:100%;min-height:min-content;padding-bottom:0}
  #screen-week[data-view=day] .day-navigation{flex:none}
  #screen-week[data-view=day] .planner-layout{display:flex;flex:1;min-height:0}
  #screen-week[data-view=day] .day-detail{display:flex;flex:1;flex-direction:column;min-height:0}
