@@ -1,5 +1,5 @@
-:root{color-scheme:dark;--bg:#19231b;--surface:#29352b;--cream:#f2eee4;--muted:#c0c8ba;--sage:#a1b68b;--lime:#d8e8b4;--stroke:rgba(239,243,226,.28);--glass:rgba(52,65,53,.55)}
-*{box-sizing:border-box}html{height:100%;background:var(--bg)}body{margin:0;min-height:100%;color:var(--cream);font:400 15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(ellipse at 95% 10%,rgba(98,116,77,.19),transparent 45%),#19231b}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--lime);outline-offset:3px}h1,h2,h3,p{margin:0}h1,h2,h3,.brand{font-family:Georgia,"Times New Roman",serif;letter-spacing:-.035em}h1{font-size:clamp(30px,6vw,45px);line-height:1.03}p{line-height:1.55}a{color:inherit}.eyebrow{text-transform:uppercase;font-size:10px;font-weight:650;letter-spacing:.22em;color:var(--lime)}.eyebrow.muted{color:#b8c5a8}
+:root{color-scheme:dark;--bg:#263d30;--surface:#29352b;--cream:#f2eee4;--muted:#c0c8ba;--sage:#a1b68b;--lime:#d8e8b4;--stroke:rgba(239,243,226,.28);--glass:rgba(52,65,53,.55)}
+*{box-sizing:border-box}html{height:100%;background:var(--bg)}body{margin:0;min-height:100%;color:var(--cream);font:400 15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(ellipse at 95% 10%,rgba(98,116,77,.19),transparent 45%),#263d30}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--lime);outline-offset:3px}h1,h2,h3,p{margin:0}h1,h2,h3,.brand{font-family:Georgia,"Times New Roman",serif;letter-spacing:-.035em}h1{font-size:clamp(30px,6vw,45px);line-height:1.03}p{line-height:1.55}a{color:inherit}.eyebrow{text-transform:uppercase;font-size:10px;font-weight:650;letter-spacing:.22em;color:var(--lime)}.eyebrow.muted{color:#b8c5a8}
 #app{position:relative;min-height:100dvh;isolation:isolate}.topbar{height:83px;position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:18px 21px 12px;max-width:1540px;margin:0 auto}.brand{font-size:clamp(24px,5.4vw,30px);font-weight:bold;line-height:1}.brand-mark{color:var(--sage)}.brand-block{display:grid;gap:4px}.brand-block .eyebrow{font-size:8px;color:#a2b198}.beta-pill{align-self:center;border:1px solid var(--stroke);border-radius:99px;padding:6px 9px;font-size:10px;color:#b4c2b1}.desktop-nav{display:none}
 .screen{display:none;position:relative;max-width:1540px;margin:auto;padding:0 17px 112px}.screen.active{display:block}.screen-heading{position:relative;z-index:3;display:flex;align-items:end;justify-content:space-between;gap:12px;padding:12px 4px 6px}.screen-heading h1{margin-top:6px}.week-controls{display:flex;align-items:center;gap:7px;color:#d6dfce;font-size:11px;white-space:nowrap}.week-controls .icon-btn{width:29px;height:29px;border:1px solid var(--stroke);border-radius:50%;color:#fff;background:rgba(54,68,54,.5);font-size:20px;line-height:1}.week-controls span{min-width:93px;text-align:center}
 .bottom-nav{position:fixed;z-index:50;bottom:calc(10px + env(safe-area-inset-bottom));left:12px;right:12px;min-height:67px;max-width:525px;margin:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;padding:5px 6px;border:1px solid rgba(246,248,235,.28);border-radius:23px;background:rgba(43,55,45,.73);backdrop-filter:blur(16px) saturate(125%);-webkit-backdrop-filter:blur(16px) saturate(125%);box-shadow:0 8px 30px rgba(0,0,0,.34)}.bottom-link{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;color:#d1d9cc;background:transparent;min-width:0;height:56px;border-radius:18px}.bottom-link svg{height:21px;width:21px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.bottom-link span{font-size:10px;letter-spacing:-.02em;white-space:nowrap}.bottom-link.active{background:rgba(224,240,196,.13);color:#e3f5c7}.bottom-link.active svg{filter:drop-shadow(0 0 5px rgba(202,231,162,.3))}
@@ -108,7 +108,7 @@
 #shopping-copy-status{font-size:12px;color:#cfdec6;line-height:1.45}
 
 /* Shared responsive shell. Width, never keyboard height, chooses the default view. */
-html,body{max-width:100%;background:#19231b}button,input,select{font-size:16px}button{touch-action:manipulation}[hidden]{display:none!important}
+html,body{max-width:100%;background:#263d30}button,input,select{font-size:16px}button{touch-action:manipulation}[hidden]{display:none!important}
 .topbar{height:calc(64px + env(safe-area-inset-top));padding:calc(10px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));gap:14px}
 .brand-block .eyebrow,.desktop-nav{display:none}.brand{font-size:26px}.header-settings{width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:14px;background:transparent;color:var(--cream)}.header-settings.active{background:#344a35}.header-settings svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6}
 .screen{width:100%;max-width:1280px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) calc(110px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
@@ -325,7 +325,7 @@ html{overscroll-behavior-y:none}
 #app:not([data-tab=week]) .app-backdrop:after{display:none}
 #main{position:relative;z-index:1}
 .topbar{z-index:60;isolation:auto;background:none;filter:none;transform:none;backdrop-filter:none;-webkit-backdrop-filter:none;text-shadow:none}
-.header-backdrop{position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(#20352deb,#20352d00)}
+.header-backdrop{position:absolute;inset:0;z-index:0;pointer-events:none;background:none}
 .topbar>.mobile-page-title,.topbar>.brand-block,.topbar>.header-settings{position:relative;z-index:1;filter:none;transform:none;backdrop-filter:none;-webkit-backdrop-filter:none;opacity:1;text-shadow:none;will-change:auto}
 .header-settings svg{width:24px;height:24px;stroke-width:1.5;shape-rendering:geometricPrecision}
 /* A quiet text action belongs to day navigation, not the page header. */
@@ -532,3 +532,10 @@ html{overscroll-behavior-y:none}
 #help-content{line-height:1.6}
 .help-actions{display:flex;gap:12px;margin-top:24px}
 .help-actions button{min-height:44px;padding:8px 14px;border:1px solid var(--stroke);border-radius:12px}
+
+/* The status area and header share one fixed base colour.
+   Recipe atmosphere remains below the navigation area. */
+.app-backdrop{background:linear-gradient(#263d30 0px,#263d30 150px,transparent 320px),radial-gradient(ellipse 170px 110px at 14% 96%,#a3ba7980,transparent),radial-gradient(ellipse 120px 170px at 90% 100%,#b99b6b70,transparent)}
+.topbar{background:#263d30}
+#meal-recipe-options{max-height:40dvh;overflow-y:auto;overscroll-behavior:contain}
+#meal-recipe-options button{display:flex;align-items:center;gap:12px;text-align:left}#meal-recipe-options button span{min-width:0}#meal-recipe-options small{display:block;color:var(--muted);margin-top:4px}

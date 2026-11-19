@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import {imageFor,recipeImages,demoImages} from '../prototype/recipe-images.mjs';
 import {readFileSync,existsSync} from 'node:fs';
 test('alpha never serves demo images, including old opt-in URLs',()=>{
- assert.deepEqual(recipeImages,{});
+ assert.equal(Object.keys(recipeImages).length,3);
+ for(const path of Object.values(recipeImages))assert(existsSync(new URL("../prototype/"+path,import.meta.url)));
  assert.deepEqual(demoImages,{});
- assert.deepEqual(imageFor('kuerbissuppe-kaesetoast'),{image:null,imageDemo:false});
+ assert.equal(imageFor('kuerbissuppe-kaesetoast').imageGenerated,true);
  assert.deepEqual(imageFor('unknown',true),{image:null,imageDemo:false});
  for(const [id,fixture] of Object.entries(demoImages)){
   assert.equal(imageFor(id,true).imageDemo,true);
