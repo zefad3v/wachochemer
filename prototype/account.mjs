@@ -102,9 +102,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   let authPending = false;
   let client, shared, user, recovery = callbackRecovery || Boolean(recoveryUser), enrollment = null, busy = false, generation = 0;
   let currentSnapshot = null, refreshSequence = 0;
-  const storageKey = 'sb-' + new URL(backendConfig.url).hostname.split('.')[0] + '-auth-token';
-  const storage = sessionStorageChoice(localStorage, sessionStorage, storageKey);
-  el('account-login').elements.remember.checked = storage.remembers();
+  let storage;
   const invite = new URL(location.href).searchParams.get('invite') || sessionStorage.getItem('wachochemer:invitation');
   if (invite) sessionStorage.setItem('wachochemer:invitation', invite);
   const callbackUrl = new URL(location.pathname, location.origin).href;
@@ -120,7 +118,6 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   function stage(name) {
     for (const id of ['login', 'confirmation', 'password', 'challenge', 'households']) el('account-' + id).hidden = id !== name;
     el('account-retry').hidden = name === 'confirmation';
-    el('account-password').elements.password.autofocus = name === 'password';
   }
   function clearEnrollment() {
     enrollment = null; el('account-enrollment').hidden = true;
@@ -283,6 +280,9 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   try {
     if (!backendConfig.url || !backendConfig.publishableKey) throw Error('De gemeinsame Haushalt isch no nöd fertig iigrichtet.');
     const {createClient} = await import('./vendor/supabase.js');
+    const storageKey = 'sb-' + new URL(backendConfig.url).hostname.split('.')[0] + '-auth-token';
+    storage = sessionStorageChoice(localStorage, sessionStorage, storageKey);
+    el('account-login').elements.remember.checked = storage.remembers();
     client = createClient(backendConfig.url, backendConfig.publishableKey, {auth: {storage, storageKey, persistSession: true, autoRefreshToken: true}});
     shared = new SharedHousehold(client);
     // The callback itself stays synchronous to avoid holding the SDK auth lock.
