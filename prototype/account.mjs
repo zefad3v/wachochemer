@@ -1,5 +1,6 @@
+import {sessionStorageChoice} from './auth-session.mjs';
 import {backendConfig} from './backend-config.js';
-import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs';
+import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261119-auth';
 
 export const cloudEnabled = Boolean(backendConfig.url || backendConfig.publishableKey);
 const html = `
@@ -10,6 +11,7 @@ const html = `
     <form id="account-login">
       <label>E-Mail<input name="email" type="email" autocomplete="username" required></label>
       <label>Passwort<input name="password" type="password" autocomplete="current-password" minlength="8" required></label>
+      <label class="remember-choice"><input name="remember" type="checkbox" checked>Aagmeldet bliibe</label>
       <button class="main-action" type="submit">Aamelde</button>
       <button type="button" id="account-register">Konto mit Iiladig erstelle</button>
       <button type="button" id="account-reset">Passwort vergesse</button>
@@ -21,10 +23,13 @@ const html = `
       <button type="button" id="account-back-to-login">Zrugg zur Aameldig</button>
     </section>
     <form id="account-password" hidden>
+      <p>Wähl es neus Passwort mit mindestens 8 Zeiche.</p>
       <label>Neus Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Passwort wiederhole<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
       <button class="main-action">Passwort speichere</button>
     </form>
     <form id="account-challenge" hidden>
+      <p id="account-challenge-hint">Bestätige dini Aameldig mit dim Authenticator.</p>
       <label>Authenticator<select id="account-factor"></select></label>
       <label>Bestätigungscode<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" required></label>
       <button class="main-action">Bestätige</button>
@@ -47,6 +52,14 @@ const settings = `
   <output id="account-settings-status" role="status"></output>
   <button type="button" id="account-switch">Haushalt wechsle</button>
   <button type="button" id="account-logout">Abmelde</button>
+  <details><summary>Passwort ändere</summary>
+    <form id="account-change-password">
+      <label>Neus Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Passwort wiederhole<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label id="account-password-nonce" hidden>Code us de E-Mail<input name="nonce" disabled inputmode="numeric" autocomplete="one-time-code"></label>
+      <button>Passwort speichere</button>
+    </form>
+  </details>
   <details><summary>Mitglieder und Iiladige</summary>
     <div id="account-members"></div>
     <form id="account-invite">
@@ -83,8 +96,13 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   const app = el('app');
   document.querySelector('main').insertAdjacentHTML('afterbegin', '<p id="account-connection" role="status" hidden></p>');
   const status = text => { el('account-status').textContent = text; el('account-settings-status').textContent = text; };
-  let client, shared, user, recovery = false, enrollment = null, busy = false, generation = 0;
+  const recoveryKey = 'wachochemer:passwordRecovery';
+  let recoveryUser = sessionStorage.getItem(recoveryKey);
+  const callbackRecovery = new URLSearchParams(location.hash.slice(1)).get('type') === 'recovery';
+  let authPending = false;
+  let client, shared, user, recovery = callbackRecovery || Boolean(recoveryUser), enrollment = null, busy = false, generation = 0;
   let currentSnapshot = null, refreshSequence = 0;
+  let storage;
   const invite = new URL(location.href).searchParams.get('invite') || sessionStorage.getItem('wachochemer:invitation');
   if (invite) sessionStorage.setItem('wachochemer:invitation', invite);
   const callbackUrl = new URL(location.pathname, location.origin).href;
@@ -114,7 +132,30 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     buttons.forEach(button => { button.disabled = true; });
     status('');
     try { await work(); } catch (error) { status(error.message || 'Verbindig fehlgschlage. Bitte nomal probiere.'); }
-    finally { busy = false; buttons.forEach((button, index) => { button.disabled = disabled[index]; }); }
+    finally {
+      busy = false;
+      buttons.forEach((button, index) => { button.disabled = disabled[index]; });
+      if (authPending) setTimeout(drainAuth, 0);
+    }
+  }
+  function drainAuth() {
+    if (busy || !authPending) return;
+    authPending = false;
+    action(() => authenticate());
+  }
+  function clearRecovery() {
+    recovery = false; recoveryUser = null; sessionStorage.removeItem(recoveryKey);
+  }
+  function passwordValue(form) {
+    if (!form.reportValidity()) return null;
+    if (form.elements.password.value !== form.elements.confirmPassword.value)
+      throw Error('D Passwörter stimmed nöd überii.');
+    return form.elements.password.value;
+  }
+  function resetPasswordChange() {
+    const form = el('account-change-password');
+    form.reset(); el('account-password-nonce').hidden = true;
+    form.elements.nonce.disabled = true; form.elements.nonce.required = false;
   }
   function bind(id, event, handler) {
     el(id).addEventListener(event, e => { e.preventDefault(); action(() => handler(e)); });
@@ -190,20 +231,29 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     }
   }
   async function authenticate(chooseSaved = true) {
-    generation++;
+    const version = ++generation;
     lock(); clearEnrollment();
-    user = unwrap(await client.auth.getUser()).user;
+    const identity = await client.auth.getUser();
+    if (version !== generation) return;
+    user = unwrap(identity).user;
     el('account-gate-logout').hidden = !user;
-    if (!user) { stage('login'); return; }
+    if (!user) { clearRecovery(); stage('login'); return; }
+    if (recoveryUser && recoveryUser !== user.id) clearRecovery();
     const assurance = unwrap(await client.auth.mfa.getAuthenticatorAssuranceLevel());
+    if (version !== generation) return;
     if (assurance.nextLevel === 'aal2' && assurance.currentLevel !== 'aal2') {
       stage('challenge');
+      el('account-challenge-hint').textContent = recovery
+        ? 'Bestätige zuerst din Authenticator-Code. Danach chasch es neus Passwort wähle.'
+        : 'Bestätige dini Aameldig mit dim Authenticator.';
       const list = unwrap(await client.auth.mfa.listFactors()).totp.filter(f => f.status === 'verified');
+      if (version !== generation) return;
       el('account-factor').replaceChildren(...list.map(f => new Option(f.friendly_name || 'Authenticator', f.id)));
       return;
     }
     if (recovery) { stage('password'); return; }
     const households = await shared.list();
+    if (version !== generation) return;
     stage('households');
     el('account-accept').hidden = !sessionStorage.getItem('wachochemer:invitation');
     el('account-household-list').replaceChildren(...households.map(h => {
@@ -222,26 +272,36 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     generation++; shared.id = null; currentSnapshot = null; clearEnrollment();
     lock(); stage('login');
     unwrap(await client.auth.signOut({scope: 'local'}));
-    user = null; recovery = false;
+    user = null; clearRecovery(); authPending = false;
+    el('account-password').reset(); resetPasswordChange();
     el('account-gate-logout').hidden = true;
   }
   lock(); stage('login');
   try {
     if (!backendConfig.url || !backendConfig.publishableKey) throw Error('De gemeinsame Haushalt isch no nöd fertig iigrichtet.');
     const {createClient} = await import('./vendor/supabase.js');
-    client = createClient(backendConfig.url, backendConfig.publishableKey);
+    const storageKey = 'sb-' + new URL(backendConfig.url).hostname.split('.')[0] + '-auth-token';
+    storage = sessionStorageChoice(localStorage, sessionStorage, storageKey);
+    el('account-login').elements.remember.checked = storage.remembers();
+    client = createClient(backendConfig.url, backendConfig.publishableKey, {auth: {storage, storageKey, persistSession: true, autoRefreshToken: true}});
     shared = new SharedHousehold(client);
     // The callback itself stays synchronous to avoid holding the SDK auth lock.
-    client.auth.onAuthStateChange(event => {
-      if (event === 'PASSWORD_RECOVERY') recovery = true;
-      if (event === 'SIGNED_OUT') {
-        generation++; shared.id = null; user = null; recovery = false;
-        lock(); stage('login'); el('account-gate-logout').hidden = true;
+    client.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        generation++;
+        recovery = true; recoveryUser = session?.user.id || null;
+        if (recoveryUser) sessionStorage.setItem(recoveryKey, recoveryUser);
+        authPending = true;
+        setTimeout(drainAuth, 0);
       }
-      if (event === 'PASSWORD_RECOVERY') setTimeout(() => action(() => authenticate()), 0);
+      if (event === 'SIGNED_OUT') {
+        generation++; shared.id = null; user = null; clearRecovery(); authPending = false;
+        lock(); stage('login'); el('account-password').reset(); resetPasswordChange(); el('account-gate-logout').hidden = true;
+      }
     });
     bind('account-login', 'submit', async () => {
       const form = el('account-login');
+      storage.setRemember(form.elements.remember.checked);
       unwrap(await client.auth.signInWithPassword({email: form.elements.email.value, password: form.elements.password.value}));
       form.elements.password.value = '';
       await authenticate();
@@ -267,8 +327,38 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
       status('Wenn es Konto existiert, bechunsch en Link per E-Mail.');
     });
     bind('account-password', 'submit', async () => {
-      unwrap(await client.auth.updateUser({password: el('account-password').elements.password.value}));
-      el('account-password').reset(); recovery = false; await authenticate();
+      const form = el('account-password'), password = passwordValue(form);
+      if (!password) return;
+      const assurance = unwrap(await client.auth.mfa.getAuthenticatorAssuranceLevel());
+      if (assurance.nextLevel === 'aal2' && assurance.currentLevel !== 'aal2') {
+        await authenticate(); return;
+      }
+      unwrap(await client.auth.updateUser({password}));
+      form.reset(); clearRecovery(); stage('households');
+      try { await authenticate(); status('Dis Passwort isch gänderet.'); }
+      catch (error) { status('Dis Passwort isch gänderet. ' + error.message); }
+    });
+    bind('account-change-password', 'submit', async () => {
+      const form = el('account-change-password'), password = passwordValue(form);
+      if (!password) return;
+      const result = await client.auth.updateUser({password, ...(form.elements.nonce.value ? {nonce: form.elements.nonce.value} : {})});
+      if (result.error?.code === 'reauthentication_needed') {
+        unwrap(await client.auth.reauthenticate());
+        el('account-password-nonce').hidden = false;
+        form.elements.nonce.disabled = false; form.elements.nonce.required = true;
+        form.elements.nonce.focus();
+        status('Bestätige de Passwortwechsel mit em Code us de E-Mail.');
+        return;
+      }
+      if (result.error?.code === 'insufficient_aal') {
+        recovery = true; recoveryUser = user.id; sessionStorage.setItem(recoveryKey, user.id);
+        el('account-password').elements.password.value = password;
+        el('account-password').elements.confirmPassword.value = password;
+        resetPasswordChange(); await authenticate(); return;
+      }
+      unwrap(result);
+      resetPasswordChange();
+      status('Dis Passwort isch gänderet.');
     });
     bind('account-challenge', 'submit', async () => {
       unwrap(await client.auth.mfa.challengeAndVerify({factorId: el('account-factor').value, code: el('account-challenge').elements.code.value}));

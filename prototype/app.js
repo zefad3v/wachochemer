@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261119-auth";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -928,3 +928,15 @@ if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) {
      Math.abs(window.visualViewport.height-window.innerHeight)<2)restoreDocumentOrigin();
  });
 }
+
+
+// Show installation guidance only while running in the browser.
+const installedMode=matchMedia("(display-mode: standalone)");
+function updateInstallHelp(){
+ byId("install-help").hidden=installedMode.matches || navigator.standalone === true;
+}
+if (/iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1))
+ byId("install-help-text").textContent='Öffne die Siite in Safari. Tippe uf «Teilen», denn uf «Zum Home-Bildschirm» und «Hinzufügen».';
+installedMode.addEventListener("change",updateInstallHelp);
+updateInstallHelp();
