@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261119-alpha";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261119-photos";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -11,7 +11,7 @@ const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig",
 const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
 const mealLabels={lunch:"Zmittag",dinner:"Znacht"};
 const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
-import {recipeImages,imageFor} from "./recipe-images.mjs";
+import {recipeImages,imageFor} from "./recipe-images.mjs?v=20261119-photos";
 const archiveImages=recipeImages;
 
 const state={
@@ -71,7 +71,8 @@ function leftoverDisplay(entry){
   title:recipe?"Reschte · "+recipe.title:"Reschte",
   description:date?"Vom "+date:"Ursprung bitte kläre",
   image:recipe?.image??null,
-  imageDemo:recipe?.imageDemo??false
+  imageDemo:recipe?.imageDemo??false,
+  imageGenerated:recipe?.imageGenerated??false
  };
 }
 function baseWeek(){
@@ -91,7 +92,7 @@ function itemForDay(date,requestedMeal=null){
  }
  if(entry.type==="recipe"){
   const recipe=state.recipes[entry.recipeId],meta=state.archiveEntries.find(x=>x.id===entry.recipeId);
-  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,imageDemo:meta?.imageDemo||false,real:!!recipe,planned:true,mealLabel,servings:entry.cookedServings??entry.servings};
+  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,imageDemo:meta?.imageDemo||false,imageGenerated:meta?.imageGenerated||false,real:!!recipe,planned:true,mealLabel,servings:entry.cookedServings??entry.servings};
  }
  if(entry.type==="manual")return {id:"manual-"+iso,title:entry.title,description:"Eigenes Menü",minutes:0,image:null,real:false,planned:true,mealLabel};
  return {id:"leftover-"+iso,...leftoverDisplay(entry),minutes:0,real:false,planned:true,mealLabel};
@@ -295,12 +296,11 @@ function renderMealRecipeOptions(){
  const selected=byId("meal-recipe").value;
  const current=state.archiveEntries.find(item=>item.id===selected);
  byId("meal-recipe-selected").textContent=current?current.title:"Bitte es Rezept wähle";
- byId("meal-recipe-options").hidden=!query;
- if(!query){byId("meal-recipe-options").innerHTML="";return}
+ byId("meal-recipe-options").hidden=false;
  const matching=state.archiveEntries.filter(item=>item.title.toLocaleLowerCase("de-CH").includes(query));
  byId("meal-recipe-options").innerHTML=matching.length?matching.map(item=>
   '<button type="button" role="option" aria-selected="'+(item.id===selected)+'" data-pick-recipe="'+escapeHtml(item.id)+'">'+
-  escapeHtml(item.title)+'</button>').join(""):'<p>Kei Rezepte gfunde</p>';
+  searchThumbnail(item)+'<span>'+escapeHtml(item.title)+'<small>'+item.minutes+' Min.</small></span></button>').join(""):'<p>Kei Rezepte gfunde</p>';
 }
 // Presentation adapters only: all writes still pass through updateMeal.
 function portionNote(){
@@ -529,7 +529,7 @@ function openRecipe(item){
  byId("dialog-hero").hidden=!item.image;
  if(item.image)image.src=item.image;
  else image.removeAttribute("src");
- byId("dialog-category").textContent=recipe?"FAMILIENREZEPT":"REZEPT NICHT VERFÜGBAR";
+ byId("dialog-category").textContent=recipe?(item.imageGenerated?"FAMILIENREZEPT · KI-BILD":"FAMILIENREZEPT"):"REZEPT NICHT VERFÜGBAR";
  byId("dialog-title").textContent=recipe?.title||item.title;
  byId("dialog-description").textContent=recipe?.description||item.description;
  byId("dialog-meta").innerHTML='<span>◷ '+(recipe?recipe.prepMinutes+recipe.cookMinutes:item.minutes)+' Min.</span><span>♙ '+(recipe?.baseServings||3)+' Portione</span>';

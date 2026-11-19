@@ -199,6 +199,9 @@ assert.equal(el('household-adults').value,'3');assert.equal(data.household.adult
 await click('household-reload');assert.equal(el('household-adults').value,'2');
 w.document.querySelector('[data-tab=week]').click();
 await click('choose-lunch');await click('day-edit');
+assert.equal(el('meal-recipe-options').hidden,false);
+assert.equal(el('meal-recipe-options').querySelectorAll('[data-pick-recipe]').length,3);
+assert.equal(el('meal-recipe-options').querySelectorAll('img').length,3);
 fill('meal-recipe-search','Kürbis');await settle();
 w.document.querySelector('[data-pick-recipe]').click();await settle();
 assert.equal(el('meal-need').value,'3');
