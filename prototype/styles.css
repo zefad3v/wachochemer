@@ -476,7 +476,7 @@ html{overscroll-behavior-y:none}
 .account-panel{display:grid;gap:14px;width:100%;max-width:580px}
 .account-panel form,.account-panel label{display:grid;gap:8px}
 .account-panel input,.account-panel select{width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--stroke);border-radius:10px;background:#263a2d;color:var(--cream);font-size:16px}
-.account-panel button{min-height:44px;padding:8px 12px;border:1px solid var(--stroke);border-radius:10px;background:#304b3b;color:var(--cream);font:inherit}
+.account-panel button,.account-panel .invite-mail{min-height:44px;padding:8px 12px;border:1px solid var(--stroke);border-radius:10px;background:#304b3b;color:var(--cream);font:inherit}
 .account-panel button.main-action{background:var(--lime);color:#1e2b1f}
 .account-panel button:disabled{opacity:.5}
 .account-panel details{border-top:1px solid var(--stroke);padding-top:8px}
@@ -539,3 +539,18 @@ html{overscroll-behavior-y:none}
 .topbar{background:#263d30}
 #meal-recipe-options{max-height:40dvh;overflow-y:auto;overscroll-behavior:contain}
 #meal-recipe-options button{display:flex;align-items:center;gap:12px;text-align:left}#meal-recipe-options button span{min-width:0}#meal-recipe-options small{display:block;color:var(--muted);margin-top:4px}
+
+.account-panel .invite-mail {
+ display: grid;
+ place-items: center;
+ color: var(--cream);
+ text-decoration: none;
+}
+.invitation-row {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 8px;
+ padding-block: 12px;
+ border-top: 1px solid var(--stroke);
+}
+.invitation-row p { flex-basis: 100%; }

@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261119-photos";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261119-invite";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
