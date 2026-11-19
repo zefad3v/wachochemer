@@ -17,6 +17,7 @@ w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEven
 w.setInterval=()=>0;
 w.requestAnimationFrame=fn=>fn();
 w.fetch=async path=>({ok:true,json:async()=>JSON.parse(readFileSync(resolve('prototype',path),'utf8'))});
+let nextUpdateError=null, recoverOnLogin=false;
 let session=null,authCallback,aal='aal1',nextAal='aal1',data=null,revision=1,pendingMeal=null;
 const ok=value=>({data:value,error:null});
 const client={
@@ -24,10 +25,15 @@ const client={
     onAuthStateChange:fn=>{authCallback=fn},
     getSession:async()=>ok({session}),
     getUser:async()=>ok({user:session?.user}),
-    signInWithPassword:async()=>{session={user:{id:'account-1',email:'one@example.test'}};return ok({session})},
+    signInWithPassword:async()=>{session={user:{id:'account-1',email:'one@example.test'}};if(recoverOnLogin){recoverOnLogin=false;authCallback('PASSWORD_RECOVERY',session)}return ok({session})},
     signUp:async args=>{calls.push(['signup',args]);return ok({})},
     resetPasswordForEmail:async()=>ok({}),
-    updateUser:async()=>ok({}),
+    updateUser:async args=>{
+      calls.push(['updateUser',args]);
+      if(nextUpdateError){const error=nextUpdateError;nextUpdateError=null;return {data:null,error}}
+      return ok({});
+    },
+    reauthenticate:async()=>ok({}),
     signOut:async()=>{session=null;authCallback('SIGNED_OUT',null);return ok({})},
     mfa:{
       getAuthenticatorAssuranceLevel:async()=>ok({currentLevel:aal,nextLevel:nextAal}),
@@ -75,6 +81,7 @@ const client={
   }
 };
 async function moduleFor(path){
+  path=path.split("?")[0];
   if(modules.has(path))return modules.get(path);
   let mod;
   if(path.endsWith('/backend-config.js'))mod=new SyntheticModule(['backendConfig'],function(){this.setExport('backendConfig',{url:'https://project.supabase.co',publishableKey:'public-example'})},{context});
@@ -84,6 +91,11 @@ async function moduleFor(path){
   modules.set(path,mod);return mod;
 }
 const link=(specifier,parent)=>moduleFor(resolve(dirname(parent.identifier),specifier));
+if(process.env.RECOVERY_RELOAD){
+ session={user:{id:'account-1',email:'one@example.test'}};
+ nextAal='aal2';aal='aal1';
+ w.sessionStorage.setItem('wachochemer:passwordRecovery','account-1');
+}
 const app=await moduleFor(resolve('prototype/app.js'));await app.link(link);await app.evaluate();
 const el=id=>w.document.getElementById(id);
 async function settle(){for(let i=0;i<15;i++)await new Promise(r=>setTimeout(r,0))}
@@ -91,6 +103,18 @@ async function click(id){el(id).click();await settle()}
 async function submit(id){el(id).dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await settle()}
 function fill(id,value){el(id).value=value;el(id).dispatchEvent(new w.Event('input',{bubbles:true}))}
 await settle();
+if(process.env.RECOVERY_RELOAD){
+ assert.equal(el('account-challenge').hidden,false);
+ assert.equal(el('app').hidden,true);
+ el('account-challenge').elements.code.value='123456';
+ await submit('account-challenge');
+ assert.equal(el('account-password').hidden,false);
+ assert.equal(el('app').hidden,true);
+ assert.equal(w.sessionStorage.getItem('wachochemer:passwordRecovery'),'account-1');
+ dom.window.close();
+ console.log('PASS recovery reload retains password flow after MFA');
+ process.exit(0);
+}
 assert.equal(el('app').hidden,true);
 assert.equal(el('account-login').hidden,false);
 el('account-login').elements.email.value='one@example.test';el('account-login').elements.password.value='test-password';
@@ -196,9 +220,52 @@ assert.equal(el('app').hidden,false);
 {
   authCallback('PASSWORD_RECOVERY',session);await settle();
   assert.equal(el('account-password').hidden,false);
-  el('account-password').elements.password.value='new-test-password';await submit('account-password');
+  const form=el('account-password');
+  form.elements.password.value='new-test-password';
+  form.elements.confirmPassword.value='different-password';
+  const writes=calls.filter(x=>x[0]==='updateUser').length;
+  await submit('account-password');
+  assert.equal(calls.filter(x=>x[0]==='updateUser').length,writes);
+  assert.match(el('account-status').textContent,/stimmed nöd/);
+  form.elements.confirmPassword.value='new-test-password';
+  nextUpdateError={code:'same_password',message:'New password should be different from the old password.'};
+  await submit('account-password');
+  assert.match(el('account-status').textContent,/anders sii/);
+  assert.equal(form.elements.password.value,'new-test-password');
+  await submit('account-password');
   assert.equal(el('app').hidden,false);
 }
+w.document.querySelector('[data-tab=settings]').click();
+const change=el('account-change-password');
+change.elements.password.value='changed-in-settings';
+change.elements.confirmPassword.value='changed-in-settings';
+nextUpdateError={code:'reauthentication_needed',message:'Reauthentication required'};
+await submit('account-change-password');
+assert.equal(el('account-password-nonce').hidden,false);
+change.elements.nonce.value='123456';
+await submit('account-change-password');
+assert.equal(change.elements.password.value,'');
+assert.match(el('account-settings-status').textContent,/gänderet/);
+assert.equal(el('account-password-nonce').hidden,true);
+await click('account-logout');
+aal='aal1';nextAal='aal2';recoverOnLogin=true;
+el('account-login').elements.email.value='one@example.test';
+el('account-login').elements.password.value='test-password';
+el('account-login').elements.remember.checked=false;
+await submit('account-login');
+assert.equal(w.localStorage.getItem('wachochemer:remember'),'false');
+assert.equal(el('account-challenge').hidden,false);
+assert.equal(el('account-password').hidden,true);
+assert.equal(el('app').hidden,true);
+assert.equal(w.sessionStorage.getItem('wachochemer:passwordRecovery'),'account-1');
+el('account-challenge').elements.code.value='123456';
+await submit('account-challenge');
+assert.equal(el('account-password').hidden,false);
+el('account-password').elements.password.value='reset-after-mfa';
+el('account-password').elements.confirmPassword.value='reset-after-mfa';
+await submit('account-password');
+assert.equal(w.sessionStorage.getItem('wachochemer:passwordRecovery'),null);
+assert.equal(el('app').hidden,false);
 // A response arriving after logout may not restore another session's plan.
 w.document.querySelector('[data-tab=week]').click();await click('day-edit');
 pendingMeal={};

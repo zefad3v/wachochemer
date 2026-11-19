@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="Wa chochemer? Mobiler Designprototyp für Wucheplan, Chochchischtli und Iichaufslischte.">
   <title>Wa chochemer? · Mobiler Prototyp</title>
-  <link rel="stylesheet" href="./styles.css?v=20261118-shell">
-  <script src="./app.js?v=20261118-shell" type="module"></script>
+  <link rel="stylesheet" href="./styles.css?v=20261119-auth">
+  <script src="./app.js?v=20261119-auth" type="module"></script>
 </head>
 <body>
 <div id="app">
@@ -115,6 +115,10 @@
       <div id="shopping-items" class="shopping-items"></div>
     </section>
     <section class="screen" id="screen-settings" aria-labelledby="settings-title">
+      <details class="settings-card install-help" id="install-help" hidden>
+        <summary>Zum Home-Bildschirm hinzuefüege</summary>
+        <p id="install-help-text">Öffne die App im Browsermenü und wähl «App installiere» oder «Zum Startbildschirm hinzufügen».</p>
+      </details>
       <div class="section-title"><button type="button" id="settings-back" class="settings-back">‹ Zrugg</button><h1 id="settings-title">Iistellige</h1></div>
       <form id="household-form" class="settings-card" novalidate>
         <h2>Haushalt</h2>

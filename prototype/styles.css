@@ -513,3 +513,6 @@ html{overscroll-behavior-y:none}
  #screen-week[data-view=day] .day-card-content{flex:1;min-height:240px}
  .day-meals:empty{display:none}
 }
+
+.remember-choice{display:flex!important;align-items:center;gap:10px}.remember-choice input{width:22px!important;min-height:22px!important;accent-color:var(--lime)}
+.install-help{display:block;margin-bottom:12px}.install-help summary{cursor:pointer;min-height:44px;align-content:center}.install-help p{margin-top:8px}

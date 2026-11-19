@@ -6,6 +6,15 @@ export function unwrap(result) {
       email_not_confirmed: 'Bitte zuerst dini E-Mail bestätige.',
       mfa_verification_failed: 'De Code stimmt nöd oder isch abgloffe. Bitte nomal probiere.',
       over_email_send_rate_limit: 'Bitte warte, bevor du nomal en E-Mail-Link aforderisch.',
+      same_password: 'S neue Passwort muess anders sii als dis bisherigs.',
+      insufficient_aal: 'Bitte zuerst din Authenticator-Code bestätige.',
+      mfa_challenge_expired: 'De Code isch abgloffe. Bitte en aktuelle Authenticator-Code iigäh.',
+      otp_expired: 'Dä Link isch abgloffe oder scho verwendet. Bitte en neue Link afordere.',
+      session_not_found: 'Dini Aameldig isch abgloffe. Bitte nomal aamelde.',
+      session_expired: 'Dini Aameldig isch abgloffe. Bitte nomal aamelde.',
+      reauthentication_needed: 'Bitte bestätige dini Identität, zum s Passwort z ändere.',
+      reauthentication_not_valid: 'De Bestätigungscode stimmt nöd oder isch abgloffe.',
+      over_request_rate_limit: 'Z viel Versüech. Bitte warte und nomal probiere.',
       weak_password: 'Bitte es stärkeres Passwort wähle.'
     };
     const byMessage = {

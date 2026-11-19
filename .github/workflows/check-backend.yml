@@ -28,6 +28,7 @@ jobs:
       - run: npm test
       - run: npm run test:database
       - run: npm run test:online
+      - run: RECOVERY_RELOAD=1 npm run test:online
       - name: Verify the checked-in browser SDK
         run: |
           npm run build:auth
