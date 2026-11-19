@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261119-auth";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261119-alpha";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -13,7 +13,7 @@ const mealLabels={lunch:"Zmittag",dinner:"Znacht"};
 const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
 import {recipeImages,imageFor} from "./recipe-images.mjs";
 const archiveImages=recipeImages;
-let imageDemo=new URLSearchParams(location.search).get("imageDemo")==="1";
+
 const state={
  tab:"week",returnTab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,plannedServings:null,recipeViewServings:null,servings:{},
  recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",
@@ -110,6 +110,15 @@ const displayedMeal=()=>{
  return state.selectedMeal||mealForTime();
 };
 function showTab(tab){
+ if(state.tab==="settings" && (tab!=="settings" || state.returnTab) && householdDirty){
+  if(!confirm("Ungspeichereti Haushaltsänderige verwerfe?"))return;
+  householdDirty=false;
+  if(state.household){
+   for(const field of ["adults","children","babies","adultsShare","childrenShare","babiesShare"])
+    byId("household-"+field).value=state.household[field];
+   byId("household-form").dispatchEvent(new Event("household-refresh"));
+  }
+ }
  if(tab==="settings"&&state.tab==="settings")tab=state.returnTab||"week";
  else if(tab==="settings")state.returnTab=state.tab;
  state.tab=tab;
@@ -161,7 +170,7 @@ function mealSummary(date){
  }).join("");
 }
 function localISO(date){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-")}
-function picture(item,label=false){return item.image?'<img src="'+escapeHtml(item.image)+'" alt="" decoding="async" draggable="false">'+(item.imageDemo&&label?'<span class="image-demo-badge">Bild-Demo · KI-Beispiel</span>':''):'<span class="planner-placeholder" aria-hidden="true"></span>'}
+function picture(item,label=false){return item.image?'<img src="'+escapeHtml(item.image)+'" alt="" decoding="async" draggable="false">':'<span class="planner-placeholder" aria-hidden="true"></span>'}
 function renderPlanner(){
  const days=weekDays(),selected=days[state.current],meal=displayedMeal(),item=itemForDay(selected.date,meal);
  byId("week-range").textContent=weekLabel();
@@ -171,7 +180,7 @@ function renderPlanner(){
  byId("plan-next-week").hidden=plannerView==="week";
  document.querySelectorAll("button[data-view]").forEach(btn=>btn.setAttribute("aria-pressed",String(btn.dataset.view===plannerView)));
  byId("week-strip").innerHTML=days.map(({date,item},i)=>'<button type="button" data-day="'+i+'" aria-pressed="'+(i===state.current)+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-label="'+escapeHtml(weekdays[date.getDay()]+', '+niceDate(date)+(item.planned?', Menü geplant':', ungeplant'))+'"><span>'+weekdayShort[date.getDay()]+'</span><strong>'+date.getDate()+'</strong><span class="plan-dot" data-planned="'+item.planned+'" aria-hidden="true"></span></button>').join("");
- byId("week-overview").innerHTML=days.map(({date,item},i)=>'<article class="week-row'+(i===state.current?' selected':'')+'"><button type="button" class="day-select" data-day="'+i+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-pressed="'+(i===state.current)+'">'+picture(item)+'<span class="row-content"><strong>'+escapeHtml(weekdays[date.getDay()]+" · "+niceDate(date))+'</strong>'+mealSummary(date)+(item.imageDemo?'<span class="demo-tag">Bild-Demo · KI-Beispiel</span>':'')+'</span></button><button type="button" class="row-edit" data-edit-day="'+i+'" aria-label="Menü für '+escapeHtml(weekdays[date.getDay()])+ ' bearbeiten">✎</button></article>').join("");
+ byId("week-overview").innerHTML=days.map(({date,item},i)=>'<article class="week-row'+(i===state.current?' selected':'')+'"><button type="button" class="day-select" data-day="'+i+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-pressed="'+(i===state.current)+'">'+picture(item)+'<span class="row-content"><strong>'+escapeHtml(weekdays[date.getDay()]+" · "+niceDate(date))+'</strong>'+mealSummary(date)+'</span></button><button type="button" class="row-edit" data-edit-day="'+i+'" aria-label="Menü für '+escapeHtml(weekdays[date.getDay()])+ ' bearbeiten">✎</button></article>').join("");
  byId("day-card").innerHTML=picture(item,true)+'<span class="day-card-content"><span>'+escapeHtml(weekdays[selected.date.getDay()]+" · "+niceDate(selected.date))+'</span><strong>'+escapeHtml(item.title)+'</strong><span>'+escapeHtml(item.planned?(item.mealLabel+" · "+(item.real?item.minutes+" Min. · "+item.servings+" Portione":item.description)):"Ungeplant")+'</span></span>';
  byId("day-card").setAttribute("aria-label",(meal==="lunch"?"Zmittag: ":"Znacht: ")+item.title+(item.real?", Rezept aaluege":", Menü bearbeiten"));
  for(const btn of document.querySelectorAll("[data-meal-page]")){
@@ -198,13 +207,13 @@ function renderArchive(){
  grid.classList.toggle("search-suggestions",searching);
  grid.innerHTML=searching
   ?(all.length?all.map(item=>'<button type="button" class="archive-suggestion" data-recipe="'+escapeHtml(item.id)+'">'+
-     searchThumbnail(item)+'<span><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept'+(item.imageDemo?' · Bild-Demo':'')+'</small></span></button>').join("")
+     searchThumbnail(item)+'<span><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept'+'</small></span></button>').join("")
      :'<p class="empty-message">Kei passende Rezepte gfunde.</p>')
   :(all.length?all.map(item=>'<button type="button" class="archive-card" data-recipe="'+escapeHtml(item.id)+'">'+
      (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" loading="lazy">':
       '<span class="archive-image-placeholder" aria-hidden="true"><span>Rezeptbild folgt</span></span>')+
      '<span class="archive-caption"><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept'+
-     (item.imageDemo?' · Bild-Demo':'')+(state.favorites.has(item.id)?' ♡':'')+'</small></span></button>').join(""):'<p>Kei Rezepte gfunde.</p>');
+     (state.favorites.has(item.id)?' ♡':'')+'</small></span></button>').join(""):'<p>Kei Rezepte gfunde.</p>');
  grid.querySelectorAll("[data-recipe]").forEach(btn=>btn.addEventListener("click",()=>{
   const item=state.archiveEntries.find(recipe=>recipe.id===btn.dataset.recipe);
   if(item)openRecipe(item);
@@ -520,7 +529,7 @@ function openRecipe(item){
  byId("dialog-hero").hidden=!item.image;
  if(item.image)image.src=item.image;
  else image.removeAttribute("src");
- byId("dialog-category").textContent=recipe?(item.imageDemo?"FAMILIENREZEPT · BILD-DEMO (KI)":"FAMILIENREZEPT"):item.real?"REZEPT NICHT VERFÜGBAR":"DESIGNBEISPIEL";
+ byId("dialog-category").textContent=recipe?"FAMILIENREZEPT":"REZEPT NICHT VERFÜGBAR";
  byId("dialog-title").textContent=recipe?.title||item.title;
  byId("dialog-description").textContent=recipe?.description||item.description;
  byId("dialog-meta").innerHTML='<span>◷ '+(recipe?recipe.prepMinutes+recipe.cookMinutes:item.minutes)+' Min.</span><span>♙ '+(recipe?.baseServings||3)+' Portione</span>';
@@ -553,7 +562,7 @@ function openRecipe(item){
  }else{
   byId("dialog-portion-picker").hidden=true;
   byId("portion-session-note").hidden=true;
-  actions.innerHTML='<div class="notice">'+(item.real?'Das Rezept isch zur Ziit nöd verfügbar. Bitte lade d Siite neu.':'Das isch es Designbeispiel. S vollständige Rezept isch no nöd im Chochchischtli erfasst.')+'</div>';
+  actions.innerHTML='<div class="notice">'+(item.real?'Das Rezept isch zur Ziit nöd verfügbar. Bitte lade d Siite neu.':'S vollständige Rezept isch no nöd im Chochchischtli erfasst.')+'</div>';
   byId("dialog-ingredients-section").hidden=true;
   byId("dialog-instructions-section").hidden=true;
  }
@@ -576,7 +585,7 @@ async function loadRecipes(){
   const {catalog,recipes}=await fetchArchiveData(fetchJson);
   state.names=Object.fromEntries(catalog.ingredients.map(x=>[x.id,x.names["de-CH"]]));
   state.recipes=Object.fromEntries(recipes.map(recipe=>[recipe.id,recipe]));
-  state.archiveEntries=archiveEntries(recipes,archiveImages).map(item=>({...item,...imageFor(item.id,imageDemo)}));
+  state.archiveEntries=archiveEntries(recipes,archiveImages).map(item=>({...item,...imageFor(item.id)}));
   state.archiveStatus="ready";
   const loaded=cloudEnabled?{plan:{version:2,entries:{}},error:null}:loadPlan(localStorage);
   state.planBlocked=cloudEnabled||!!loaded.error;
@@ -628,7 +637,7 @@ async function importLocalPlan(shared){
  const loaded=loadPlan(localStorage);
  if(loaded.error)throw Error(loaded.error);
  const issues=assessPlan(loaded.plan,state.recipes).issues;
- if(issues.length)throw Error("De lokale Plan enthält ungeklärti Portione oder Reschte. Bitte zuerst im lokale Prototyp prüefe.");
+ if(issues.length)throw Error("De lokale Plan enthält ungeklärti Portione oder Reschte. Bitte zuerst de lokale Plan prüefe.");
  if(!Object.keys(loaded.plan.entries).length)throw Error("Uf däm Grät isch kei lokale Plan vorhanden.");
  const key="wachochemer:import:"+shared.id;
  let id=localStorage.getItem(key);
@@ -691,7 +700,8 @@ function bindHouseholdForm(){
    state.household={...state.household,...profile};
    settingsRevision=state.householdRevision;
    status.textContent="Gspeicheret.";
-  }catch(err){if(epoch===sessionEpoch)status.textContent=err.message}
+   byId("household-reload").hidden=true;
+  }catch(err){if(epoch===sessionEpoch){status.textContent=err.message;if(err.code==="40001")byId("household-reload").hidden=false}}
   finally{enableForm()}
  });
  showTotal();
@@ -734,11 +744,11 @@ function init(){
   catch(err){updatePlanNotice(err.message)}
  });
  bindHouseholdForm();
- byId("household-reload").hidden=!cloudEnabled;
+ byId("household-reload").hidden=true;
  byId("household-reload").addEventListener("click",async()=>{
   if(householdDirty&&!confirm("Ungspeichereti Iistellige verwerfe und de aktuelle Stand lade?"))return;
   householdDirty=false;
-  try{await account.refresh();byId("household-status").textContent="Aktuelle Stand glade."}
+  try{await account.refresh();byId("household-status").textContent="Aktuelle Stand glade.";byId("household-reload").hidden=true}
   catch(err){byId("household-status").textContent=err.message}
  });
  byId("meal-reload").addEventListener("click",async()=>{
@@ -886,12 +896,6 @@ function init(){
  const filters=[["all","Alli"],["favorites","Favoritä"]];
  byId("recipe-filters").innerHTML=filters.map(([id,label])=>'<button type="button" class="filter-chip'+(id===state.filter?' active':'')+'" data-filter="'+id+'">'+label+'</button>').join("");
  byId("recipe-filters").addEventListener("click",e=>{const target=e.target.closest("[data-filter]");if(!target)return;state.filter=target.dataset.filter;renderArchive()});
- byId("image-demo").checked=imageDemo;
- byId("image-demo").addEventListener("change",event=>{
-  imageDemo=event.target.checked;
-  const url=new URL(location.href);if(imageDemo)url.searchParams.set("imageDemo","1");else url.searchParams.delete("imageDemo");history.replaceState(null,"",url);
-  state.archiveEntries=state.archiveEntries.map(item=>({...item,...imageFor(item.id,imageDemo)}));renderPlanner();
- });
  byId("start-day").value=String(state.startDay);
  byId("start-day").addEventListener("change",e=>{state.startDay=Number(e.target.value);save("wachochemer:weekstart",state.startDay);state.current=0;state.weekOffset=0;renderPlanner()});
  byId("portion-minus").addEventListener("click",()=>adjustPortions(-0.5));
@@ -940,3 +944,60 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent) ||
  byId("install-help-text").textContent='Öffne die Siite in Safari. Tippe uf «Teilen», denn uf «Zum Home-Bildschirm» und «Hinzufügen».';
 installedMode.addEventListener("change",updateInstallHelp);
 updateInstallHelp();
+
+const helpPages=[
+ ["Wuche plane","Am Mittwuch tippsch uf «Nächsti Wuche plane». Wähl en Tag und bearbeit s Menü mit em Stift. D Planig wird mit dim Haushalt teilt."],
+ ["Zmittag und Znacht","Wisch uf de grosse Tageskarte nach links für Znacht und nach rechts für Zmittag. Du chasch au d Mahlziit unde i de Karte antippe. D Tage wählsch obe. I de installierte App chasch in Untermenüs vom linke Inhaltsrand nach rechts wische, zum zruggzgah."],
+ ["Rezept und Chochmodus","Im Chochchischtli öffnisch es Rezept. Mit «Chochmodus starte» chasch Portione aapasse, Zutate abhake und d'Schritt durre schaffe."],
+ ["Neui Rezepte im Alpha-Test","En Rezepteditor i de App fehlt aktuell. Für es neus Rezept bruchts Titel, Basisportione, Zutate mit Menge und Einheit, Zuebereitigsschritt sowie Vorbereitigs- und Chochziit. Die Dateie werded aktuell über s GitHub-Archiv übernoh. Fürs Teste chasch im Wucheplan unter «Was gits?» es eigenes Menü mit Name iiträge. Das erstellt no kei Rezept mit Zutate und Zuebereitig."],
+ ["Zäme teste","I de Iistellige unter «Mitglieder und Iiladige» erstellsch en Iiladigslink. D Person erstellt es eigenes Konto und tritt dim Haushalt bii. Die Hilf findsch jederzeit i de Iistellige."]
+];
+let helpPage=0;
+function renderHelp(){
+ byId("help-title").textContent=helpPages[helpPage][0];
+ byId("help-content").textContent=helpPages[helpPage][1];
+ byId("help-next").textContent=helpPage===helpPages.length-1?"Los gahts":"Wiiter";
+}
+function openHelp(){
+ helpPage=0;renderHelp();byId("help-dialog").showModal();
+}
+byId("open-help").addEventListener("click",openHelp);
+byId("help-close").addEventListener("click",()=>byId("help-dialog").close());
+byId("help-next").addEventListener("click",()=>{
+ if(helpPage===helpPages.length-1)byId("help-dialog").close();
+ else{helpPage++;renderHelp()}
+});
+byId("help-dialog").addEventListener("close",()=>save("wachochemer:introSeen",true));
+if(!readSaved("wachochemer:introSeen",false) && !cloudEnabled)openHelp();
+const introObserver=new MutationObserver(()=>{
+ if(!byId("app").hidden && !readSaved("wachochemer:introSeen",false) && !document.querySelector("dialog[open]"))openHelp();
+});
+introObserver.observe(byId("app"),{attributes:true,attributeFilter:["hidden"]});
+
+// Installed apps have no Safari toolbar back control.
+let backTouch=null;
+document.addEventListener("touchstart",event=>{
+ const touch=event.touches[0];
+ backTouch=(installedMode.matches || navigator.standalone === true) &&
+  event.touches.length===1 && touch.clientX<=48 &&
+  !event.target.closest("input,select,textarea,button,a") ? {x:touch.clientX,y:touch.clientY} : null;
+},{passive:true});
+document.addEventListener("touchmove",event=>{if(event.touches.length!==1)backTouch=null},{passive:true});
+document.addEventListener("touchcancel",()=>{backTouch=null},{passive:true});
+document.addEventListener("touchend",event=>{
+ const start=backTouch;backTouch=null;
+ if(!start || !event.changedTouches.length)return;
+ const touch=event.changedTouches[0],dx=touch.clientX-start.x,dy=touch.clientY-start.y;
+ if(dx<70 || dx<Math.abs(dy)*1.5)return;
+ const modal=document.querySelector("dialog[open]");
+ if(modal){
+  if(modal.id==="recipe-dialog")closeRecipe();
+  else if(modal.id==="meal-editor")byId("meal-editor-close").click();
+  else modal.close();
+  return;
+ }
+ if(state.tab!=="settings")return;
+ const task=byId("account-settings")?.querySelector(".account-task:not([hidden])");
+ if(task)task.querySelector("button").click();
+ else showTab(state.returnTab||"week");
+},{passive:true});

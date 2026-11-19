@@ -276,9 +276,6 @@ body{background:radial-gradient(ellipse at 12% 22%,#52654a66,transparent 52%),ra
 .meal-pages button[aria-pressed=true]{background:none;box-shadow:none;color:#fff9e8}
 .meal-dot{width:6px;height:6px;flex:0 0 6px}
 .meal-pages button[aria-pressed=true] .meal-dot{background:#f0efca;border-color:#f0efca}
-.image-demo-badge{position:absolute;z-index:2;top:46px;left:20px;font:500 10px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.04em;color:#fff8e5;text-shadow:0 1px 5px #000}
-.image-demo-setting{display:block;margin-top:18px;padding:16px;border:1px solid var(--stroke);border-radius:14px}
-.image-demo-setting small{display:block;margin:6px 0;color:var(--muted)}
 @media(max-width:679px){
  .topbar{height:auto;min-height:calc(48px + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left));display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center}
  .mobile-page-title{display:block;grid-column:2;grid-row:1;text-align:center;font:600 clamp(19px,5.4vw,24px)/1.2 Georgia,serif;letter-spacing:-.035em;padding:8px 0}
@@ -516,3 +513,22 @@ html{overscroll-behavior-y:none}
 
 .remember-choice{display:flex!important;align-items:center;gap:10px}.remember-choice input{width:22px!important;min-height:22px!important;accent-color:var(--lime)}
 .install-help{display:block;margin-bottom:12px}.install-help summary{cursor:pointer;min-height:44px;align-content:center}.install-help p{margin-top:8px}
+
+/* Stable settings widths, independent of expanded content. */
+#screen-settings .settings-card,#account-settings{width:100%;min-width:0;max-width:100%}
+#account-settings{display:grid;grid-template-columns:minmax(0,1fr);justify-items:stretch;gap:12px}
+#account-settings>*{min-width:0;width:100%}
+#account-settings label,#account-settings form,#account-settings input{min-width:0;max-width:100%;width:100%}
+#account-members p{display:flex;flex-wrap:wrap;gap:8px;overflow-wrap:anywhere}
+#account-members button{flex:0 0 auto}
+.account-navigation,.account-task{display:grid;gap:12px}
+.account-task h3{font-size:24px}
+.account-navigation button{text-align:left}
+.settings-done{width:100%;margin:12px 0;min-height:46px}
+#household-reload{min-height:44px;border:1px solid var(--stroke);background:transparent;color:var(--cream);border-radius:12px}
+.help-dialog{width:min(90vw,480px);max-height:80dvh;overflow:auto;border:1px solid var(--stroke);border-radius:20px;padding:24px;background:var(--bg);color:var(--cream)}
+.help-dialog::backdrop{background:#0009}
+.help-dialog h2{font-size:28px;margin-bottom:16px}
+#help-content{line-height:1.6}
+.help-actions{display:flex;gap:12px;margin-top:24px}
+.help-actions button{min-height:44px;padding:8px 14px;border:1px solid var(--stroke);border-radius:12px}

@@ -91,6 +91,29 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   document.body.insertAdjacentHTML('afterbegin', html);
   document.querySelector('#household-form').insertAdjacentHTML('afterend', settings);
   document.querySelector('.settings-note').textContent = 'De Haushalt und Wucheplan werded online gspeicheret. D Aazeige-Iistellige gelted für dä Browser.';
+  // Account tasks get separate panels, with a stable full-width navigation list.
+  const account = document.getElementById('account-settings');
+  const navigation = document.createElement('nav');
+  navigation.className = 'account-navigation';
+  navigation.setAttribute('aria-label', 'Kontoiistellige');
+  for (const detail of [...account.querySelectorAll(':scope > details')]) {
+    const summary = detail.querySelector('summary');
+    const label = summary.textContent;
+    summary.remove();
+    const panel = document.createElement('section');
+    panel.className = 'account-task'; panel.hidden = true;
+    const heading = document.createElement('h3'); heading.textContent = label; heading.tabIndex = -1;
+    const back = document.createElement('button'); back.type = 'button'; back.textContent = 'Kontoiistellige';
+    back.addEventListener('click', () => { panel.hidden = true; navigation.hidden = false; open.focus(); });
+    panel.append(back, heading, ...detail.childNodes);
+    const open = document.createElement('button'); open.type = 'button'; open.textContent = label + ' ›';
+    open.addEventListener('click', () => {
+      account.querySelectorAll('.account-task').forEach(task => task.hidden = true);
+      navigation.hidden = true; panel.hidden = false; heading.focus({preventScroll:true});
+    });
+    navigation.append(open); detail.replaceWith(panel);
+  }
+  account.insertBefore(navigation, account.querySelector('.account-task'));
   const el = id => document.getElementById(id);
   const gate = el('account-gate');
   const app = el('app');
