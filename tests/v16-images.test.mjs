@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {imageFor,recipeImages,demoImages} from '../prototype/recipe-images.mjs';
 import {readFileSync,existsSync} from 'node:fs';
-test('demo images are opt-in, separate and never assigned to unknown recipes',()=>{
+test('alpha never serves demo images, including old opt-in URLs',()=>{
  assert.deepEqual(recipeImages,{});
+ assert.deepEqual(demoImages,{});
  assert.deepEqual(imageFor('kuerbissuppe-kaesetoast'),{image:null,imageDemo:false});
  assert.deepEqual(imageFor('unknown',true),{image:null,imageDemo:false});
  for(const [id,fixture] of Object.entries(demoImages)){
@@ -11,7 +12,7 @@ test('demo images are opt-in, separate and never assigned to unknown recipes',()
   assert(existsSync(new URL('../prototype/'+fixture.image,import.meta.url)));
  }
 });
-test('verified image takes precedence over illustrative demo',()=>{
+test('only assigned recipe images are displayed',()=>{
  recipeImages['test-recipe']='./owned.webp';
  try{assert.deepEqual(imageFor('test-recipe',true),{image:'./owned.webp',imageDemo:false})}
  finally{delete recipeImages['test-recipe']}

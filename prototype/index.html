@@ -9,10 +9,10 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="48x48" href="./assets/icons/favicon-48.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="description" content="Wa chochemer? Mobiler Designprototyp für Wucheplan, Chochchischtli und Iichaufslischte.">
-  <title>Wa chochemer? · Mobiler Prototyp</title>
-  <link rel="stylesheet" href="./styles.css?v=20261119-auth">
-  <script src="./app.js?v=20261119-auth" type="module"></script>
+  <meta name="description" content="Wa chochemer? Wucheplan für Wucheplan, Chochchischtli und Iichaufslischte.">
+  <title>Wa chochemer?</title>
+  <link rel="stylesheet" href="./styles.css?v=20261119-alpha">
+  <script src="./app.js?v=20261119-alpha" type="module"></script>
 </head>
 <body>
 <div id="app">
@@ -119,7 +119,7 @@
         <summary>Zum Home-Bildschirm hinzuefüege</summary>
         <p id="install-help-text">Öffne die App im Browsermenü und wähl «App installiere» oder «Zum Startbildschirm hinzufügen».</p>
       </details>
-      <div class="section-title"><button type="button" id="settings-back" class="settings-back">‹ Zrugg</button><h1 id="settings-title">Iistellige</h1></div>
+      <div class="section-title"><h1 id="settings-title">Iistellige</h1></div>
       <form id="household-form" class="settings-card" novalidate>
         <h2>Haushalt</h2>
         <output id="household-total" for="household-adults household-children household-babies household-adultsShare household-childrenShare household-babiesShare"></output>
@@ -166,8 +166,9 @@
         <label for="start-day"><strong>Wuchebeginn</strong><span>Vo wellem Tag söll dini Wuche starte?</span></label>
         <select id="start-day"><option value="1">Mäntig</option><option value="2">Zischtig</option><option value="3">Mittwuch</option><option value="4">Dunschtig</option><option value="5">Friitig</option><option value="6">Samschtig</option><option value="0">Sunntig</option></select>
       </div>
-      <label class="image-demo-setting"><input id="image-demo" type="checkbox"> Bild-Demo aazeige <small>KI-Beispielbild, kei Foto vom tatsächliche Rezept. Dini Planig bliibt unveränderet.</small></label>
       <p class="settings-note">D Iistellige werded i dim Browser gspeicheret.</p>
+      <button type="button" id="open-help" class="settings-back">Hilf und Iifüehrig</button>
+      <button type="button" id="settings-back" class="main-action settings-done">Fertig</button>
     </section>
   </main>
   <nav class="bottom-nav" aria-label="Hauptnavigation">
@@ -234,5 +235,10 @@
     </div>
   </dialog>
 </div>
+<dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title">
+  <h2 id="help-title">Willkomme bi Wa chochemer?</h2>
+  <div id="help-content"></div>
+  <div class="help-actions"><button type="button" id="help-close">Schliesse</button><button type="button" id="help-next" class="main-action">Wiiter</button></div>
+</dialog>
 </body>
 </html>
