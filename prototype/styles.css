@@ -472,10 +472,11 @@ html{overscroll-behavior-y:none}
 .detail-ingredients li.done label{text-decoration:line-through;color:#a6b0a0}
 
 [hidden]{display:none!important}
-.account-gate{min-height:100dvh;display:grid;place-items:center;padding:24px;background:var(--bg)}
+.account-gate{height:100dvh;display:flex;flex-direction:column;align-items:center;overflow-y:auto;overscroll-behavior-y:contain;padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));background:var(--bg)}
+.account-gate>.account-panel{margin-block:auto;flex:none;min-width:0}
 .account-panel{display:grid;gap:14px;width:100%;max-width:580px}
 .account-panel form,.account-panel label{display:grid;gap:8px}
-.account-panel input,.account-panel select{width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--stroke);border-radius:10px;background:#263a2d;color:var(--cream);font-size:16px}
+.account-panel input,.account-panel select{width:100%;min-width:0;max-width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--stroke);border-radius:10px;background:#263a2d;color:var(--cream);font-size:16px}
 .account-panel button{min-height:44px;padding:8px 12px;border:1px solid var(--stroke);border-radius:10px;background:#304b3b;color:var(--cream);font:inherit}
 .account-panel button.main-action{background:var(--lime);color:#1e2b1f}
 .account-panel button:disabled{opacity:.5}
@@ -483,6 +484,13 @@ html{overscroll-behavior-y:none}
 .account-panel summary{min-height:44px;cursor:pointer}
 .account-panel p,.account-panel output{overflow-wrap:anywhere}
 .account-panel output:empty{display:none}
+.startup-panel{text-align:center;justify-items:center}
+.startup-panel img{border-radius:18px}
+.startup-panel h1{font-size:clamp(30px,8vw,48px)}
+.invitation-preview{padding:16px;border:1px solid var(--stroke);border-radius:14px;background:#293e32}
+.invitation-preview h2{margin-top:0;font-size:22px;overflow-wrap:anywhere}
+.invitation-preview button{font-size:14px}
+.account-panel input[readonly]{color:var(--muted)}
 #account-connection{padding:12px;border:1px solid var(--stroke);border-radius:10px;color:#ffbe9f}
 #account-qr{max-width:220px;width:100%;background:white}
 #account-settings{margin-bottom:16px}

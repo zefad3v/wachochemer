@@ -6,7 +6,7 @@
     "test": "node --test tests/*.test.mjs",
     "test:database": "node scripts/test-database.mjs",
     "build:auth": "esbuild scripts/auth-sdk.mjs --bundle --format=esm --minify --outfile=prototype/vendor/supabase.js && node scripts/vendor-licenses.mjs",
-    "test:online": "node --experimental-vm-modules tests/online-dom.mjs",
+    "test:online": "node --experimental-vm-modules tests/online-dom.mjs && node --experimental-vm-modules tests/account-entry.mjs",
     "configure:backend": "node scripts/configure-backend.mjs"
   },
   "dependencies": {

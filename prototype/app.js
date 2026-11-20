@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261119-invite-mail";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261120-invite-entry";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -912,7 +912,10 @@ function init(){
   if(state.tab==="archive")renderArchive();
  });
  showTab("week");
- loadRecipes().then(async()=>{if(cloudEnabled)account=await startAccount({onSnapshot:applySharedSnapshot,onLock:lockSharedPlan,onImport:importLocalPlan})});
+ loadRecipes().then(async()=>{
+  if(cloudEnabled)account=await startAccount({onSnapshot:applySharedSnapshot,onLock:lockSharedPlan,onImport:importLocalPlan});
+  else{byId("account-startup").hidden=true;byId("app").hidden=false;}
+ });
 }
 if(cloudEnabled)document.getElementById("app").hidden=true;
 init();

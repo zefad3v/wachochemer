@@ -11,11 +11,20 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="Wa chochemer? Wucheplan für Wucheplan, Chochchischtli und Iichaufslischte.">
   <title>Wa chochemer?</title>
-  <link rel="stylesheet" href="./styles.css?v=20261119-invite-mail">
-  <script src="./app.js?v=20261119-invite-mail" type="module"></script>
+  <link rel="stylesheet" href="./styles.css?v=20261120-invite-entry">
+  <script src="./app.js?v=20261120-invite-entry" type="module"></script>
 </head>
 <body>
-<div id="app">
+<section id="account-startup" class="account-gate" aria-labelledby="account-startup-title">
+  <div class="account-panel startup-panel">
+    <img src="./assets/icons/icon-192.png" width="72" height="72" alt="">
+    <h1 id="account-startup-title">Wa chochemer?</h1>
+    <p id="account-startup-status" role="status">App wird glade …</p>
+    <button type="button" id="account-startup-retry" hidden>Erneut lade</button>
+    <noscript>Zum Benutze vo de App muess JavaScript aktiviert sii.</noscript>
+  </div>
+</section>
+<div id="app" hidden>
   <div class="app-backdrop" aria-hidden="true"></div>
   <header class="topbar">
     <span class="header-backdrop" aria-hidden="true"></span>

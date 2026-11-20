@@ -1,5 +1,38 @@
 # Gemeinsamer Haushalt
 
+## Einladung und Startzustand, 20. November 2026
+
+Der Startbildschirm steht bereits im HTML. Bis SDK, gespeicherte Sitzung und
+Haushalt geladen sind, bleiben App und Anmeldeformulare ausgeblendet. Bei einem
+Startfehler erscheint die Anmeldung mit Fehlermeldung; bei längerem Laden ist ein
+Neuladen möglich. Das verkürzt keine Netzwerklaufzeit, verhindert aber Eingaben
+während der automatischen Anmeldung.
+
+`household_invitation_preview(uuid)` liefert vor der Anmeldung ausschliesslich
+E-Mail und Haushaltsname einer gültigen Einladung. Der zufällige UUID-Link dient
+hier bewusst als Zugriffsnachweis. Die Implementierung liegt als eng begrenzte
+Definer-Funktion im privaten Schema, mit einer Invoker-Hülle im öffentlichen
+Schema. `anon` erhält Schema-Usage und Execute nur für diese Vorschau, keine
+Tabellenrechte oder Ausführungsrechte für andere private Funktionen. Unbekannte,
+abgelaufene und zurückgezogene Einladungen liefern `null`. Die Annahme bleibt an
+bestätigte E-Mail, passende Kontoadresse und gegebenenfalls AAL2 gebunden.
+
+Die E-Mail wird in Anmeldung und separater Registrierung vorausgefüllt. Der
+Haushaltsname bleibt vor der Annahme sichtbar. Die Registrierung öffnet ohne
+vorherige Formulareingaben, prüft dann Passwort und Wiederholung und bewahrt den
+Einladungsparameter im Bestätigungslink. Ein anderes angemeldetes Konto bekommt
+einen Hinweis zum Kontowechsel. Bei einer ausstehenden Einladung wird keine
+zusätzliche Haushaltserstellung angeboten.
+
+Prüfungen: `npm test`, `npm run test:database`, `npm run test:online` und
+`RECOVERY_RELOAD=1 npm run test:online`. Die neuen DOM-Fälle prüfen langsame
+Sitzungswiederherstellung, Einladungsvorschau, Registrierung, Annahme, falsches
+Konto und Fehlerfälle. SQL-Fixtures prüfen die Vorschau ohne Tabellenzugriff
+und die unveränderte Zugriffssperre bei der Annahme. Echte iPhone-PWA und die
+Bestätigungsmail auf Jasmines Gerät bleiben separat manuell abzunehmen.
+
+Die folgenden Einrichtungsnotizen enthalten auch historische Zustände.
+
 Die App unter `prototype/` verwendet Supabase Auth und PostgreSQL, sobald `prototype/backend-config.js` eine Projekt-URL und einen öffentlichen Schlüssel enthält. Ohne Konfiguration bleibt die bisherige lokale Vorschau verfügbar. Eine teilweise Konfiguration sperrt die App mit einer Fehlermeldung.
 
 ## Verhalten
