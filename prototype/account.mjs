@@ -1,6 +1,6 @@
 import {sessionStorageChoice} from './auth-session.mjs';
 import {backendConfig} from './backend-config.js';
-import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261119-auth';
+import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261120-recipes';
 
 export const cloudEnabled = Boolean(backendConfig.url || backendConfig.publishableKey);
 const html = `
@@ -300,11 +300,12 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   async function refresh(onlyChanges = false) {
     if (!shared?.id) return;
     const version = generation, target = shared.id, request = ++refreshSequence;
-    const snapshot = await shared.load();
+    const snapshot = await shared.load(currentSnapshot);
     if (generation !== version || shared.id !== target || request !== refreshSequence) return;
     el('account-connection').hidden = true;
     if (onlyChanges && currentSnapshot &&
         currentSnapshot.householdRevision === snapshot.householdRevision &&
+        JSON.stringify(currentSnapshot.recipeVersions) === JSON.stringify(snapshot.recipeVersions) &&
         JSON.stringify(currentSnapshot.revisions) === JSON.stringify(snapshot.revisions) &&
         JSON.stringify(currentSnapshot.plan) === JSON.stringify(snapshot.plan)) return;
     currentSnapshot = snapshot;
@@ -661,6 +662,21 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   } catch (error) { stage('login'); status(error.message); }
   finally { clearTimeout(startupTimer); }
   return {
+    async importRecipe(target, input) {
+      if (!target || shared.id!==target || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst de Haushalt lade.');
+      const result=await client.functions.invoke('recipe-import',{body:{...input,householdId:target}});
+      if (result.error) {
+        const body=await result.error.context?.json?.().catch(()=>null);
+        throw Object.assign(Error('Import fehlgschlage. Bitte Verbindig prüefe.'),{code:body?.code});
+      }
+      return result.data;
+    },
+    async saveRecipe(target,id,revision,draft) {
+      if (!target || shared.id!==target || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst de Haushalt lade.');
+      const version=generation;
+      unwrap(await client.rpc('save_household_recipe',{target,recipe_id:id,expected:revision,draft}));
+      if(version===generation)await refresh();
+    },
     async saveMeal(key, entry, revision) {
       if (!shared?.id || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst aamelde und de Haushalt lade.');
       const version = generation;

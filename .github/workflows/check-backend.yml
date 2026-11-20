@@ -26,6 +26,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.6
+      - run: deno test --node-modules-dir=none --allow-env tests/recipe-import-edge.ts
       - run: npm run test:database
       - run: npm run test:online
       - run: RECOVERY_RELOAD=1 npm run test:online

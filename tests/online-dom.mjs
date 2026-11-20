@@ -18,6 +18,7 @@ w.setInterval=()=>0;
 w.requestAnimationFrame=fn=>fn();
 w.fetch=async path=>({ok:true,json:async()=>JSON.parse(readFileSync(resolve('prototype',path),'utf8'))});
 let nextUpdateError=null, recoverOnLogin=false;
+let recipeRows=[], importMode;
 let invitations=[], inviteMailFailure=null, sharedLink=null;
 w.navigator.share=async ({url})=>{sharedLink=url;};
 let session=null,authCallback,aal='aal1',nextAal='aal1',data=null,revision=1,pendingMeal=null;
@@ -26,6 +27,11 @@ const client={
   functions:{
     async invoke(name,{body}){
       calls.push([name,body]);
+      if(name==='recipe-import'){
+        importMode=body.mode;
+        return ok({source:body.url,draft:{title:'Rezept vom Link',description:'',baseServings:2,prepMinutes:5,cookMinutes:10,
+          lines:['1 dl Milch'],steps:['Mischen.']}});
+      }
       assert.equal(name,'send-household-invitation');
       assert.equal(body.householdId,'household-1');
       const invitation=invitations.find(item=>item.id===body.invitationId);
@@ -60,6 +66,8 @@ const client={
   from:table=>{
     const query={
       select(){return this},eq(){return this},
+      async in(key,values){return ok(recipeRows.filter(row=>values.includes(row[key])))},
+
       async order(){return ok(data?[{id:'household-1',name:'Üse Haushalt'}]:[])},
       then(fn){return Promise.resolve(ok(table==='household_invitations'?invitations:[])).then(fn)}
     };return query;
@@ -70,7 +78,13 @@ const client={
       data={household:{id:'household-1',name:args.household_name,revision:'1',adults:0,children:0,babies:0,adults_share:1,children_share:1,babies_share:0,recipe_shares:{},shopping_extras:[]},meals:[]};
       return ok('household-1');
     }
-    if(name==='household_snapshot')return ok(structuredClone(data));
+    if(name==='household_snapshot')return ok({...structuredClone(data),recipes:recipeRows.map(({id,revision})=>({id,revision}))});
+    if(name==='save_household_recipe'){
+      const row=recipeRows.find(r=>r.id===args.recipe_id);
+      if((row?.revision??0)!==args.expected)return {data:null,error:{code:'40001',message:'conflict'}};
+      recipeRows=[{id:args.recipe_id,revision:args.expected+1,draft:structuredClone(args.draft)}];
+      return ok(args.expected+1);
+    }
     if(name==='household_people')return ok([{user_id:'account-1',email:'one@example.test'}]);
     if(name==='save_household_meal'){
       if(pendingMeal)return new Promise(resolve=>{pendingMeal.resolve=resolve});
@@ -171,6 +185,34 @@ await click('open-help');
 assert.equal(el('help-dialog').open,true);
 await click('help-close');
 assert.equal(el('account-settings').querySelectorAll(':scope > details').length,0);
+// Import is a draft. Only the explicit confirmation writes a household recipe.
+w.document.querySelector('[data-tab=archive]').click();
+await click('new-house-recipe');
+fill('house-import-url','https://fooby.ch/test');
+await click('house-read-link');
+assert.equal(importMode,'link');
+assert.equal(recipeRows.length,0);
+const form=el('house-recipe-form');
+assert.equal(form.elements.title.value,'Rezept vom Link');
+assert.equal(form.querySelector('.quantity').value,'100');
+form.elements.title.value='Üse Brei';
+await submit('house-recipe-form');
+assert.equal(el('house-preview-name').textContent,'Üse Brei');
+assert.equal(el('house-preview').hidden,false);assert.equal(recipeRows.length,0);
+await click('house-revise');await submit('house-recipe-form');await click('house-save');
+assert.equal(recipeRows.length,1);assert.equal(el('dialog-title').textContent,'Üse Brei');
+assert.equal(el('dialog-actions').querySelector('.bring-action'),null);
+assert.equal(el('dialog-ingredients').textContent.includes('Milch'),true);
+el('dialog-actions').querySelector('button.plan-recipe-action').click();
+form.elements.title.value='Mein Entwurf';
+recipeRows[0].revision++;recipeRows[0].draft.title='Zweite Person';
+await submit('house-recipe-form');await click('house-save');
+assert.equal(el('house-reload-recipe').hidden,false);assert.equal(form.elements.title.value,'Mein Entwurf');
+await click('house-reload-recipe');assert.equal(form.elements.title.value,'Zweite Person');
+await click('house-editor-close');
+await click('new-house-recipe');fill('house-ai-text','Zutaten und Schritte');await click('house-read-ai');
+assert.equal(importMode,'ai');assert.equal(recipeRows.length,1);
+await click('house-editor-close');w.document.querySelector('[data-tab=week]').click();
 const taskButton=el('account-settings').querySelector('.account-navigation button');
 taskButton.click();
 assert.equal(el('account-settings').querySelector('.account-task').hidden,false);
@@ -228,7 +270,7 @@ await click('household-reload');assert.equal(el('household-adults').value,'2');
 w.document.querySelector('[data-tab=week]').click();
 await click('choose-lunch');await click('day-edit');
 assert.equal(el('meal-recipe-options').hidden,false);
-assert.equal(el('meal-recipe-options').querySelectorAll('[data-pick-recipe]').length,3);
+assert.equal(el('meal-recipe-options').querySelectorAll('[data-pick-recipe]').length,4);
 assert.equal(el('meal-recipe-options').querySelectorAll('img').length,3);
 fill('meal-recipe-search','Kürbis');await settle();
 w.document.querySelector('[data-pick-recipe]').click();await settle();

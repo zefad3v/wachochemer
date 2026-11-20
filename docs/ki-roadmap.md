@@ -2,6 +2,10 @@
 
 Diese Datei fehlte auf dem Ausgangsbranch und ergänzt die bestehende [Roadmap](roadmap.md).
 
+## M8 Rezeptpflege im gemeinsamen Chochchistli
+
+Die Redaktion pflegt die öffentlichen Startrezepte weiterhin in Git. Mitglieder können im selben Archiv Haushaltsrezepte erfassen, nachbearbeiten und aus einem Link oder mit KI übernehmen. Vor dem Speichern prüfen sie Mengen, Einheiten, Portionen und Schritte in einer Vorschau. Die Anleitung für Inbetriebnahme und Abnahme steht in [Supabase](../supabase/README.md#rezepteditor-und-import).
+
 ## M9: Einladung und Sitzungsstart, 20. November 2026
 
 Einladungsvorschau mit E-Mail und Haushaltsname, getrennte Registrierung und
