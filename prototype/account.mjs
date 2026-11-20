@@ -7,14 +7,31 @@ const html = `
 <section id="account-gate" class="account-gate" hidden>
   <div class="account-panel">
     <h1>Wa chochemer?</h1>
+    <section id="account-invitation" class="invitation-preview" hidden>
+      <h2 id="account-invitation-title"></h2>
+      <p id="account-invitation-detail"></p>
+      <button type="button" id="account-dismiss-invitation">Ohni Iiladig wiiter</button>
+    </section>
     <p id="account-status" role="status"></p>
     <form id="account-login">
+      <h2>Aamelde</h2>
       <label>E-Mail<input name="email" type="email" autocomplete="username" required></label>
       <label>Passwort<input name="password" type="password" autocomplete="current-password" minlength="8" required></label>
       <label class="remember-choice"><input name="remember" type="checkbox" checked>Aagmeldet bliibe</label>
       <button class="main-action" type="submit">Aamelde</button>
-      <button type="button" id="account-register">Konto mit Iiladig erstelle</button>
+      <p>No kei Konto?</p>
+      <button type="button" id="account-register">Neus Konto erstelle</button>
       <button type="button" id="account-reset">Passwort vergesse</button>
+    </form>
+    <form id="account-signup" hidden>
+      <h2>Neus Konto erstelle</h2>
+      <p>Wähl es eigets Passwort mit mindestens 8 Zeiche. Danach bestätigsch dini E-Mail und nimmsch d Iiladig aa.</p>
+      <label>E-Mail<input name="email" type="email" autocomplete="username" required></label>
+      <label>Neus Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Passwort wiederhole<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label class="remember-choice"><input name="remember" type="checkbox" checked>Aagmeldet bliibe</label>
+      <button class="main-action" type="submit">Konto erstelle</button>
+      <button type="button" id="account-signup-login">Ich ha scho es Konto</button>
     </form>
     <section id="account-confirmation" hidden>
       <h2 id="account-confirmation-title" tabindex="-1">Bitte E-Mail bestätige</h2>
@@ -131,9 +148,45 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   let storage;
   const invite = new URL(location.href).searchParams.get('invite') || sessionStorage.getItem('wachochemer:invitation');
   if (invite) sessionStorage.setItem('wachochemer:invitation', invite);
+  let invitationInfo = null;
   const callbackUrl = new URL(location.pathname, location.origin).href;
   let selectedInvitation = null;
   const inviteStatus = text => { el('account-invite-status').textContent = text; };
+  const startup = el('account-startup');
+  const startupTimer = setTimeout(() => {
+    el('account-startup-status').textContent = 'S Lade dauert länger. Bitte prüef dini Internetverbindig.';
+    el('account-startup-retry').hidden = false;
+  }, 15000);
+  el('account-startup-retry').addEventListener('click', () => location.reload());
+
+  async function loadInvitation() {
+    invitationInfo = null;
+    const pending = sessionStorage.getItem('wachochemer:invitation');
+    el('account-invitation').hidden = !pending;
+    el('account-register').hidden = false;
+    for (const id of ['account-login', 'account-signup']) el(id).elements.email.readOnly = false;
+    if (!pending) return;
+    el('account-invitation-title').textContent = 'Dini Iiladig';
+    el('account-invitation-detail').textContent = 'Iiladig wird prüeft …';
+    try {
+      if (/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(pending))
+        invitationInfo = unwrap(await client.rpc('household_invitation_preview', {invitation: pending}));
+      if (!invitationInfo) {
+        el('account-invitation-detail').textContent = 'D Iiladig isch nöd meh gültig. Bitte en neue Link afordere.';
+        return;
+      }
+      el('account-invitation-title').textContent = 'Iiladig zum Haushalt «' + invitationInfo.household_name + '»';
+      el('account-invitation-detail').textContent = 'Für ' + invitationInfo.email + '. Meld di aa oder erstell es neus Konto. Danach chasch em Haushalt biiträte.';
+      for (const id of ['account-login', 'account-signup']) {
+        el(id).elements.email.value = invitationInfo.email;
+        el(id).elements.email.readOnly = true;
+      }
+    } catch {
+      el('account-invitation-detail').textContent = 'D Iiladig het sich nöd lade lah. Bitte Internet prüefe und «Erneut lade» wähle.';
+    } finally {
+      el('account-register').hidden = !invitationInfo;
+    }
+  }
 
   function clearInvitationLink() {
     selectedInvitation = null;
@@ -195,7 +248,9 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     onLock();
   }
   function stage(name) {
-    for (const id of ['login', 'confirmation', 'password', 'challenge', 'households']) el('account-' + id).hidden = id !== name;
+    for (const id of ['login', 'signup', 'confirmation', 'password', 'challenge', 'households']) el('account-' + id).hidden = id !== name;
+    startup.hidden = name !== 'loading';
+    gate.hidden = name === 'loading';
     el('account-retry').hidden = name === 'confirmation';
   }
   function clearEnrollment() {
@@ -210,7 +265,10 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     const disabled = buttons.map(button => button.disabled);
     buttons.forEach(button => { button.disabled = true; });
     report('');
-    try { await work(); } catch (error) { report(error.message || 'Verbindig fehlgschlage. Bitte nomal probiere.'); }
+    try { await work(); } catch (error) {
+      if (!startup.hidden) stage('login');
+      report(error.message || 'Verbindig fehlgschlage. Bitte nomal probiere.');
+    }
     finally {
       busy = false;
       buttons.forEach((button, index) => { button.disabled = disabled[index]; });
@@ -254,14 +312,16 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     el('account-identity').textContent = user.email + ' · ' + snapshot.household.name;
   }
   async function selectHousehold(id) {
-    generation++;
+    const version = ++generation;
     shared.id = id;
-    lock();
+    lock(); stage('loading');
     await refresh();
+    if (version !== generation || shared.id !== id) return;
     localStorage.setItem('wachochemer:activeHousehold:' + user.id, id);
-    app.hidden = false; gate.hidden = true;
     await members();
     await factors();
+    if (version !== generation || shared.id !== id) return;
+    startup.hidden = true; app.hidden = false; gate.hidden = true;
   }
   async function members() {
     if (!shared.id) return;
@@ -347,10 +407,10 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   }
   async function authenticate(chooseSaved = true) {
     const version = ++generation;
-    lock(); clearEnrollment();
+    lock(); stage('loading'); clearEnrollment();
     const identity = await client.auth.getUser();
     if (version !== generation) return;
-    user = unwrap(identity).user;
+    user = identity.error?.name === 'AuthSessionMissingError' ? null : unwrap(identity).user;
     el('account-gate-logout').hidden = !user;
     if (!user) { clearRecovery(); stage('login'); return; }
     if (recoveryUser && recoveryUser !== user.id) clearRecovery();
@@ -370,7 +430,14 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     const households = await shared.list();
     if (version !== generation) return;
     stage('households');
-    el('account-accept').hidden = !sessionStorage.getItem('wachochemer:invitation');
+    const pending = sessionStorage.getItem('wachochemer:invitation');
+    const matchesInvitation = invitationInfo && user.email.toLowerCase() === invitationInfo.email.toLowerCase();
+    el('account-accept').hidden = !pending || !matchesInvitation;
+    el('account-accept').textContent = invitationInfo ? 'Em Haushalt «' + invitationInfo.household_name + '» biiträte' : 'Iiladig aanäh';
+    el('account-create').hidden = Boolean(pending);
+    if (pending && invitationInfo && !matchesInvitation)
+      status('Du bisch als ' + user.email + ' aagmeldet. Die Iiladig isch für ' + invitationInfo.email + '. Bitte abmelde und mit däre E-Mail wiiterfahre.');
+    else if (pending && matchesInvitation) status('Du bisch als ' + user.email + ' aagmeldet. Nimm jetzt d Iiladig aa.');
     el('account-household-list').replaceChildren(...households.map(h => {
       const button = document.createElement('button');
       button.type = 'button'; button.textContent = h.name;
@@ -391,13 +458,15 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     el('account-password').reset(); resetPasswordChange();
     el('account-gate-logout').hidden = true;
   }
-  lock(); stage('login');
+  lock(); stage('loading');
+  el('account-startup-status').textContent = 'Aameldig wird prüeft …';
   try {
     if (!backendConfig.url || !backendConfig.publishableKey) throw Error('De gemeinsame Haushalt isch no nöd fertig iigrichtet.');
     const {createClient} = await import('./vendor/supabase.js');
     const storageKey = 'sb-' + new URL(backendConfig.url).hostname.split('.')[0] + '-auth-token';
     storage = sessionStorageChoice(localStorage, sessionStorage, storageKey);
     el('account-login').elements.remember.checked = storage.remembers();
+    el('account-signup').elements.remember.checked = storage.remembers();
     client = createClient(backendConfig.url, backendConfig.publishableKey, {auth: {storage, storageKey, persistSession: true, autoRefreshToken: true}});
     shared = new SharedHousehold(client);
     // The callback itself stays synchronous to avoid holding the SDK auth lock.
@@ -421,15 +490,32 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
       form.elements.password.value = '';
       await authenticate();
     });
-    bind('account-register', 'click', async () => {
-      const form = el('account-login');
-      if (!form.reportValidity()) return;
+    bind('account-register', 'click', () => {
+      const form = el('account-signup');
+      form.elements.email.value = invitationInfo?.email || el('account-login').elements.email.value;
+      el('account-login').elements.password.value = '';
+      stage('signup');
+      status('Erstell dis eigets Konto. Wenn du scho es Konto hesch, wähl «Ich ha scho es Konto».');
+      (form.elements.email.value ? form.elements.password : form.elements.email).focus();
+    });
+    bind('account-signup-login', 'click', () => {
+      el('account-signup').elements.password.value = '';
+      el('account-signup').elements.confirmPassword.value = '';
+      stage('login'); status('Meld di mit dim bestehende Konto aa.');
+    });
+    bind('account-signup', 'submit', async () => {
+      const form = el('account-signup'), password = passwordValue(form);
+      if (!password) return;
+      storage.setRemember(form.elements.remember.checked);
       const url = new URL(callbackUrl);
       const pending = sessionStorage.getItem('wachochemer:invitation');
       if (pending) url.searchParams.set('invite', pending);
-      unwrap(await client.auth.signUp({email: form.elements.email.value, password: form.elements.password.value,
+      const result = unwrap(await client.auth.signUp({email: form.elements.email.value.trim(), password,
         options: {emailRedirectTo: url.href}}));
       form.elements.password.value = '';
+      form.elements.confirmPassword.value = '';
+      el('account-login').elements.email.value = form.elements.email.value;
+      if (result.session) { await authenticate(); return; }
       el('account-confirmation-email').textContent = form.elements.email.value;
       stage('confirmation');
       el('account-confirmation-title').focus();
@@ -486,11 +572,21 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     bind('account-accept', 'click', async () => {
       const id = unwrap(await client.rpc('accept_household_invitation', {invitation: sessionStorage.getItem('wachochemer:invitation')}));
       sessionStorage.removeItem('wachochemer:invitation');
+      invitationInfo = null; el('account-invitation').hidden = true;
+      for (const form of ['account-login', 'account-signup']) el(form).elements.email.readOnly = false;
       const url = new URL(location.href); url.searchParams.delete('invite'); history.replaceState(null, '', url);
       await selectHousehold(id);
     });
     bind('account-switch', 'click', () => { shared.id = null; return authenticate(false); });
-    bind('account-retry', 'click', () => authenticate());
+    bind('account-retry', 'click', async () => { await loadInvitation(); await authenticate(); });
+    bind('account-dismiss-invitation', 'click', async () => {
+      sessionStorage.removeItem('wachochemer:invitation'); invitationInfo = null;
+      const url = new URL(location.href); url.searchParams.delete('invite'); history.replaceState(null, '', url);
+      el('account-invitation').hidden = true;
+      el('account-register').hidden = false;
+      for (const id of ['account-login', 'account-signup']) el(id).elements.email.readOnly = false;
+      await authenticate();
+    });
     bind('account-logout', 'click', logout); bind('account-gate-logout', 'click', logout);
     bind('account-invite', 'submit', async event => {
       const form = el('account-invite');
@@ -559,9 +655,11 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     window.addEventListener('focus', poll);
     document.addEventListener('visibilitychange', poll);
     const session = unwrap(await client.auth.getSession()).session;
+    await loadInvitation();
     if (session) await authenticate();
-    else status('Meld di für din gemeinsame Haushalt aa.');
-  } catch (error) { status(error.message); }
+    else { stage('login'); status('Meld di aa oder erstell mit diner Iiladig es neus Konto.'); }
+  } catch (error) { stage('login'); status(error.message); }
+  finally { clearTimeout(startupTimer); }
   return {
     async saveMeal(key, entry, revision) {
       if (!shared?.id || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst aamelde und de Haushalt lade.');
