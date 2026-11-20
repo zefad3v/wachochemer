@@ -7,6 +7,7 @@ Deno.test('Import checks access first, bounds AI cost, keeps the API key server 
   const uuid='30000000-0000-4000-8000-000000000001';
   const post=(mode:string,text='',url='')=>handleRecipeImport(new Request('https://edge.example',{method:'POST',
     headers:{Authorization:'Bearer fixture'},body:JSON.stringify({mode,text,url,householdId:uuid})}));
+  let expectedModel='test-model';
   let access=200, calls:string[]=[];
   const dish={title:'Salat',description:'',baseServings:2,prepMinutes:5,cookMinutes:0,lines:['1 EL Öl'],steps:['Mischen.']};
   try {
@@ -21,7 +22,7 @@ Deno.test('Import checks access first, bounds AI cost, keeps the API key server 
       assert.equal(url,'https://api.openai.com/v1/responses');
       const payload=JSON.parse(String(options?.body));
       assert.equal(payload.store,false); assert.equal(payload.text.format.strict,true);
-      assert.equal(payload.input,'Kopierter Rezepttext'); assert.equal(payload.model,'test-model');
+      assert.equal(payload.input,'Kopierter Rezepttext'); assert.equal(payload.model,expectedModel);
       assert.equal(new Headers(options?.headers).get('Authorization'),'Bearer test-only');
       return Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(dish)}]}]});
     };
@@ -31,6 +32,9 @@ Deno.test('Import checks access first, bounds AI cost, keeps the API key server 
     assert.equal((await ordinary.json()).draft.title,'Suppe');assert.equal(calls.length,2);
     const result=await post('ai','Kopierter Rezepttext');
     assert.deepEqual((await result.json()).draft,dish);
+    Deno.env.delete('OPENAI_RECIPE_MODEL');
+    expectedModel='gpt-6-luna';
+    assert.equal((await post('ai','Kopierter Rezepttext')).status,200);
     access=429;assert.equal((await post('ai','Kopierter Rezepttext')).status,429);
     access=200;Deno.env.delete('OPENAI_API_KEY');
     assert.equal((await (await post('ai','Kopierter Rezepttext')).json()).code,'ai_setup');
