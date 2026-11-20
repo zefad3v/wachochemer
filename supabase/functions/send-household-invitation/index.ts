@@ -82,6 +82,41 @@ Mit däm Link chasch em gemeinsame Haushalt biiträte:
 ${link.href}
 
 Meld di mit däre E-Mail-Adresse aa oder erstell es Konto. Falls du kei Iiladig erwartet hesch, chasch die E-Mail ignoriere.`,
+      html: `<!doctype html>
+<html lang="gsw-CH">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
+  <title>Du bisch iiglade</title>
+</head>
+<body style="margin:0;padding:0;background-color:#1d3129;color:#f2eee4;font-family:Arial,sans-serif;-webkit-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Plant zäme, sammlet Rezäpt und chöchet mitenand.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#1d3129;">
+    <tr><td align="center" style="padding:32px 20px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:520px;">
+        <tr><td style="padding-bottom:28px;">
+          <img src="https://zefad3v.github.io/wachochemer/prototype/assets/icons/icon-192.png" width="64" height="64" alt="Kochtopf mit Chochlöffel" style="display:block;border:0;border-radius:16px;">
+          <p style="margin:16px 0 0;color:#f2eee4;font-family:Georgia,serif;font-size:28px;line-height:1.2;font-weight:bold;">Wa chochemer?</p>
+        </td></tr>
+        <tr><td style="padding:28px 24px;background-color:#293e32;border:1px solid #536651;border-radius:18px;">
+          <h1 style="margin:0 0 20px;color:#f2eee4;font-family:Georgia,serif;font-size:32px;line-height:1.2;">Du bisch iiglade</h1>
+          <p style="margin:0 0 12px;color:#f2eee4;font-size:16px;line-height:1.6;">Hoi!</p>
+          <p style="margin:0 0 24px;color:#f2eee4;font-size:16px;line-height:1.6;">Tritt em gemeinsame Haushalt bii und plant zäme, was uf de Tisch chunnt.</p>
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="#d8e8b4" style="border-radius:12px;">
+            <a href="${link.href}" style="display:inline-block;padding:16px 24px;border:1px solid #d8e8b4;border-radius:12px;color:#1d3129;font-size:16px;line-height:1.4;font-weight:bold;text-decoration:none;">Iiladig aanäh</a>
+          </td></tr></table>
+          <p style="margin:24px 0 0;color:#c0c8ba;font-size:14px;line-height:1.6;">Meld di mit däre E-Mail-Adresse aa oder erstell es Konto.</p>
+        </td></tr>
+        <tr><td style="padding-top:24px;">
+          <p style="margin:0 0 12px;color:#c0c8ba;font-size:13px;line-height:1.6;">Falls de Button nöd funktioniert, chasch de <a href="${link.href}" style="color:#d8e8b4;">Iiladigslink öffne</a>.</p>
+          <p style="margin:0;color:#c0c8ba;font-size:13px;line-height:1.6;">Falls du kei Iiladig erwartet hesch, chasch die E-Mail ignoriere.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
       disableFileAccess: true,
       disableUrlAccess: true,
     });
