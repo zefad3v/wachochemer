@@ -64,10 +64,13 @@ const settings = `
     <div id="account-members"></div>
     <form id="account-invite">
       <label>E-Mail vo de Person<input name="email" type="email" required></label>
-      <button>Iiladigslink erstelle</button>
+      <button type="submit" value="send" class="main-action">Iiladig per E-Mail schicke</button>
+      <button type="submit" value="link">Link zum Teile erstelle</button>
     </form>
+    <output id="account-invite-status" role="status"></output>
     <label id="account-link-label" hidden>Iiladigslink zum Teile<input id="account-link" readonly></label>
     <button type="button" id="account-copy" hidden>Link kopiere</button>
+    <button type="button" id="account-share" hidden>Link teile</button>
     <div id="account-invitations"></div>
   </details>
   <details><summary>Zwei-Faktor-Aameldig</summary>
@@ -129,13 +132,66 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   const invite = new URL(location.href).searchParams.get('invite') || sessionStorage.getItem('wachochemer:invitation');
   if (invite) sessionStorage.setItem('wachochemer:invitation', invite);
   const callbackUrl = new URL(location.pathname, location.origin).href;
+  let selectedInvitation = null;
+  const inviteStatus = text => { el('account-invite-status').textContent = text; };
+
+  function clearInvitationLink() {
+    selectedInvitation = null;
+    el('account-link').value = '';
+    el('account-link-label').hidden = true;
+    el('account-copy').hidden = true;
+    el('account-share').hidden = true;
+    inviteStatus('');
+  }
+
+  function showInvitationLink(id) {
+    selectedInvitation = id;
+    const url = new URL(callbackUrl);
+    url.searchParams.set('invite', id);
+    el('account-link').value = url.href;
+    el('account-link-label').hidden = false;
+    el('account-copy').hidden = false;
+    el('account-share').hidden = typeof navigator.share !== 'function';
+  }
+
+  async function updateInvitationList(version) {
+    try { await members(); }
+    catch {
+      if (version === generation) inviteStatus(el('account-invite-status').textContent + ' D Liste het sich nöd aktualisiere lah.');
+    }
+  }
+
+  async function sendInvitation(target, invitation, email) {
+    const version = generation;
+    inviteStatus('Iiladig wird verschickt …');
+    let sent = false, wait = false;
+    try {
+      const {data, error} = await client.functions.invoke('send-household-invitation', {
+        body: {householdId: target, invitationId: invitation},
+      });
+      sent = !error && data?.sent === true;
+      wait = error?.context?.status === 429;
+    } catch {
+      // A lost response can leave SMTP acceptance unknown.
+    }
+    if (version !== generation || shared.id !== target) return;
+    if (sent) inviteStatus('Iiladig per E-Mail verschickt a ' + email + '.');
+    else {
+      showInvitationLink(invitation);
+      inviteStatus(wait
+        ? 'Bitte wart es bitz vor em nächste Versand. De Link chasch jetzt teile.'
+        : 'De Versand het sich nöd bestätige lah. Du chasch de Link teile oder de Versand nomal probiere.');
+    }
+    await updateInvitationList(version);
+  }
+
   function lock() {
     app.hidden = true; gate.hidden = false; currentSnapshot = null;
     clearEnrollment();
     el('account-connection').hidden = true;
     for (const id of ['account-members', 'account-invitations', 'account-factors']) el(id).replaceChildren();
     el('account-identity').textContent = '';
-    el('account-link').value = ''; el('account-link-label').hidden = true; el('account-copy').hidden = true;
+    clearInvitationLink();
     onLock();
   }
   function stage(name) {
@@ -147,14 +203,14 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     el('account-secret').value = ''; el('account-qr').removeAttribute('src');
     el('account-enrollment').reset();
   }
-  async function action(work) {
+  async function action(work, report = status) {
     if (busy) return;
     busy = true;
     const buttons = [...gate.querySelectorAll('button'), ...el('account-settings').querySelectorAll('button')];
     const disabled = buttons.map(button => button.disabled);
     buttons.forEach(button => { button.disabled = true; });
-    status('');
-    try { await work(); } catch (error) { status(error.message || 'Verbindig fehlgschlage. Bitte nomal probiere.'); }
+    report('');
+    try { await work(); } catch (error) { report(error.message || 'Verbindig fehlgschlage. Bitte nomal probiere.'); }
     finally {
       busy = false;
       buttons.forEach((button, index) => { button.disabled = disabled[index]; });
@@ -180,8 +236,8 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     form.reset(); el('account-password-nonce').hidden = true;
     form.elements.nonce.disabled = true; form.elements.nonce.required = false;
   }
-  function bind(id, event, handler) {
-    el(id).addEventListener(event, e => { e.preventDefault(); action(() => handler(e)); });
+  function bind(id, event, handler, report = status) {
+    el(id).addEventListener(event, e => { e.preventDefault(); action(() => handler(e), report); });
   }
   async function refresh(onlyChanges = false) {
     if (!shared?.id) return;
@@ -209,8 +265,10 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   }
   async function members() {
     if (!shared.id) return;
-    const people = unwrap(await client.rpc('household_people', {target: shared.id}));
-    const invitations = unwrap(await client.from('household_invitations').select('id,email,expires_at').eq('household_id', shared.id));
+    const target = shared.id, version = generation;
+    const people = unwrap(await client.rpc('household_people', {target}));
+    const invitations = unwrap(await client.from('household_invitations').select('id,email,expires_at,email_sent_at').eq('household_id', target));
+    if (version !== generation || shared.id !== target) return;
     el('account-members').replaceChildren();
     for (const person of people) {
       const row = document.createElement('p'), button = document.createElement('button');
@@ -229,14 +287,48 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     }
     el('account-invitations').replaceChildren();
     for (const invitation of invitations) {
-      const row = document.createElement('p'), button = document.createElement('button');
-      row.append(document.createTextNode(invitation.email + ' · ' + new Date(invitation.expires_at).toLocaleDateString('de-CH') + ' '));
-      button.textContent = 'Iiladig zruggzieh';
-      button.addEventListener('click', () => action(async () => {
-        unwrap(await client.rpc('revoke_household_invitation', {target: shared.id, invitation: invitation.id}));
+      const row = document.createElement('div');
+      row.className = 'invitation-row';
+      const summary = document.createElement('p');
+      const expires = new Date(invitation.expires_at);
+      const expired = expires.getTime() <= Date.now();
+      summary.textContent = invitation.email + (expired ? ' · Abgloffe' : ' · Offe bis ' + expires.toLocaleDateString('de-CH'));
+      row.append(summary);
+      if (!expired) {
+        if (invitation.email_sent_at) {
+          const sentAt = new Date(invitation.email_sent_at);
+          summary.textContent += ' · Per E-Mail verschickt am ' + sentAt.toLocaleDateString('de-CH');
+        }
+        const send = document.createElement('button');
+        send.type = 'button';
+        send.textContent = invitation.email_sent_at ? 'Nomal verschicke' : 'Per E-Mail schicke';
+        send.addEventListener('click', () => action(() => {
+          el('account-invite-status').scrollIntoView({block: 'nearest'});
+          return sendInvitation(target, invitation.id, invitation.email);
+        }, inviteStatus));
+        row.append(send);
+        const share = document.createElement('button');
+        share.type = 'button';
+        share.textContent = 'Link zum Teile';
+        share.addEventListener('click', () => {
+          showInvitationLink(invitation.id);
+          inviteStatus('Link für ' + invitation.email + ' bereit zum Teile.');
+          el('account-invite-status').scrollIntoView({block: 'nearest'});
+        });
+        row.append(share);
+      }
+      const revoke = document.createElement('button');
+      revoke.type = 'button';
+      revoke.textContent = 'Iiladig zruggzieh';
+      revoke.addEventListener('click', () => action(async () => {
+        unwrap(await client.rpc('revoke_household_invitation', {target, invitation: invitation.id}));
+        if (version !== generation) return;
+        if (selectedInvitation === invitation.id) clearInvitationLink();
         await members();
-      }));
-      row.append(button); el('account-invitations').append(row);
+        if (version === generation) inviteStatus('Iiladig isch zruggzoge.');
+      }, inviteStatus));
+      row.append(revoke);
+      el('account-invitations').append(row);
     }
   }
   async function factors() {
@@ -400,14 +492,39 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     bind('account-switch', 'click', () => { shared.id = null; return authenticate(false); });
     bind('account-retry', 'click', () => authenticate());
     bind('account-logout', 'click', logout); bind('account-gate-logout', 'click', logout);
-    bind('account-invite', 'submit', async () => {
-      const id = unwrap(await client.rpc('invite_household_member', {target: shared.id, target_email: el('account-invite').elements.email.value}));
-      const url = new URL(callbackUrl); url.searchParams.set('invite', id);
-      el('account-link').value = url.href;
-      el('account-link-label').hidden = false; el('account-copy').hidden = false;
-      status('Link erstellt. Teile ihn mit de iigladene Person.'); await members();
-    });
-    bind('account-copy', 'click', async () => { await navigator.clipboard.writeText(el('account-link').value); status('Link kopiert.'); });
+    bind('account-invite', 'submit', async event => {
+      const form = el('account-invite');
+      if (!form.reportValidity()) return;
+      const email = form.elements.email.value.trim().toLowerCase();
+      const version = generation, target = shared.id;
+      const id = unwrap(await client.rpc('invite_household_member', {target, target_email: email}));
+      if (version !== generation || shared.id !== target) return;
+      form.reset();
+      clearInvitationLink();
+      if (event.submitter?.value !== 'link') {
+        await sendInvitation(target, id, email);
+        return;
+      }
+      showInvitationLink(id);
+      inviteStatus('Link für ' + email + ' bereit zum Teile.');
+      await updateInvitationList(version);
+    }, inviteStatus);
+    bind('account-copy', 'click', async () => {
+      try {
+        await navigator.clipboard.writeText(el('account-link').value);
+        inviteStatus('Link kopiert. Jetzt chasch ihn i dini Nachricht iifüege.');
+      } catch {
+        el('account-link').select();
+        inviteStatus('Kopier de markierti Link im Textfeld.');
+      }
+    }, inviteStatus);
+    bind('account-share', 'click', async () => {
+      try {
+        await navigator.share({title: 'Iiladig zu Wa chochemer?', url: el('account-link').value});
+      } catch (error) {
+        if (error.name !== 'AbortError') inviteStatus('Teile het nöd klappt. Du chasch de Link kopiere.');
+      }
+    }, inviteStatus);
     bind('account-enroll', 'click', async () => {
       if (enrollment) unwrap(await client.auth.mfa.unenroll({factorId: enrollment.id}));
       enrollment = unwrap(await client.auth.mfa.enroll({factorType: 'totp', friendlyName: 'Wachochemer ' + new Date().toISOString()}));

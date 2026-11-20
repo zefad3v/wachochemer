@@ -539,3 +539,12 @@ html{overscroll-behavior-y:none}
 .topbar{background:#263d30}
 #meal-recipe-options{max-height:40dvh;overflow-y:auto;overscroll-behavior:contain}
 #meal-recipe-options button{display:flex;align-items:center;gap:12px;text-align:left}#meal-recipe-options button span{min-width:0}#meal-recipe-options small{display:block;color:var(--muted);margin-top:4px}
+
+.invitation-row {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 8px;
+ padding-block: 12px;
+ border-top: 1px solid var(--stroke);
+}
+.invitation-row p { flex-basis: 100%; }

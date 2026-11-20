@@ -8,7 +8,7 @@ Die App unter `prototype/` verwendet Supabase Auth und PostgreSQL, sobald `proto
 - Optionale TOTP-Zwei-Faktor-Anmeldung. Wer einen verifizierten Faktor aktiviert hat, braucht für jeden Haushaltszugriff eine AAL2-Sitzung. Ein zweiter Authenticator kann als Ersatz eingerichtet werden. Es werden keine eigenen Recovery-Codes erzeugt.
 - Mehrere Logins pro Haushalt und mehrere Haushalte pro Konto. Alle Mitglieder können planen, Einstellungen ändern, einladen und Mitglieder entfernen. Das letzte Mitglied kann den Haushalt nicht verlassen.
 - Personenanzahl und Portionsvorgaben sind unabhängig von der Anzahl der Logins.
-- Einladungen sind an die bestätigte E-Mail-Adresse gebunden und sieben Tage gültig. Die App erzeugt einen Link zum manuellen Teilen. Die Bestätigungsmail und der Passwortreset werden durch Supabase Auth versandt.
+- Einladungen sind an die bestätigte E-Mail-Adresse gebunden und sieben Tage gültig. Die App kann sie direkt per SMTP verschicken oder den Link zum Teilen anzeigen. Aktive Links bleiben beim erneuten Versand gültig. Bestätigungsmails und Passwortresets laufen über Supabase Auth.
 - Wucheplan, Portionsvorgaben pro Rezept und zusätzliche Einkaufsartikel werden gemeinsam gespeichert. Die App lädt Änderungen bei Fensterfokus und spätestens beim nächsten 10-Sekunden-Intervall, solange kein Menüeditor geöffnet ist. Es gibt keinen Offline-Schreibpuffer.
 - Jede Mahlzeit und die Haushaltseinstellungen haben eine Versionsnummer. Veraltete Änderungen werden abgewiesen. Der Entwurf bleibt erhalten; „Aktuelle Stand lade“ bietet einen ausdrücklichen Neustart der Bearbeitung an.
 - Resten reservieren Mengen einer früheren Mahlzeit desselben Haushalts. Eine Transaktion verhindert doppelte Reservierungen oder das Löschen einer weiterhin verwendeten Quelle.
@@ -50,6 +50,15 @@ Der Auth-Hook `public.before_user_created` ist im Dashboard aktiviert. E-Mail/Pa
 Ein tatsächlicher Registrierungsversuch ohne Freigabe/Einladung über den öffentlichen Auth-Endpunkt wurde mit HTTP 403 und „Für die Registrierung brauchst du eine Haushaltseinladung.“ abgewiesen. Dabei wurde kein Konto angelegt. Damit ist auch die Anbindung des Hooks an Supabase Auth geprüft.
 
 Die erste Login-Adresse ist freigegeben. Custom SMTP ist mit Infomaniak und einem Gerätepasswort eingerichtet. Die erste Bestätigungsmail ist beim Nutzer angekommen. Bestätigung und gemeinsame Nutzung mit zwei regulären Konten sind noch zu prüfen. Die Registrierungsvorlage ist im Dashboard auf Schweizerdeutsch gespeichert. Der Betreff lautet «Wa chochemer? Bitte E-Mail bestätige», der Inhalt liegt in templates/confirmation.html. Der Bestätigungslink verwendet weiterhin {{ .ConfirmationURL }}.
+
+## Versand von Haushaltseinladungen aktivieren
+
+1. Die Migration `20261119194713_household_invitation_mail.sql` im bestätigten Wachochemer-Projekt anwenden. Bestehende Einladungen und ihre Ablaufdaten bleiben erhalten.
+2. Unter **Edge Functions → Secrets** `INVITE_SMTP_USERNAME` mit der vollständigen Infomaniak-Postfachadresse und `INVITE_SMTP_PASSWORD` mit einem Gerätepasswort dieses Postfachs hinterlegen. Ein eigenes Gerätepasswort für Einladungen erlaubt getrenntes Widerrufen. Wenn der bestehende Absender vom Login abweicht, optional `INVITE_SMTP_FROM` mit der beim Postfach eingerichteten Absenderadresse setzen. Die separaten Secrets ändern den bestehenden Auth-Versand nicht.
+3. `supabase/functions/send-household-invitation/index.ts` als `send-household-invitation` mit aktiviertem JWT-Gateway bereitstellen. Supabase stellt `SUPABASE_URL`, `SUPABASE_ANON_KEY` und `SUPABASE_SERVICE_ROLE_KEY` serverseitig bereit. Die Funktion verbindet sich per TLS mit `mail.infomaniak.com:465` und erzeugt Links zur fest hinterlegten GitHub-Pages-Adresse. Die Browseränderung erst nach der Migration und dem Funktions-Deploy veröffentlichen.
+4. Mit einem eigenen Testempfänger den Eingang der Einladung und das Öffnen des Links prüfen. «Verschickt» zeigt die SMTP-Annahme an. Bei nicht bestätigtem Versand bleibt der Link in der App zum Teilen verfügbar.
+
+Die Versandreservierung prüft die Mitgliedschaft und die AAL2-Anforderung mit dem JWT der anfragenden Person. Sie erzwingt eine Minute Abstand pro Einladung und höchstens zwölf Versuche je Konto innerhalb eines Stundenfensters. Nur der Server kann die SMTP-Annahme als Versandzeitpunkt speichern.
 
 ## Abnahme der eingerichteten Datenbank
 

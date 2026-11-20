@@ -18,9 +18,23 @@ w.setInterval=()=>0;
 w.requestAnimationFrame=fn=>fn();
 w.fetch=async path=>({ok:true,json:async()=>JSON.parse(readFileSync(resolve('prototype',path),'utf8'))});
 let nextUpdateError=null, recoverOnLogin=false;
+let invitations=[], inviteMailFailure=null, sharedLink=null;
+w.navigator.share=async ({url})=>{sharedLink=url;};
 let session=null,authCallback,aal='aal1',nextAal='aal1',data=null,revision=1,pendingMeal=null;
 const ok=value=>({data:value,error:null});
 const client={
+  functions:{
+    async invoke(name,{body}){
+      calls.push([name,body]);
+      assert.equal(name,'send-household-invitation');
+      assert.equal(body.householdId,'household-1');
+      const invitation=invitations.find(item=>item.id===body.invitationId);
+      assert.ok(invitation);
+      if(inviteMailFailure)return {data:null,error:{context:{status:inviteMailFailure}}};
+      invitation.email_sent_at=new Date().toISOString();
+      return ok({sent:true});
+    }
+  },
   auth:{
     onAuthStateChange:fn=>{authCallback=fn},
     getSession:async()=>ok({session}),
@@ -47,7 +61,7 @@ const client={
     const query={
       select(){return this},eq(){return this},
       async order(){return ok(data?[{id:'household-1',name:'Üse Haushalt'}]:[])},
-      then(fn){return Promise.resolve(ok([])).then(fn)}
+      then(fn){return Promise.resolve(ok(table==='household_invitations'?invitations:[])).then(fn)}
     };return query;
   },
   rpc:async(name,args)=>{
@@ -76,7 +90,17 @@ const client={
         revision:String(Number(data.household.revision)+1)});
       return ok(null);
     }
-    if(name==='invite_household_member')return ok('invite-1');
+    if(name==='invite_household_member'){
+      const existing=invitations.find(item=>item.email===args.target_email);
+      if(existing)return ok(existing.id);
+      const id='invite-'+(invitations.length+1);
+      invitations.push({id,email:args.target_email,expires_at:new Date(Date.now()+86400000).toISOString()});
+      return ok(id);
+    }
+    if(name==='revoke_household_invitation'){
+      invitations=invitations.filter(invitation=>invitation.id!==args.invitation);
+      return ok(true);
+    }
     return ok(null);
   }
 };
@@ -221,13 +245,25 @@ assert.equal(el('meal-need').value,'4');assert.equal(data.meals[0].entry.cookedS
 await click('meal-reload');assert.equal(el('meal-servings').value,'5');
 await click('meal-editor-close');
 w.document.querySelector('[data-tab=settings]').click();
-el('account-invite').elements.email.value='two@example.test';await submit('account-invite');
-assert.match(el('account-link').value,/invite=invite-1/);
+el('account-invite').elements.email.value='two+invite@example.test';await submit('account-invite');
+assert.match(el('account-invite-status').textContent,/verschickt a two\+invite@example.test/);
+assert.match(el('account-invitations').textContent,/Per E-Mail verschickt am/);
+assert.equal(el('account-link-label').hidden,true);
+
+el('account-invite').elements.email.value='two+invite@example.test';
+el('account-invite').querySelector('[value=link]').click();await settle();
+const inviteLink=el('account-link').value;
+assert.match(inviteLink,/invite=invite-1/);
+assert.match(el('account-invite-status').textContent,/bereit zum Teile/);
+assert.equal(calls.filter(([name])=>name==='send-household-invitation').length,1);
+await click('account-share');assert.equal(sharedLink,inviteLink);
 await click('account-enroll');
 assert.equal(el('account-secret').value,'EXAMPLE');
 assert.equal(el('account-enrollment').hidden,false);
 await click('account-cancel-enroll');assert.equal(el('account-secret').value,'');
 await click('account-logout');assert.equal(el('app').hidden,true);
+assert.equal(el('account-share').hidden,true);
+assert.equal(el('account-link').value,'');
 
 // Optional MFA challenges precede any household access after a password login.
 nextAal='aal2';aal='aal1';
@@ -236,6 +272,21 @@ await submit('account-login');
 assert.equal(el('account-challenge').hidden,false);assert.equal(el('app').hidden,true);
 el('account-challenge').elements.code.value='123456';await submit('account-challenge');
 assert.equal(el('app').hidden,false);
+assert.equal(el('account-share').hidden,true);
+const inviteButtons=()=>el('account-invitations').querySelectorAll('button');
+assert.equal(inviteButtons()[0].textContent,'Nomal verschicke');
+inviteMailFailure=503;
+inviteButtons()[0].click();await settle();
+assert.match(el('account-invite-status').textContent,/Versand het sich nöd bestätige lah/);
+assert.equal(el('account-link').value,inviteLink);
+assert.equal(calls.filter(([name])=>name==='invite_household_member').length,2);
+inviteMailFailure=429;
+inviteButtons()[0].click();await settle();
+assert.match(el('account-invite-status').textContent,/Bitte wart/);
+assert.equal(el('account-link').value,inviteLink);
+inviteButtons()[2].click();await settle();
+assert.equal(el('account-share').hidden,true);
+assert.equal(el('account-invitations').children.length,0);
 {
   authCallback('PASSWORD_RECOVERY',session);await settle();
   assert.equal(el('account-password').hidden,false);
