@@ -13,6 +13,7 @@ Ein Supabase-Projekt darf erst nach eindeutig bestätigter Zuordnung zu Wachoche
 - Onlinebetrieb ohne Offline-Schreibwarteschlange. Fehlgeschlagene Speicherung darf keinen Erfolg anzeigen und nicht in einen lokalen Ersatzplan ausweichen.
 - E-Mail/Passwort mit bestätigter E-Mail; TOTP ist pro Konto optional. Sobald ein Faktor aktiviert ist, erzwingt die Datenbank AAL2.
 - Jeder Haushaltszugriff braucht eine Mitgliedschaft. Auch RPC-Schreibvorgänge und Restenreservierungen müssen diese Prüfung serverseitig durchsetzen.
+- Einzige Ausnahme für die ausdrücklich gewünschte Einladungsvorschau vor der Anmeldung: Mit einem gültigen, zufälligen Einladungs-UUID dürfen ausschliesslich die Ziel-E-Mail und der Haushaltsname angezeigt werden. Kein Auflisten oder Suchen nach E-Mail/Haushalt, keine weiteren Daten und keine Schreibrechte. Abgelaufene, zurückgezogene oder unbekannte Links geben keine Vorschau. Der Beitritt selbst braucht weiterhin die passende bestätigte Kontoadresse und gegebenenfalls AAL2; weitere Haushaltszugriffe erfordern Mitgliedschaft.
 - Fremde Änderungen dürfen nicht still überschrieben werden. Versionskonflikte müssen den Entwurf erhalten und ein ausdrückliches Neuladen erlauben.
 - Rezepttexte sind Deutsch (CH), Bedienoberfläche ist Schweizerdeutsch. Technische Schlüssel wie `lunch` gehören nicht in sichtbare Titel.
 
