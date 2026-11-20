@@ -55,9 +55,23 @@ export class SharedHousehold {
   async list() {
     return unwrap(await this.client.from('households').select('id,name').order('name'));
   }
-  async load() {
+  async load(previous = null) {
     if (!this.id) throw Error('Bitte en Haushalt wähle.');
-    return decodeSnapshot(unwrap(await this.client.rpc('household_snapshot', {target: this.id})));
+    const target = this.id;
+    const data = unwrap(await this.client.rpc('household_snapshot', {target}));
+    const snapshot = decodeSnapshot(data), versions = data.recipes || [];
+    const rows = new Map((previous?.householdId === target ? previous.recipeRows : []).map(row=>[row.id,row]));
+    const changed = versions.filter(v=>rows.get(v.id)?.revision !== v.revision);
+    for(let offset=0;offset<changed.length;offset+=50){
+      const ids=changed.slice(offset,offset+50).map(row=>row.id);
+      const batch=unwrap(await this.client.from('household_recipes').select('id,revision,draft')
+        .eq('household_id',target).in('id',ids));
+      if(batch.length!==ids.length) throw Error('Rezeptdate händ sich gänderet. Bitte neu lade.');
+      for(const row of batch)rows.set(row.id,row);
+    }
+    snapshot.recipeRows=versions.map(v=>rows.get(v.id));
+    snapshot.recipeVersions=versions;
+    return snapshot;
   }
   async saveMeal(key, entry, revision) {
     const [day, slot] = key.split('|');

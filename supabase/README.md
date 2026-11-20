@@ -140,3 +140,18 @@ Die gemeinsame Browserumgebung konnte den lokalen Vorschauport nicht erreichen. 
 - [Registrierungshook](https://supabase.com/docs/guides/auth/auth-hooks/before-user-created-hook)
 - [Auth Hooks](https://supabase.com/docs/guides/auth/auth-hooks)
 - [Eigener SMTP-Versand](https://supabase.com/docs/guides/auth/auth-smtp)
+
+## Rezepteditor und Import
+
+Die öffentlichen Rezepte kommen aus `data/recipes`. Wer das Projekt betreut, ergänzt sie per Pull Request. Ein Import oder ein manuell gespeichertes Rezept ist ausschliesslich für den gewählten Haushalt sichtbar. Beide Quellen erscheinen im selben Chochchistli. Der Wochenplan referenziert private Rezepte mit stabiler UUID und Präfix `haushalt-`. Private Rezepte erzeugen keine öffentliche Bring!-URL. Zutaten können über die bestehende Einkaufsliste kopiert werden.
+
+**Inbetriebnahme nach Releasefreigabe**
+
+1. Migration `20261120164410_household_recipes.sql` auf dem Projekt Wachochemer anwenden. Bestehende Rezeptdateien und Pläne bleiben kompatibel. Die Rezepte im Haushalt werden über dieselbe Mitgliedschaftsprüfung und MFA-Regel wie der Plan geschützt.
+2. Edge Function `recipe-import` aus diesem Repository ausrollen. Wie bei der Einladungsfunktion validiert PostgREST den Benutzer-Token im RPC und prüft die Mitgliedschaft. Bei asymmetrischen Auth-Schlüsseln die alte Gateway-JWT-Prüfung deaktivieren. Die Funktion selbst verlangt einen Bearer-Token und eine erfolgreiche Reservierung, bevor sie Quellen oder OpenAI aufruft.
+3. Für die KI in den Edge Function Secrets `OPENAI_API_KEY` eines OpenAI-API-Projekts setzen. Optional `OPENAI_RECIPE_MODEL` für ein Responses-Modell mit Structured Outputs setzen. Standard ist `gpt-6-luna`. Schlüssel ausschliesslich serverseitig hinterlegen. Erfassen und strukturierter Linkimport funktionieren unabhängig vom KI-Schlüssel.
+4. Frontend freigeben. Auf dem iPhone ein Rezept aus einem Link übernehmen, eine Menge korrigieren und die Vorschau bestätigen. Mit einem zweiten Konto im selben Haushalt suchen, einplanen und im Kochmodus öffnen. Mit eingerichtetem API-Schlüssel zusätzlich einen eingefügten Rezepttext prüfen.
+
+Der Linkimport unterstützt HTTPS auf den angegebenen Portalen und prüft jeden Redirect. Die Seite muss ein lesbares Schema.org-Rezept liefern. Für andere Quellen steht eingefügter Text zur Verfügung. Der KI-Aufruf übermittelt den Text oder einen Ausschnitt der gewählten Rezeptseite nur nach Antippen von «Mit KI iiläse». Titel, Portionen, Zeiten, Mengen und Schritte sind prüfbare Entwürfe. Bilder werden nicht übernommen. Standardlimit pro UTC-Tag sind 100 Importversuche pro Haushalt, davon höchstens 10 mit KI. Auch pro Konto sind höchstens 10 KI-Versuche möglich.
+
+`npm run test:database` prüft Isolation, MFA, Mengenvalidierung, Konflikte und Duplikate. `npm run test:online` prüft Vorschau, Speicherung und Konfliktbehandlung mit simuliertem Backend. Der Edge-Test läuft mit Deno über `deno test --allow-env tests/recipe-import-edge.ts` und simuliert Anbieterantworten. Für einen Rollback zuerst die vorherige Frontend-Version wieder ausliefern. Die additive Tabelle erhalten, damit erfasste Haushaltsrezepte verfügbar bleiben.

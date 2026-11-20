@@ -556,3 +556,25 @@ html{overscroll-behavior-y:none}
  border-top: 1px solid var(--stroke);
 }
 .invitation-row p { flex-basis: 100%; }
+
+#new-house-recipe { margin-block: .5rem; min-height:44px }
+#house-recipe-editor .meal-form { padding: 1rem; display:grid; gap:1rem }
+#house-recipe-editor textarea { width:100%; resize:vertical; padding:.6rem; background:#23392d; color:inherit; border:1px solid #748575; border-radius:.5rem; font:inherit; font-size:16px }
+#house-recipe-editor input, #house-recipe-editor select { font-size:16px; width:100% }
+#house-recipe-editor button, #house-import summary { min-height:44px; cursor:pointer }
+#house-import summary { display:list-item; align-content:center }
+#house-recipe-editor fieldset { margin:0; padding:.7rem; border:1px solid #748575; border-radius:.7rem }
+.recipe-numbers,.ingredient-measure { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem }
+.ingredient-measure { grid-template-columns:1fr 1fr }
+.house-ingredient { border-bottom:1px solid #617365; padding-block:.75rem; display:grid; gap:.5rem }
+#house-recipe-editor .ingredient-footer { display:flex; align-items:center; justify-content:space-between }
+#house-recipe-editor .ingredient-footer label { display:flex; align-items:center }
+#house-recipe-editor .ingredient-footer input { width:auto }
+#house-preview, #house-editor-status { overflow-wrap:anywhere }
+#house-preview li { margin-block:.45rem }
+#house-recipe-editor button:not(.main-action), #new-house-recipe {
+  background:#304a39; color:#edf2e5; border:1px solid #708670; border-radius:12px; padding:.5rem .8rem;
+}
+#house-recipe-editor .main-action { border:0; border-radius:12px; padding:.65rem; background:#dfebbe; color:#203323; font-weight:650 }
+#house-recipe-editor button:disabled { opacity:.6 }
+#house-editor-status:empty { display:none }

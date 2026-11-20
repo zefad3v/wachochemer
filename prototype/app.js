@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261120-invite-entry";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261120-recipes";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -7,6 +7,9 @@ import {householdNeed,portion,assessPlan,updateMeal,cookingTotals} from "../src/
 import {parseDecimal,decimalText} from "./locale-number.mjs";
 import {loadPlan,storePlan,restorePlan} from "../src/storage/meal-plan.mjs";
 import {buildTransferManifest,serializeManifest,manifestText} from "../src/integrations/bring.mjs";
+import {householdRecipe} from './household-recipes.mjs';
+import {recipeEditor} from './recipe-editor.mjs';
+let publicRecipes=[],publicNames={},editor;
 const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig","Samschtig"];
 const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
 const mealLabels={lunch:"Zmittag",dinner:"Znacht"};
@@ -434,7 +437,7 @@ function transferManifest(){
  if(state.planBlocked||state.archiveStatus!=="ready")throw Error("Plan/Rezeptdate bitte zuerst wiederherstelle oder lade.");
  return buildTransferManifest(state.plan,state.recipes,state.shopping.from,state.shopping.to,{
   includeOptional:byId("shopping-optional").checked,extras:state.extras,
-  publicRecipeUrl:recipe=>recipe.slug?"https://zefad3v.github.io/wachochemer/rezepte/"+encodeURIComponent(recipe.slug)+"/":null
+  publicRecipeUrl:recipe=>!recipe.householdRecipe&&recipe.slug?"https://zefad3v.github.io/wachochemer/rezepte/"+encodeURIComponent(recipe.slug)+"/":null
  });
 }
 function shoppingTransferText(){return manifestText(transferManifest(),state.names)}
@@ -529,7 +532,7 @@ function openRecipe(item){
  byId("dialog-hero").hidden=!item.image;
  if(item.image)image.src=item.image;
  else image.removeAttribute("src");
- byId("dialog-category").textContent=recipe?(item.imageGenerated?"FAMILIENREZEPT · KI-BILD":"FAMILIENREZEPT"):"REZEPT NICHT VERFÜGBAR";
+ byId("dialog-category").textContent=recipe?(recipe.householdRecipe?"ÜSES REZEPT":(item.imageGenerated?"STARTREZEPT · KI-BILD":"STARTREZEPT")):"REZEPT NICHT VERFÜGBAR";
  byId("dialog-title").textContent=recipe?.title||item.title;
  byId("dialog-description").textContent=recipe?.description||item.description;
  byId("dialog-meta").innerHTML='<span>◷ '+(recipe?recipe.prepMinutes+recipe.cookMinutes:item.minutes)+' Min.</span><span>♙ '+(recipe?.baseServings||3)+' Portione</span>';
@@ -540,7 +543,12 @@ function openRecipe(item){
  if(recipe){
   const live="https://zefad3v.github.io/wachochemer/rezepte/"+encodeURIComponent(recipe.slug)+"/";
   actions.innerHTML='<button class="main-action" type="button" id="jump-to-ingredients">Chochmodus starte</button>'+
-  '<a class="bring-action" href="'+live+'" target="_blank" rel="noopener noreferrer" aria-label="Bring! Import auf der veröffentlichten Rezeptseite öffnen" title="Bring! öffnet die Rezeptseite. Die gewählte Portionszahl dort nochmals einstellen.">'+bringIcon()+'</a>';
+  (recipe.householdRecipe?'':'<a class="bring-action" href="'+live+'" target="_blank" rel="noopener noreferrer" aria-label="Bring! Import auf der veröffentlichten Rezeptseite öffnen" title="Bring! öffnet die Rezeptseite. Die gewählte Portionszahl dort nochmals einstellen.">'+bringIcon()+'</a>');
+  if(recipe.householdRecipe){
+   const row=state.recipeRows.find(r=>'haushalt-'+r.id===item.id);
+   const edit=document.createElement('button');edit.type='button';edit.className='plan-recipe-action';edit.textContent='Rezept bearbeite';
+   edit.onclick=()=>{closeRecipe();editor.open(row)};actions.append(edit);
+  }
   byId("jump-to-ingredients").addEventListener("click",()=>setCookingMode(true));
   const planBtn=document.createElement("button");
   planBtn.type="button";
@@ -580,12 +588,21 @@ async function fetchJson(path){
  if(!response.ok)throw new Error(path+" returned "+response.status);
  return response.json();
 }
+function setRecipeCatalog(rows){
+ const recipes=[...publicRecipes],names={...publicNames};
+ for(const row of rows){
+  const custom=householdRecipe(row,publicNames);
+  recipes.push(custom.recipe);Object.assign(names,custom.names);
+ }
+ state.names=names;
+ state.recipes=Object.fromEntries(recipes.map(recipe=>[recipe.id,recipe]));
+ state.archiveEntries=archiveEntries(recipes,archiveImages).map(item=>({...item,...imageFor(item.id)}));
+}
 async function loadRecipes(){
  try{
   const {catalog,recipes}=await fetchArchiveData(fetchJson);
-  state.names=Object.fromEntries(catalog.ingredients.map(x=>[x.id,x.names["de-CH"]]));
-  state.recipes=Object.fromEntries(recipes.map(recipe=>[recipe.id,recipe]));
-  state.archiveEntries=archiveEntries(recipes,archiveImages).map(item=>({...item,...imageFor(item.id)}));
+  publicNames=Object.fromEntries(catalog.ingredients.map(x=>[x.id,x.names["de-CH"]]));
+  publicRecipes=recipes;setRecipeCatalog([]);
   state.archiveStatus="ready";
   const loaded=cloudEnabled?{plan:{version:2,entries:{}},error:null}:loadPlan(localStorage);
   state.planBlocked=cloudEnabled||!!loaded.error;
@@ -607,6 +624,9 @@ async function loadRecipes(){
 
 function lockSharedPlan(){
  sessionEpoch++;
+ state.recipeRows=[];setRecipeCatalog([]);
+ byId("new-house-recipe").hidden=true;
+ byId("recipe-grid").replaceChildren();
  state.planBlocked=true;state.plan={version:2,entries:{}};state.revisions={};
  state.householdId=null;
  state.household=null;state.recipeShares={};state.extras=[];
@@ -619,6 +639,9 @@ function lockSharedPlan(){
 }
 function applySharedSnapshot(snapshot){
  Object.assign(state,snapshot);
+ setRecipeCatalog(snapshot.recipeRows);
+ byId("new-house-recipe").hidden=false;
+ if(state.tab==="archive")renderArchive();
  state.planBlocked=false;
  if(!householdDirty){
   for(const field of ["adults","children","babies","adultsShare","childrenShare","babiesShare"])
@@ -707,6 +730,10 @@ function bindHouseholdForm(){
  showTotal();
 }
 function init(){
+ editor=recipeEditor({account:()=>account,household:()=>state.householdId,
+  findRow:id=>state.recipeRows?.find(r=>r.id===id),
+  onSaved:id=>{showTab("archive");openRecipe(state.archiveEntries.find(r=>r.id==="haushalt-"+id));}});
+ byId("new-house-recipe").onclick=()=>editor.open();
  byId("plan-status").addEventListener("click",event=>{
   const button=event.target.closest("[data-review-key]");
   if(!button)return;
@@ -952,7 +979,7 @@ const helpPages=[
  ["Wuche plane","Am Mittwuch tippsch uf «Nächsti Wuche plane». Wähl en Tag und bearbeit s Menü mit em Stift. D Planig wird mit dim Haushalt teilt."],
  ["Zmittag und Znacht","Wisch uf de grosse Tageskarte nach links für Znacht und nach rechts für Zmittag. Du chasch au d Mahlziit unde i de Karte antippe. D Tage wählsch obe. I de installierte App chasch in Untermenüs vom linke Inhaltsrand nach rechts wische, zum zruggzgah."],
  ["Rezept und Chochmodus","Im Chochchischtli öffnisch es Rezept. Mit «Chochmodus starte» chasch Portione aapasse, Zutate abhake und d'Schritt durre schaffe."],
- ["Neui Rezepte im Alpha-Test","En Rezepteditor i de App fehlt aktuell. Für es neus Rezept bruchts Titel, Basisportione, Zutate mit Menge und Einheit, Zuebereitigsschritt sowie Vorbereitigs- und Chochziit. Die Dateie werded aktuell über s GitHub-Archiv übernoh. Fürs Teste chasch im Wucheplan unter «Was gits?» es eigenes Menü mit Name iiträge. Das erstellt no kei Rezept mit Zutate und Zuebereitig."],
+ ["Rezept erfasse","Im Chochchischtli tippsch uf «Rezept erfasse». Trag dis Rezept ii oder lies en Link ii. Für kopierte Rezepttext chasch d KI verwände. Prüef Portione, Zutate und Schritt i de Vorschau. Mit «Im Haushalt speichere» wird s Rezept für alli Mitglieder sichtbar."],
  ["Zäme teste","I de Iistellige unter «Mitglieder und Iiladige» erstellsch en Iiladigslink. D Person erstellt es eigenes Konto und tritt dim Haushalt bii. Die Hilf findsch jederzeit i de Iistellige."]
 ];
 let helpPage=0;
@@ -995,6 +1022,7 @@ document.addEventListener("touchend",event=>{
  const modal=document.querySelector("dialog[open]");
  if(modal){
   if(modal.id==="recipe-dialog")closeRecipe();
+  else if(modal.id==="house-recipe-editor")byId("house-editor-close").click();
   else if(modal.id==="meal-editor")byId("meal-editor-close").click();
   else modal.close();
   return;
