@@ -93,8 +93,8 @@ Meld di mit däre E-Mail-Adresse aa oder erstell es Konto. Falls du kei Iiladig 
     }).then((response) => response.ok, () => false);
     if (!confirmed) console.error("Invitation mail accepted but confirmation could not be saved");
     return respond(200, { sent: true });
-  } catch {
-    console.error("Household invitation mail request failed");
+  } catch (error) {
+    console.error("Household invitation mail request failed", JSON.stringify({name:error.name, code:error.code, command:error.command, responseCode:error.responseCode}));
     return respond(503, { code: "unavailable" });
   }
 });
