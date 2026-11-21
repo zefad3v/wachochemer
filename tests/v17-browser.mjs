@@ -8,7 +8,7 @@ const base=process.env.BASE_URL||'http://127.0.0.1:8765';
 const out=new URL('../docs/screenshots/v17/',import.meta.url).pathname;mkdirSync(out,{recursive:true});
 let checks=0;
 function check(name,value){assert(value,name);console.log('PASS '+name);checks++}
-async function ready(page){await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('No nüt plant'))}
+async function ready(page){await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('Noch nichts geplant'))}
 async function headerSharp(page){return page.evaluate(()=>{
  const nodes=[...document.querySelectorAll('.mobile-page-title,.header-settings,.header-settings svg')];
  return nodes.every(el=>{for(let n=el;n;n=n.parentElement){const s=getComputedStyle(n);if(s.filter!=='none'||s.backdropFilter!=='none'||s.transform!=='none'||Number(s.opacity)!==1)return false}return true});

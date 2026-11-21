@@ -39,7 +39,7 @@ test('missing recipe data or URL creates warnings without phantom ingredients',(
  const missing=buildTransferManifest(plan,{r:{baseServings:2}},'2026-12-31','2027-01-03',options);
  assert.deepEqual(missing.items,[]);assert(missing.warnings.length);
  const m=buildTransferManifest(plan,recipes,'2026-12-31','2027-01-03');
- assert.equal(m.cooking[0].officialImport,null);assert(m.warnings.some(x=>/URL/.test(x.message)));
+ assert.equal(m.cooking[0].officialImport,null);assert(m.warnings.some(x=>/öffentliche Rezeptadresse/.test(x.message)));
 });
 test('different units stay separate; mandatory and optional contributions retain provenance',()=>{
  const dup={...r,ingredients:[...r.ingredients,{ingredientId:'rice',unit:'kg',quantity:.2},{ingredientId:'rice',unit:'g',quantity:10,optional:true}]};

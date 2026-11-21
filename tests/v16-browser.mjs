@@ -13,7 +13,7 @@ try{
  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.clock.install({time:new Date('2026-11-15T12:00:00+01:00')});
  await page.goto(base+'/prototype/?imageDemo=1');
- await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('No nüt plant'));
+ await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('Noch nichts geplant'));
  await page.locator('#day-edit').click();
  await page.locator("#meal-recipe-search").fill("Kürbis");await page.locator('[data-pick-recipe="kuerbissuppe-kaesetoast"]').click();
  await page.locator('#meal-form button[type=submit]').click();

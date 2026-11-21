@@ -1,6 +1,6 @@
 import {UNITS,validateRecipe} from '../src/domain/model.mjs';
 
-export const unitLabels = {g:'g',kg:'kg',ml:'ml',l:'l',piece:'Stück',tbsp:'EL',tsp:'TL',pinch:'Prise',unspecified:'ohni Mengenangab',to_taste:'nach Geschmack'};
+export {unitLabels} from '../locales/format-de-CH.mjs';
 const fractions={'½':'1/2','¼':'1/4','¾':'3/4','⅓':'1/3','⅔':'2/3','⅛':'1/8'};
 const numeric = s => s.split(/\s+/).reduce((sum,part)=>{
   const [a,b]=part.replace(',','.').split('/').map(Number);
@@ -12,9 +12,9 @@ export function parseAmount(text) {
  const s=String(text).replace(/([½¼¾⅓⅔⅛])/g,(_m,ch)=>' '+fractions[ch]).trim();
  const number='(?:\\d+\\s+\\d+/\\d+|\\d+/\\d+|\\d+(?:[.,]\\d+)?)';
  const match=new RegExp('^('+number+')(?:\\s*(?:[-–—]|bis)\\s*('+number+'))?$','i').exec(s);
- if(!match)throw Error('Bitte e Zahl oder en Mengenbereich iiträge.');
+ if(!match)throw Error('Bitte gib eine Zahl oder einen Mengenbereich ein.');
  const quantity=numeric(match[1]),quantityMax=match[2]?numeric(match[2]):null;
- if(!Number.isFinite(quantity)||quantity<=0||quantityMax!=null&&(!Number.isFinite(quantityMax)||quantityMax<quantity))throw Error('Bitte en gültige Mengenbereich iiträge.');
+ if(!Number.isFinite(quantity)||quantity<=0||quantityMax!=null&&(!Number.isFinite(quantityMax)||quantityMax<quantity))throw Error('Bitte gib einen gültigen Mengenbereich ein.');
  return {quantity,...(quantityMax!=null?{quantityMax}:{})};
 }
 export function parseIngredient(line) {
@@ -41,8 +41,8 @@ export function parseIngredient(line) {
 export function canonicalSource(text) {
   if (!text.trim()) return '';
   let url;
-  try {url=new URL(text.trim());} catch {throw Error('Bitte e gültigi HTTPS-Quelle iiträge.');}
-  if(url.protocol!=='https:'||url.username||url.password)throw Error('Bitte e HTTPS-Quelle ohni Zuegangsdate iiträge.');
+  try {url=new URL(text.trim());} catch {throw Error('Bitte gib eine gültige HTTPS-Adresse ein.');}
+  if(url.protocol!=='https:'||url.username||url.password)throw Error('Bitte gib eine HTTPS-Adresse ohne Zugangsdaten ein.');
   url.hash='';
   for(const key of [...url.searchParams.keys()])if(/^utm_|^(fbclid|gclid)$/i.test(key))url.searchParams.delete(key);
   return url.href;
@@ -66,17 +66,17 @@ export function householdRecipe(row,catalogNames) {
 }
 export function validateDraft(d) {
   if (!d.title || d.title.length>160 || d.description.length>2000 || d.source.length>2000)
-    throw Error('Bitte Titel, Beschriibig und Quelle prüefe.');
-  if(!Number.isInteger(d.baseServings)||d.baseServings<1||d.baseServings>999)throw Error('Bitte d Basisportione iiträge.');
-  if([d.prepMinutes,d.cookMinutes,d.totalMinutes].some(n=>n!=null&&(!Number.isInteger(n)||n<0||n>9999)))throw Error('Bitte gültigi Ziite i Minute iiträge.');
+    throw Error('Bitte prüfe Titel, Beschreibung und Quelle.');
+  if(!Number.isInteger(d.baseServings)||d.baseServings<1||d.baseServings>999)throw Error('Bitte gib die Portionszahl des Grundrezepts ein.');
+  if([d.prepMinutes,d.cookMinutes,d.totalMinutes].some(n=>n!=null&&(!Number.isInteger(n)||n<0||n>9999)))throw Error('Bitte gib eine gültige Dauer in Minuten ein.');
   if(d.image)canonicalSource(d.image);
-  if(!d.steps.length || d.steps.length>100 || d.steps.some(s=>!s.trim()||s.length>3000))throw Error('Bitte d Zuebereitig prüefe. Pro Zeile ein Schritt.');
-  if(!d.ingredients.length||d.ingredients.length>100)throw Error('Es brucht 1 bis 100 Zutate.');
+  if(!d.steps.length || d.steps.length>100 || d.steps.some(s=>!s.trim()||s.length>3000))throw Error('Prüfe die Zubereitung. Schreibe jeden Schritt auf eine eigene Zeile.');
+  if(!d.ingredients.length||d.ingredients.length>100)throw Error('Gib zwischen 1 und 100 Zutaten an.');
   for(const [i,row] of d.ingredients.entries()){
-    if(row.quantityMax!=null && (['to_taste','unspecified'].includes(row.unit)||!Number.isFinite(row.quantityMax)||row.quantityMax<row.quantity||row.quantityMax>1e6))throw Error('Bitte en gültige Mengenbereich iiträge.');
+    if(row.quantityMax!=null && (['to_taste','unspecified'].includes(row.unit)||!Number.isFinite(row.quantityMax)||row.quantityMax<row.quantity||row.quantityMax>1e6))throw Error('Bitte gib einen gültigen Mengenbereich ein.');
     if(!row.name || row.name.length>200 || !UNITS.includes(row.unit) ||
       (['to_taste','unspecified'].includes(row.unit)?row.quantity!==null:!Number.isFinite(row.quantity)||row.quantity<=0||row.quantity>1e6))
-      throw Error('Zutat '+(i+1)+': Bitte Name, Menge und Einheit prüefe.');
+      throw Error('Zutat '+(i+1)+': Bitte prüfe Name, Menge und Einheit.');
   }
   return d;
 }

@@ -12,7 +12,7 @@ try{
  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.clock.install({time:new Date('2026-12-31T12:59:00+01:00')});
  await page.goto(base+'/prototype/');
- await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('No nüt plant'));
+ await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('Noch nichts geplant'));
  await check('initialization without edit-day, local today and before-14 lunch',async()=>{
   assert.equal(await page.locator('#edit-day').count(),0);
   assert.equal(await page.locator('#week-strip [aria-current=date]').getAttribute('aria-pressed'),'true');

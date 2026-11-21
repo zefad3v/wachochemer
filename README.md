@@ -1,4 +1,4 @@
-# Wa chochemer?
+# Wa chochemer
 
 Eine Schweizer Rezeptplattform im Aufbau. Rezepte, Zutaten und Oberflächentexte werden strukturiert verwaltet. Das erste Testrezept ist **Milde Poulet-Fajitas** mit Bring! Integration.
 
@@ -6,7 +6,7 @@ Eine Schweizer Rezeptplattform im Aufbau. Rezepte, Zutaten und Oberflächentexte
 
 * `data/ingredients.json`: zentraler Zutatenstamm, eindeutige IDs und Bezeichnungen.
 * `data/recipes/*.json`: Rezepte und Mengen als strukturierte Quelldaten.
-* `locales/gsw-CH.json`: schweizerdeutsche Oberflächenbegriffe.
+* `locales/de-CH.json`: Schweizer Standarddeutsch für die öffentlichen Rezeptseiten.
 * `scripts/build.mjs`: statischer Generator für HTML und Schema.org/Recipe.
 * `index.html`: vorläufige Startseite, aus JSON generiert.
 * `rezepte/<slug>/index.html`: generierte Detailseiten.

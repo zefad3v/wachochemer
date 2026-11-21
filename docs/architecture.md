@@ -6,7 +6,7 @@
 
 ## Entscheidungen
 
-* Die Oberfläche verwendet derzeit schweizerdeutsche Bezeichnungen. Rezeptinhalte bleiben auf Deutsch (CH).
+* Die Oberfläche verwendet Deutsch (Schweiz). Die App heisst «Wa chochemer», die Planansicht «Wucheplan». Von Mitgliedern erfasste oder importierte Inhalte behalten ihre Originalsprache.
 * Mehrsprachigkeit ist durch `locales/`, stabile Zutaten-IDs und sprachbezogene Namen vorbereitet, aber noch nicht implementiert.
 * Der Zutatenstamm liegt in `data/ingredients.json`.
 * Rezepte liegen in `data/recipes/*.json`. Mengen sind Zahlen mit festen Einheiten. IDs und `schemaVersion` erleichtern eine spätere Datenbankmigration.
