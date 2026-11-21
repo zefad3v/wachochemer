@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Wa chochemer?",
-  "short_name": "Wa chochemer?",
-  "lang": "gsw-CH",
+  "name": "Wa chochemer",
+  "short_name": "Wa chochemer",
+  "lang": "de-CH",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

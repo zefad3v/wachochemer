@@ -8,7 +8,7 @@ try{
  const page=await browser.newPage({viewport:{width:390,height:844},acceptDownloads:true});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8765/prototype/');
- await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('No nüt plant'));
+ await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('Noch nichts geplant'));
  await page.locator('#choose-dinner').click();await page.locator('#day-edit').click();
  await page.locator('#meal-recipe-search').fill('Fajitas');await page.locator('[data-pick-recipe]').click();
  await page.locator('#meal-advanced').evaluate(el=>el.open=true);await page.locator('#meal-servings').fill('5.5');await page.locator('#meal-consumed').fill('2.5');await page.locator('#meal-form button[type=submit]').click();

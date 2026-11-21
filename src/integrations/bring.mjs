@@ -1,13 +1,14 @@
 // Preparation only. No network, authentication or claims about Bring account state.
 import {cookingTotals,portion,validKey} from '../domain/planning.mjs';
 import {datesBetween} from '../../prototype/planner.mjs';
+import {mealKeyLabel,unitLabels} from '../../locales/format-de-CH.mjs';
 const compare=(a,b)=>a<b?-1:a>b?1:0;
 const validRecipe=r=>r&&Number.isFinite(r.baseServings)&&r.baseServings>0&&Array.isArray(r.ingredients)&&r.ingredients.length&&r.ingredients.every(x=>x&&typeof x.ingredientId==='string'&&typeof x.unit==='string'&&(x.quantity===null||Number.isFinite(x.quantity)&&x.quantity>0));
 export function prepareRecipeImport(recipe,requestedQuantity,publicUrl){
  portion(requestedQuantity);
- if(!validRecipe(recipe))throw Error('Rezeptdate sind unvollständig.');
+ if(!validRecipe(recipe))throw Error('Die Rezeptdaten sind unvollständig.');
  const url=new URL(publicUrl);
- if(url.protocol!=='https:')throw Error('Bring! bruucht e öffentlichi HTTPS-Rezept-URL.');
+ if(url.protocol!=='https:')throw Error('Bring! benötigt eine öffentliche HTTPS-Adresse für das Rezept.');
  const params=new URLSearchParams({url:url.href,source:'web',baseQuantity:String(recipe.baseServings),requestedQuantity:String(requestedQuantity)});
  return {publicUrl:url.href,baseQuantity:recipe.baseServings,requestedQuantity,
   importUrl:'https://api.getbring.com/rest/bringrecipes/deeplink?'+params,
@@ -25,11 +26,11 @@ export function buildTransferManifest(plan,recipes,from,to,{includeOptional=fals
   try{
    validKey(key);portion(e.cookedServings);
    const recipe=usable[e.recipeId];
-   if(!recipe)throw Error('Rezeptdate fehled oder sind unvollständig.');
+   if(!recipe)throw Error('Rezeptdaten fehlen oder sind unvollständig.');
    let officialImport=null;
    const url=publicRecipeUrl(recipe);
    if(url){try{officialImport=prepareRecipeImport(recipe,e.cookedServings,url)}catch(err){warnings.push({key,message:err.message})}}
-   else warnings.push({key,message:'Kei öffentlichi Rezept-URL; Einzelimport nöd vorbereitet.'});
+   else warnings.push({key,message:'Für den Einzelimport fehlt eine öffentliche Rezeptadresse.'});
    cooking.push({mealKey:key,recipeId:e.recipeId,title:recipe.title||e.recipeId,
     cookedServings:e.cookedServings,officialImport});
    for(const row of recipe.ingredients){
@@ -47,8 +48,8 @@ export function buildTransferManifest(plan,recipes,from,to,{includeOptional=fals
  const duplicateCandidates=items.filter(x=>x.sources.length>1).map(x=>({ingredientId:x.ingredientId,unit:x.unit,mealKeys:[...new Set(x.sources.map(s=>s.mealKey))]}));
  const units=new Map();
  for(const row of items){if(!units.has(row.ingredientId))units.set(row.ingredientId,new Set());units.get(row.ingredientId).add(row.unit)}
- for(const [id,set] of units)if(set.size>1)warnings.push({key:id,message:'Glichi Zutat mit verschiedene Einheite; separat prüefe, kei automatische Umrechnig.'});
- for(const row of totals.skipped)warnings.push({key:row.date+'|'+row.meal,message:'Menü ohni berechenbari Zutate: '+row.title});
+ for(const [id,set] of units)if(set.size>1)warnings.push({key:id,message:'Diese Zutat hat unterschiedliche Einheiten. Bitte prüfe die Mengen einzeln.'});
+ for(const row of totals.skipped)warnings.push({key:row.date+'|'+row.meal,message:'Menü ohne berechenbare Zutaten: '+row.title});
  return {version:1,range:{from,to},includeOptional,cooking,items,
   extras:extras.filter(x=>x&&days.has(x.date)).map(x=>({date:x.date,title:x.title})).sort((a,b)=>compare(a.date+'|'+a.title,b.date+'|'+b.title)),
   duplicateCandidates,warnings:warnings.sort((a,b)=>compare(a.key+'|'+a.message,b.key+'|'+b.message)),
@@ -56,9 +57,9 @@ export function buildTransferManifest(plan,recipes,from,to,{includeOptional=fals
 }
 export const serializeManifest=manifest=>JSON.stringify(manifest,null,2)+'\n';
 export function manifestText(manifest,names={}){
- const amount=x=>x.unit==='unspecified'?'ohne Mengenangabe':x.quantity===null?'nach Geschmack':new Intl.NumberFormat('de-CH',{maximumFractionDigits:2}).format(x.quantity)+(x.quantityMax!=null?'–'+new Intl.NumberFormat('de-CH',{maximumFractionDigits:2}).format(x.quantityMax):'')+(x.unit==='to_taste'?'':' '+x.unit);
- return ['Wachochemer, '+manifest.range.from+' bis '+manifest.range.to,
-  ...manifest.items.map(x=>(names[x.ingredientId]||x.ingredientId)+' — '+amount(x)+(x.optional?' (optional)':'')),
-  ...manifest.extras.map(x=>x.title),...manifest.warnings.map(x=>'Achtung: '+x.key+': '+x.message),
+ const amount=x=>x.unit==='unspecified'?'ohne Mengenangabe':x.quantity===null?'nach Geschmack':new Intl.NumberFormat('de-CH',{maximumFractionDigits:2}).format(x.quantity)+(x.quantityMax!=null?'–'+new Intl.NumberFormat('de-CH',{maximumFractionDigits:2}).format(x.quantityMax):'')+' '+unitLabels[x.unit];
+ return ['Wa chochemer, '+manifest.range.from+' bis '+manifest.range.to,
+  ...manifest.items.map(x=>(names[x.ingredientId]||x.ingredientId)+' · '+amount(x)+(x.optional?' (optional)':'')),
+  ...manifest.extras.map(x=>x.title),...manifest.warnings.map(x=>'Hinweis: '+(mealKeyLabel(x.key)||names[x.key]||x.key)+': '+x.message),
   'Nur vorbereitet. In Bring! gespeicherte Rezepte und Zutaten auf der Einkaufsliste sind nicht überprüft.'].join('\n');
 }

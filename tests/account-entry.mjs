@@ -30,7 +30,7 @@ async function boot({invite=invitation,existing=false,wrongAccount=false,preview
       async getSession(){await sessionReady.promise;return ok({session})},
       async getUser(){
         if(existing)await userReady.promise;
-        if(userError)return {error:{message:'Kei Verbindig'},data:null};
+        if(userError)return {error:{message:'Failed to fetch'},data:null};
         return ok({user:session?.user});
       },
       async signInWithPassword(args){calls.push(['signin',args]);session={user:{id:'account-1',email:args.email}};return ok({session})},
@@ -94,7 +94,7 @@ async function boot({invite=invitation,existing=false,wrongAccount=false,preview
   signup.elements.password.value='test-password';signup.elements.confirmPassword.value='different-password';
   await b.submit('account-signup');
   assert.equal(b.calls.filter(([name])=>name==='signup').length,0);
-  assert.match(el('account-status').textContent,/stimmed nöd/);
+  assert.match(el('account-status').textContent,/stimmen nicht/);
   signup.elements.confirmPassword.value='test-password';await b.submit('account-signup');
   const args=b.calls.find(([name])=>name==='signup')[1];
   assert.equal(args.email,invitedEmail);
@@ -148,7 +148,7 @@ async function boot({invite=invitation,existing=false,wrongAccount=false,preview
 // Invalid, expired and unavailable previews stay explicit and can be dismissed.
 for(const options of [{preview:false},{invite:'not-a-uuid'},{previewError:true}]){
   const b=await boot(options);b.sessionReady.resolve();await b.ready;
-  assert.match(b.el('account-invitation-detail').textContent,/nöd meh gültig|nöd lade/);
+  assert.match(b.el('account-invitation-detail').textContent,/abgelaufen|nicht geladen/);
   assert.equal(b.el('account-register').hidden,true);
   assert.equal(b.el('account-login').elements.email.value,'');
   assert.equal(b.el('account-startup').hidden,true);
@@ -164,7 +164,7 @@ for(const options of [{preview:false},{invite:'not-a-uuid'},{previewError:true}]
   const b=await boot({invite:null,existing:true,userError:true});b.sessionReady.resolve();b.userReady.resolve();await b.ready;
   assert.equal(b.el('account-startup').hidden,true);
   assert.equal(b.el('account-login').hidden,false);
-  assert.match(b.el('account-status').textContent,/Verbindig/);
+  assert.match(b.el('account-status').textContent,/Keine Verbindung/);
   assert.equal(b.el('app').hidden,true);
   b.close();
 }

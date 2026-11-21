@@ -5,7 +5,7 @@ let count=0;const check=(v)=>{assert(v);count++};
 try{
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  await page.goto('http://127.0.0.1:8765/prototype/');
- await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('No nüt plant'));
+ await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('Noch nichts geplant'));
  await page.locator('#choose-dinner').click();await page.locator('#day-edit').click();
  check(await page.locator('#meal-recipe').inputValue()==='');
  check(!await page.locator('#meal-recipe-options').isVisible());

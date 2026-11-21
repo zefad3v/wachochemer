@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261121-recipe-management";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261121-de-ch";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -9,11 +9,10 @@ import {loadPlan,storePlan,restorePlan} from "../src/storage/meal-plan.mjs";
 import {buildTransferManifest,serializeManifest,manifestText} from "../src/integrations/bring.mjs";
 import {householdRecipe} from './household-recipes.mjs';
 import {recipeEditor} from './recipe-editor.mjs';
+import {mealLabels,mealKeyLabel,planDateLabel,unitLabels} from "../locales/format-de-CH.mjs";
 let publicRecipes=[],publicNames={},editor;
-const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig","Samschtig"];
+const weekdays=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
 const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
-const mealLabels={lunch:"Zmittag",dinner:"Znacht"};
-const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL",pinch:"Prise"};
 import {recipeImages,imageFor} from "./recipe-images.mjs?v=20261119-photos";
 const archiveImages=recipeImages;
 
@@ -49,30 +48,21 @@ function scaledQuantity(quantity,unit,factor){
 }
 function formatIngredient(row,factor=1){
  const name=state.names[row.ingredientId]||row.ingredientId.replaceAll("_"," ");
- const unit=units[row.unit]??row.unit;
+ const unit=row.unit==="piece"?"":unitLabels[row.unit];
  const quantity=scaledQuantity(row.quantity,row.unit,factor);
  const amount=row.unit==="unspecified"?"":row.quantity===null||row.unit==="to_taste" ? "Etwas" : moneyLike(quantity)+(row.quantityMax!=null?'–'+moneyLike(scaledQuantity(row.quantityMax,row.unit,factor)):'')+(unit?" "+unit:"");
  const plurals={wheat_tortilla_small:"kleine Weizentortillas",toast_bread_slice:"Scheiben Toastbrot"};
  return (amount?amount+" ":"")+(plurals[row.ingredientId]||name)+(row.optional?" (optional)":"");
 }
 function niceDate(date){return new Intl.DateTimeFormat("de-CH",{day:"numeric",month:"short"}).format(date)}
-const planDateFormat=new Intl.DateTimeFormat("de-CH",{day:"numeric",month:"short",timeZone:"UTC"});
-function planDateLabel(date){
- try{return planDateFormat.format(parseDay(date))}catch{return ""}
-}
-function mealKeyLabel(key){
- const [date,meal,...rest]=String(key??"").split("|");
- const day=planDateLabel(date);
- return day&&Object.hasOwn(mealLabels,meal)&&!rest.length?day+" · "+mealLabels[meal]:"";
-}
 function leftoverDisplay(entry){
  const origin=mealKeyLabel(entry.sourceKey);
  const source=origin?state.plan.entries[entry.sourceKey]:null;
  const recipe=source?.type==="recipe"?state.archiveEntries.find(item=>item.id===source.recipeId):null;
  const date=origin||planDateLabel(entry.sourceDate);
  return {
-  title:recipe?"Reschte · "+recipe.title:"Reschte",
-  description:date?"Vom "+date:"Ursprung bitte kläre",
+  title:recipe?"Resten · "+recipe.title:"Resten",
+  description:date?"Vom "+date:"Herkunft klären",
   image:recipe?.image??null,
   imageDemo:recipe?.imageDemo??false,
   imageGenerated:recipe?.imageGenerated??false
@@ -91,11 +81,11 @@ function itemForDay(date,requestedMeal=null){
  const entry=requestedMeal?(requestedMeal==="lunch"?lunch:dinner):dinner||lunch;
  const mealLabel=mealLabels[requestedMeal||(dinner?"dinner":"lunch")];
  if(!entry){
-  return {id:"empty-"+iso,title:"No nüt plant",description:"Wähl es Rezept, es eigenes Menü oder Reschte.",minutes:0,image:null,real:false,planned:false,mealLabel:""};
+  return {id:"empty-"+iso,title:"Noch nichts geplant",description:"Wähle ein Rezept, ein eigenes Menü oder Resten.",minutes:0,image:null,real:false,planned:false,mealLabel:""};
  }
  if(entry.type==="recipe"){
   const recipe=state.recipes[entry.recipeId],meta=state.archiveEntries.find(x=>x.id===entry.recipeId);
-  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:recipe?.totalMinutes??((recipe?.prepMinutes||0)+(recipe?.cookMinutes||0)),image:meta?.image||null,imageDemo:meta?.imageDemo||false,imageGenerated:meta?.imageGenerated||false,real:!!recipe,planned:true,mealLabel,servings:entry.cookedServings??entry.servings};
+  return {id:entry.recipeId,title:recipe?.title||"Rezept nicht verfügbar",description:recipe?.description||"",minutes:recipe?.totalMinutes??((recipe?.prepMinutes||0)+(recipe?.cookMinutes||0)),image:meta?.image||null,imageDemo:meta?.imageDemo||false,imageGenerated:meta?.imageGenerated||false,real:!!recipe,planned:true,mealLabel,servings:entry.cookedServings??entry.servings};
  }
  if(entry.type==="manual")return {id:"manual-"+iso,title:entry.title,description:"Eigenes Menü",minutes:0,image:null,real:false,planned:true,mealLabel};
  return {id:"leftover-"+iso,...leftoverDisplay(entry),minutes:0,real:false,planned:true,mealLabel};
@@ -115,7 +105,7 @@ const displayedMeal=()=>{
 };
 function showTab(tab){
  if(state.tab==="settings" && (tab!=="settings" || state.returnTab) && householdDirty){
-  if(!confirm("Ungspeichereti Haushaltsänderige verwerfe?"))return;
+  if(!confirm("Ungespeicherte Änderungen am Haushalt verwerfen?"))return;
   householdDirty=false;
   if(state.household){
    for(const field of ["adults","children","babies","adultsShare","childrenShare","babiesShare"])
@@ -127,7 +117,7 @@ function showTab(tab){
  else if(tab==="settings")state.returnTab=state.tab;
  state.tab=tab;
  byId("app").dataset.tab=tab;
- byId("mobile-page-title").textContent=({week:"Üse Wucheplan",archive:"Chochchischtli",shopping:"Für Bring!",settings:"Iistellige"})[tab];
+ byId("mobile-page-title").textContent=({week:"Wucheplan",archive:"Kochbuch",shopping:"Für Bring!",settings:"Einstellungen"})[tab];
  document.querySelectorAll(".screen").forEach(el=>el.classList.toggle("active",el.id==="screen-"+tab));
  document.querySelectorAll("[data-tab]").forEach(el=>{
    const yes=el.dataset.tab===tab;
@@ -169,7 +159,7 @@ function setDay(idx){
 function mealSummary(date){
  return ["lunch","dinner"].map(meal=>{
   const item=itemForDay(date,meal);
-  const detail=item.servings?item.servings+" Portione":item.planned&&!item.real?item.description:"";
+  const detail=item.servings?item.servings+" Portionen":item.planned&&!item.real?item.description:"";
   return '<span>'+escapeHtml(mealLabels[meal]+": "+item.title+(detail?" · "+detail:""))+'</span>';
  }).join("");
 }
@@ -185,8 +175,8 @@ function renderPlanner(){
  document.querySelectorAll("button[data-view]").forEach(btn=>btn.setAttribute("aria-pressed",String(btn.dataset.view===plannerView)));
  byId("week-strip").innerHTML=days.map(({date,item},i)=>'<button type="button" data-day="'+i+'" aria-pressed="'+(i===state.current)+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-label="'+escapeHtml(weekdays[date.getDay()]+', '+niceDate(date)+(item.planned?', Menü geplant':', ungeplant'))+'"><span>'+weekdayShort[date.getDay()]+'</span><strong>'+date.getDate()+'</strong><span class="plan-dot" data-planned="'+item.planned+'" aria-hidden="true"></span></button>').join("");
  byId("week-overview").innerHTML=days.map(({date,item},i)=>'<article class="week-row'+(i===state.current?' selected':'')+'"><button type="button" class="day-select" data-day="'+i+'" '+(localISO(date)===localToday()?'aria-current="date" ':'')+'aria-pressed="'+(i===state.current)+'">'+picture(item)+'<span class="row-content"><strong>'+escapeHtml(weekdays[date.getDay()]+" · "+niceDate(date))+'</strong>'+mealSummary(date)+'</span></button><button type="button" class="row-edit" data-edit-day="'+i+'" aria-label="Menü für '+escapeHtml(weekdays[date.getDay()])+ ' bearbeiten">✎</button></article>').join("");
- byId("day-card").innerHTML=picture(item,true)+'<span class="day-card-content"><span>'+escapeHtml(weekdays[selected.date.getDay()]+" · "+niceDate(selected.date))+'</span><strong>'+escapeHtml(item.title)+'</strong><span>'+escapeHtml(item.planned?(item.mealLabel+" · "+(item.real?item.minutes+" Min. · "+item.servings+" Portione":item.description)):"Ungeplant")+'</span></span>';
- byId("day-card").setAttribute("aria-label",(meal==="lunch"?"Zmittag: ":"Znacht: ")+item.title+(item.real?", Rezept aaluege":", Menü bearbeiten"));
+ byId("day-card").innerHTML=picture(item,true)+'<span class="day-card-content"><span>'+escapeHtml(weekdays[selected.date.getDay()]+" · "+niceDate(selected.date))+'</span><strong>'+escapeHtml(item.title)+'</strong><span>'+escapeHtml(item.planned?(item.mealLabel+" · "+(item.real?item.minutes+" Min. · "+item.servings+" Portionen":item.description)):"Ungeplant")+'</span></span>';
+ byId("day-card").setAttribute("aria-label",(meal==="lunch"?"Mittagessen: ":"Abendessen: ")+item.title+(item.real?", Rezept ansehen":", Menü bearbeiten"));
  for(const btn of document.querySelectorAll("[data-meal-page]")){
   const active=btn.dataset.mealPage===meal;
   btn.setAttribute("aria-pressed",String(active));
@@ -202,8 +192,8 @@ function renderArchive(){
  grid.classList.remove("search-results");
  if(state.archiveStatus!=="ready"){
   grid.innerHTML='<p role="status">'+(state.archiveStatus==="error"
-   ?"Rezepte chönd grad nöd glade werde. Bitte Verbindig prüefe und d Siite neu lade."
-   :"Rezepte werded glade…")+'</p>';
+   ?"Rezepte konnten nicht geladen werden. Prüfe die Verbindung und lade die Seite neu."
+   :"Rezepte werden geladen …")+'</p>';
   return;
  }
  const all=filterArchive(state.archiveEntries,{query:state.query,filter:state.filter,favorites:state.favorites});
@@ -212,12 +202,12 @@ function renderArchive(){
  grid.innerHTML=searching
   ?(all.length?all.map(item=>'<button type="button" class="archive-suggestion" data-recipe="'+escapeHtml(item.id)+'">'+
      searchThumbnail(item)+'<span><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept'+'</small></span></button>').join("")
-     :'<p class="empty-message">Kei passende Rezepte gfunde.</p>')
+     :'<p class="empty-message">Keine passenden Rezepte gefunden.</p>')
   :(all.length?all.map(item=>'<button type="button" class="archive-card" data-recipe="'+escapeHtml(item.id)+'">'+
      (item.image?'<img src="'+escapeHtml(item.image)+'" alt="" loading="lazy">':
       '<span class="archive-image-placeholder" aria-hidden="true"><span>Rezeptbild folgt</span></span>')+
      '<span class="archive-caption"><strong>'+escapeHtml(item.title)+'</strong><small>'+item.minutes+' Min. · Rezept'+
-     (state.favorites.has(item.id)?' ♡':'')+'</small></span></button>').join(""):'<p>Kei Rezepte gfunde.</p>');
+     (state.favorites.has(item.id)?' ♡':'')+'</small></span></button>').join(""):'<p>Keine Rezepte gefunden.</p>');
  grid.querySelectorAll("[data-recipe]").forEach(btn=>btn.addEventListener("click",()=>{
   const item=state.archiveEntries.find(recipe=>recipe.id===btn.dataset.recipe);
   if(item)openRecipe(item);
@@ -230,16 +220,16 @@ function updatePlanNotice(error=null){
  details.hidden=!error&&issues.length===0;
  if(details.hidden){details.open=false;list.replaceChildren();return}
  if(error){
-  details.open=true;summary.textContent="Menüplan konnte nöd glade werde";
+  details.open=true;summary.textContent="Der Menüplan konnte nicht geladen werden";
   list.textContent=error;return;
  }
- summary.textContent=issues.length+" älteri oder unvollständigi Menüeinträg prüefe";
+ summary.textContent=issues.length+" ältere oder unvollständige Menüeinträge prüfen";
  list.innerHTML=issues.map(issue=>{
   const key=String(issue.key??""),[date,meal]=key.split("|");
   const canEdit=/^\d{4}-\d{2}-\d{2}$/.test(date)&&["lunch","dinner"].includes(meal);
-  const label=canEdit?date.slice(8)+"."+date.slice(5,7)+"."+date.slice(0,4)+" · "+(meal==="lunch"?"Zmittag":"Znacht"):key;
+  const label=canEdit?date.slice(8)+"."+date.slice(5,7)+"."+date.slice(0,4)+" · "+(meal==="lunch"?"Mittagessen":"Abendessen"):key;
   return '<div class="plan-review-row"><span><strong>'+escapeHtml(label)+'</strong> · '+escapeHtml(issue.message)+'</span>'+
-   (canEdit?'<button type="button" data-review-key="'+escapeHtml(key)+'">Prüefe</button>':'')+'</div>';
+   (canEdit?'<button type="button" data-review-key="'+escapeHtml(key)+'">Prüfen</button>':'')+'</div>';
  }).join("");
 }
 let account;
@@ -250,8 +240,8 @@ function disableFormWhileSaving(form){
  return ()=>{controls.forEach((control,index)=>{control.disabled=disabled[index]});form.removeAttribute("aria-busy")};
 }
 async function persistPlan(key){
- if(state.archiveStatus!=="ready")throw Error("Rezepte bitte zuerst vollständig lade.");
- if(state.planBlocked)throw Error("Originalplan bitte zuerst wiederherstelle.");
+ if(state.archiveStatus!=="ready")throw Error("Bitte lade zuerst alle Rezepte.");
+ if(state.planBlocked)throw Error("Bitte stelle zuerst den ursprünglichen Plan wieder her.");
  if(cloudEnabled) await account.saveMeal(key,state.plan.entries[key]??null,state.editorRevisions?.[key]??"0");
  else storePlan(localStorage,state.plan);
  renderPlanner();
@@ -298,17 +288,17 @@ function renderMealRecipeOptions(){
  const query=byId("meal-recipe-search").value.trim().toLocaleLowerCase("de-CH");
  const selected=byId("meal-recipe").value;
  const current=state.archiveEntries.find(item=>item.id===selected);
- byId("meal-recipe-selected").textContent=current?current.title:"Bitte es Rezept wähle";
+ byId("meal-recipe-selected").textContent=current?current.title:"Bitte ein Rezept wählen";
  byId("meal-recipe-options").hidden=false;
  const matching=state.archiveEntries.filter(item=>item.title.toLocaleLowerCase("de-CH").includes(query));
  byId("meal-recipe-options").innerHTML=matching.length?matching.map(item=>
   '<button type="button" role="option" aria-selected="'+(item.id===selected)+'" data-pick-recipe="'+escapeHtml(item.id)+'">'+
-  searchThumbnail(item)+'<span>'+escapeHtml(item.title)+'<small>'+item.minutes+' Min.</small></span></button>').join(""):'<p>Kei Rezepte gfunde</p>';
+  searchThumbnail(item)+'<span>'+escapeHtml(item.title)+'<small>'+item.minutes+' Min.</small></span></button>').join(""):'<p>Keine Rezepte gefunden</p>';
 }
 // Presentation adapters only: all writes still pass through updateMeal.
 function portionNote(){
  const recipe=state.recipes[byId("meal-recipe").value];
- byId("meal-portion-note").textContent=state.household?"Vorschlag us dim Haushalt; frei aapassbar.":recipe?"Kein Haushalt erfasst. Vorschlag: "+recipe.baseServings+" Basisportione vom Rezept. Haushalt i de Iistellige erfasse.":"Zuerst es Rezept wähle oder de Haushalt i de Iistellige erfasse.";
+ byId("meal-portion-note").textContent=state.household?"Vorschlag gemäss deinen Haushaltseinstellungen. Du kannst die Menge anpassen.":recipe?"Kein Haushalt erfasst. Vorschlag: "+recipe.baseServings+" Portionen gemäss Rezept. Erfasse deinen Haushalt in den Einstellungen.":"Wähle ein Rezept oder erfasse deinen Haushalt in den Einstellungen.";
 }
 function suggestMealPortions(){
  const id=byId("meal-recipe").value;
@@ -321,7 +311,7 @@ function reflectMealPortions(){
  const extra=Number.isFinite(consumed)&&Number.isFinite(cooked)?Math.max(0,cooked-consumed):0;
  byId("meal-extra").value=decimalText(extra);byId("meal-extra-enabled").checked=extra>0;
  byId("meal-extra-line").hidden=extra<=0;
- byId("meal-total").textContent=Number.isFinite(cooked)?"Total choche: "+decimalText(cooked)+" Portione":"Bitte Portione erfasse";portionNote();
+ byId("meal-total").textContent=Number.isFinite(cooked)?"Kochmenge: "+decimalText(cooked)+" Portionen":"Bitte gib die Portionszahl ein";portionNote();
 }
 function syncMealPortions(){
  const need=parseDecimal(byId("meal-need").value),enabled=byId("meal-extra-enabled").checked;
@@ -330,7 +320,7 @@ function syncMealPortions(){
  byId("meal-consumed").value=decimalText(need);
  const valid=Number.isFinite(need)&&Number.isFinite(extra)&&need>0&&extra>=0;
  byId("meal-servings").value=valid?decimalText(need+extra):"";
- byId("meal-total").textContent=valid?"Total choche: "+decimalText(need+extra)+" Portione":"Bitte gültigi Portione iigäh";
+ byId("meal-total").textContent=valid?"Kochmenge: "+decimalText(need+extra)+" Portionen":"Bitte gib eine gültige Portionszahl ein";
 }
 function renderSourceChoices(){
  const target=mealKey(state.editingDate,byId("meal-type").value),plan=structuredClone(state.plan);
@@ -339,7 +329,7 @@ function renderSourceChoices(){
  const order=k=>k.slice(0,10)+(k.endsWith("|lunch")?"0":"1");
  const selected=byId("meal-leftover-source").value+"|"+byId("meal-leftover-source-meal").value;
  const sources=Object.entries(balances).filter(([key,b])=>order(key)<order(target)&&b.available>0&&!issues.some(i=>i.key===key));
- byId("meal-source-choice").innerHTML='<option value="">Reschte bewusst wähle</option>'+sources.map(([key,b])=>'<option value="'+escapeHtml(key)+'">'+escapeHtml(mealKeyLabel(key)+' · '+state.recipes[plan.entries[key].recipeId].title+' · '+b.available+' frei')+'</option>').join('');
+ byId("meal-source-choice").innerHTML='<option value="">Resten auswählen</option>'+sources.map(([key,b])=>'<option value="'+escapeHtml(key)+'">'+escapeHtml(mealKeyLabel(key)+' · '+state.recipes[plan.entries[key].recipeId].title+' · '+b.available+' frei')+'</option>').join('');
  byId("meal-source-choice").value=sources.some(([key])=>key===selected)?selected:"";
 }
 function focusRecipeStart(){
@@ -361,10 +351,10 @@ function renderMealBalance(){
  let key=mealKey(state.editingDate,byId("meal-type").value);
  if(byId("meal-kind").value==="leftover"){
   try{key=mealKey(byId("meal-leftover-source").value,byId("meal-leftover-source-meal").value)}
-  catch{byId("meal-balance").textContent="Ursprungsdatum und Mahlziit wähle.";return}
+  catch{byId("meal-balance").textContent="Wähle das Datum und die Mahlzeit, von der die Resten stammen.";return}
  }
  const balance=assessPlan(state.plan,state.recipes).balances[key];
- byId("meal-balance").textContent=balance?"Kocht: "+balance.cooked+" · Verzehrt: "+(balance.consumed??"bitte kläre")+" · Reserviert: "+balance.reserved+" · Verfügbar: "+(balance.available??"bitte kläre"):"Kei Kochmenge für die Mahlziit erfasst.";
+ byId("meal-balance").textContent=balance?"Gekocht: "+balance.cooked+" · Verzehrt: "+(balance.consumed??"bitte klären")+" · Reserviert: "+balance.reserved+" · Verfügbar: "+(balance.available??"bitte klären"):"Für diese Mahlzeit ist keine Kochmenge erfasst.";
 }
 function updateMealEditorFields(){
  const kind=byId("meal-kind").value;
@@ -399,8 +389,8 @@ async function saveMealEditor(event){
   if(kind==="none")state.plan=updateMeal(state.plan,key,null,state.recipes);
   else{
    let entry;
-   if(kind==="recipe"&&!state.recipes[byId("meal-recipe").value])throw Error("Bitte es gültigs Rezept ussueche.");
-   if(kind==="recipe"&&(!Number.isFinite(parseDecimal(byId("meal-servings").value))||!Number.isFinite(parseDecimal(byId("meal-consumed").value))))throw Error("Bitte gültigi Portione iigäh. Punkt oder Komma sind möglich.");
+   if(kind==="recipe"&&!state.recipes[byId("meal-recipe").value])throw Error("Bitte wähle ein gültiges Rezept.");
+   if(kind==="recipe"&&(!Number.isFinite(parseDecimal(byId("meal-servings").value))||!Number.isFinite(parseDecimal(byId("meal-consumed").value))))throw Error("Bitte gib eine gültige Portionszahl ein. Punkt und Komma sind möglich.");
    if(kind==="recipe")entry={type:"recipe",recipeId:byId("meal-recipe").value,cookedServings:parseDecimal(byId("meal-servings").value),consumedServings:parseDecimal(byId("meal-consumed").value)};
    if(kind==="manual")entry={type:"manual",title:byId("meal-manual").value.trim()};
    if(kind==="leftover"){
@@ -434,7 +424,7 @@ function changeShoppingRange(from,to){
  }
 }
 function transferManifest(){
- if(state.planBlocked||state.archiveStatus!=="ready")throw Error("Plan/Rezeptdate bitte zuerst wiederherstelle oder lade.");
+ if(state.planBlocked||state.archiveStatus!=="ready")throw Error("Lade zuerst den Plan und die Rezepte oder stelle die Daten wieder her.");
  return buildTransferManifest(state.plan,state.recipes,state.shopping.from,state.shopping.to,{
   includeOptional:byId("shopping-optional").checked,extras:state.extras,
   publicRecipeUrl:recipe=>!recipe.householdRecipe&&recipe.slug?"https://zefad3v.github.io/wachochemer/rezepte/"+encodeURIComponent(recipe.slug)+"/":null
@@ -454,23 +444,23 @@ function renderShopping(){
  }
  const {items}=totals;
  const skipped=totals.warnings;
- byId("bring-imports").innerHTML=totals.cooking.map(row=>'<p>'+escapeHtml(row.mealKey+" · "+row.title+" · "+row.cookedServings+" Portione")+(row.officialImport?' <a target="_blank" rel="noopener noreferrer" href="'+escapeHtml(row.officialImport.importUrl)+'">Einzelrezept in Bring! öffne</a>':' · Kei Einzelimport verfügbar')+'</p>').join("");
- byId("bring-warnings").textContent=totals.warnings.map(x=>x.key+": "+x.message).join("\n");
+ byId("bring-imports").innerHTML=totals.cooking.map(row=>'<p>'+escapeHtml(mealKeyLabel(row.mealKey)+" · "+row.title+" · "+row.cookedServings+" Portionen")+(row.officialImport?' <a target="_blank" rel="noopener noreferrer" href="'+escapeHtml(row.officialImport.importUrl)+'">Einzelrezept in Bring! öffnen</a>':' · Kein Einzelimport verfügbar')+'</p>').join("");
+ byId("bring-warnings").textContent=totals.warnings.map(x=>(mealKeyLabel(x.key)||state.names[x.key]||x.key)+": "+x.message).join("\n");
  const days=new Set(datesBetween(from,to));
  const extras=state.extras.filter(x=>days.has(x.date));
- byId("shopping-progress").textContent=items.length+" Rezept-Zutate · "+extras.length+" Zusatzartikel";
+ byId("shopping-progress").textContent=items.length+" Rezeptzutaten · "+extras.length+" Zusatzartikel";
  const rows=items.length?items.map(row=>{
   const label=state.names[row.ingredientId]||row.ingredientId;
-  const unit=units[row.unit]||row.unit;
-  const quantity=row.unit==="unspecified"?"Ohni Mengenangab":row.quantity===null?"Nach Gschmack":moneyLike(Math.round(row.quantity*100)/100)+(row.quantityMax!=null?'–'+moneyLike(Math.round(row.quantityMax*100)/100):'')+(unit?" "+unit:"");
+  const unit=unitLabels[row.unit];
+  const quantity=row.unit==="unspecified"?"Ohne Mengenangabe":row.quantity===null?"Nach Geschmack":moneyLike(Math.round(row.quantity*100)/100)+(row.quantityMax!=null?'–'+moneyLike(Math.round(row.quantityMax*100)/100):'')+(unit?" "+unit:"");
   return '<div class="shopping-row"><span class="shopping-name">'+escapeHtml(label)+'</span>'+
    '<span class="shopping-amount">'+escapeHtml(quantity)+'</span></div>';
- }).join(""):'<p class="empty-message">Kei Rezept-Zutate i däm Ziitruum.</p>';
+ }).join(""):'<p class="empty-message">Keine Rezeptzutaten in diesem Zeitraum.</p>';
  const extraRows=extras.map(row=>'<div class="shopping-row"><span class="shopping-name">'+escapeHtml(row.title)+'</span>'+
-  '<button type="button" class="remove-extra" data-remove-extra="'+escapeHtml(row.id)+'" aria-label="'+escapeHtml(row.title)+' entferne">✕</button></div>').join("");
- byId("shopping-items").innerHTML='<section class="shopping-group"><h3>Für Bring! vorbereite</h3>'+rows+'</section>'+
-  (extraRows?'<section class="shopping-group"><h3>Zusätzlechi Sache</h3>'+extraRows+'</section>':'')+
-  (skipped.length?'<p class="shopping-disclaimer">Warnige obe bitte prüefe.</p>':'');
+  '<button type="button" class="remove-extra" data-remove-extra="'+escapeHtml(row.id)+'" aria-label="'+escapeHtml(row.title)+' entfernen">✕</button></div>').join("");
+ byId("shopping-items").innerHTML='<section class="shopping-group"><h3>Für Bring! vorbereiten</h3>'+rows+'</section>'+
+  (extraRows?'<section class="shopping-group"><h3>Zusätzliche Artikel</h3>'+extraRows+'</section>':'')+
+  (skipped.length?'<p class="shopping-disclaimer">Bitte prüfe die Hinweise oben.</p>':'');
  byId("shopping-items").querySelectorAll("[data-remove-extra]").forEach(btn=>btn.addEventListener("click",async()=>{
   const epoch=sessionEpoch;
   const extras=state.extras.filter(x=>x.id!==btn.dataset.removeExtra);
@@ -532,28 +522,28 @@ function openRecipe(item){
  byId("dialog-hero").hidden=!item.image;
  if(item.image)image.src=item.image;
  else image.removeAttribute("src");
- byId("dialog-category").textContent=recipe?(recipe.householdRecipe?"ÜSES REZEPT":(item.imageGenerated?"STARTREZEPT · KI-BILD":"STARTREZEPT")):"REZEPT NICHT VERFÜGBAR";
+ byId("dialog-category").textContent=recipe?(recipe.householdRecipe?"HAUSHALTSREZEPT":(item.imageGenerated?"STARTREZEPT · KI-BILD":"STARTREZEPT")):"REZEPT NICHT VERFÜGBAR";
  byId("dialog-title").textContent=recipe?.title||item.title;
  byId("dialog-description").textContent=recipe?.description||item.description;
- byId("dialog-meta").innerHTML='<span>◷ '+(recipe?(recipe.totalMinutes??((recipe.prepMinutes||0)+(recipe.cookMinutes||0))):item.minutes)+' Min.</span><span>♙ '+(recipe?.baseServings||3)+' Portione</span>';
+ byId("dialog-meta").innerHTML='<span>◷ '+(recipe?(recipe.totalMinutes??((recipe.prepMinutes||0)+(recipe.cookMinutes||0))):item.minutes)+' Min.</span><span>♙ '+(recipe?.baseServings||3)+' Portionen</span>';
  byId("dialog-favourite").textContent=state.favorites.has(item.id)?"♥":"♡";
  byId("dialog-favourite").classList.toggle("liked",state.favorites.has(item.id));
  byId("dialog-favourite").dataset.id=item.id;
  const actions=byId("dialog-actions");
  if(recipe){
   const live="https://zefad3v.github.io/wachochemer/rezepte/"+encodeURIComponent(recipe.slug)+"/";
-  actions.innerHTML='<button class="main-action" type="button" id="jump-to-ingredients">Chochmodus starte</button>'+
+  actions.innerHTML='<button class="main-action" type="button" id="jump-to-ingredients">Kochmodus starten</button>'+
   (recipe.householdRecipe?'':'<a class="bring-action" href="'+live+'" target="_blank" rel="noopener noreferrer" aria-label="Bring! Import auf der veröffentlichten Rezeptseite öffnen" title="Bring! öffnet die Rezeptseite. Die gewählte Portionszahl dort nochmals einstellen.">'+bringIcon()+'</a>');
   if(recipe.householdRecipe){
    const row=state.recipeRows.find(r=>'haushalt-'+r.id===item.id);
-   const edit=document.createElement('button');edit.type='button';edit.className='plan-recipe-action';edit.textContent='Rezept bearbeite';
+   const edit=document.createElement('button');edit.type='button';edit.className='plan-recipe-action';edit.textContent='Rezept bearbeiten';
    edit.onclick=()=>{closeRecipe();editor.open(row)};actions.append(edit);
   }
   byId("jump-to-ingredients").addEventListener("click",()=>setCookingMode(true));
   const planBtn=document.createElement("button");
   planBtn.type="button";
   planBtn.className="plan-recipe-action";
-  planBtn.textContent="I Wucheplan";
+  planBtn.textContent="Zum Wochenplan hinzufügen";
   if(!item.planned)actions.append(planBtn);
   planBtn.addEventListener("click",()=>{
    closeRecipe();
@@ -570,7 +560,7 @@ function openRecipe(item){
  }else{
   byId("dialog-portion-picker").hidden=true;
   byId("portion-session-note").hidden=true;
-  actions.innerHTML='<div class="notice">'+(item.real?'Das Rezept isch zur Ziit nöd verfügbar. Bitte lade d Siite neu.':'S vollständige Rezept isch no nöd im Chochchischtli erfasst.')+'</div>';
+  actions.innerHTML='<div class="notice">'+(item.real?'Dieses Rezept ist zurzeit nicht verfügbar. Bitte lade die Seite neu.':'Das vollständige Rezept fehlt noch im Kochbuch.')+'</div>';
   byId("dialog-ingredients-section").hidden=true;
   byId("dialog-instructions-section").hidden=true;
  }
@@ -660,8 +650,8 @@ async function importLocalPlan(shared){
  const loaded=loadPlan(localStorage);
  if(loaded.error)throw Error(loaded.error);
  const issues=assessPlan(loaded.plan,state.recipes).issues;
- if(issues.length)throw Error("De lokale Plan enthält ungeklärti Portione oder Reschte. Bitte zuerst de lokale Plan prüefe.");
- if(!Object.keys(loaded.plan.entries).length)throw Error("Uf däm Grät isch kei lokale Plan vorhanden.");
+ if(issues.length)throw Error("Prüfe vor dem Import die offenen Angaben zu Portionen und Resten im lokalen Plan.");
+ if(!Object.keys(loaded.plan.entries).length)throw Error("Auf diesem Gerät ist kein lokaler Plan vorhanden.");
  const key="wachochemer:import:"+shared.id;
  let id=localStorage.getItem(key);
  if(!id){id=crypto.randomUUID();localStorage.setItem(key,id)}
@@ -673,7 +663,7 @@ function bindHouseholdForm(){
  const groups=["adults","children","babies"];
  const countInput=group=>byId("household-"+group);
  const shareInput=group=>byId("household-"+group+"Share");
- const portionLabel=need=>new Intl.NumberFormat("de-CH",{maximumFractionDigits:12,useGrouping:false}).format(need)+(need===1?" Portion":" Portione")+" pro Mahlziit";
+ const portionLabel=need=>new Intl.NumberFormat("de-CH",{maximumFractionDigits:12,useGrouping:false}).format(need)+(need===1?" Portion":" Portionen")+" pro Mahlzeit";
  function readForm(){
   const profile={};
   for(const group of groups){
@@ -684,7 +674,7 @@ function bindHouseholdForm(){
  }
  function showTotal(){
   try{total.textContent=portionLabel(householdNeed(readForm()))}
-  catch{total.textContent="Bitte Persone und Portione erfasse."}
+  catch{total.textContent="Bitte gib die Personenzahl und die Portionen an."}
  }
  function onEdit(){
   if(!householdDirty)settingsRevision=state.householdRevision;
@@ -717,12 +707,12 @@ function bindHouseholdForm(){
    const profile=readForm();
    householdNeed(profile);
    if(cloudEnabled)await saveSharedSettings({household:profile},settingsRevision??state.householdRevision);
-   else if(!save("wachochemer:household",profile))throw Error("Speichere fehlgschlage.");
+   else if(!save("wachochemer:household",profile))throw Error("Speichern fehlgeschlagen.");
    if(epoch!==sessionEpoch)return;
    householdDirty=false;
    state.household={...state.household,...profile};
    settingsRevision=state.householdRevision;
-   status.textContent="Gspeicheret.";
+   status.textContent="Gespeichert.";
    byId("household-reload").hidden=true;
   }catch(err){if(epoch===sessionEpoch){status.textContent=err.message;if(err.code==="40001")byId("household-reload").hidden=false}}
   finally{enableForm()}
@@ -733,7 +723,7 @@ function init(){
  editor=recipeEditor({account:()=>account,household:()=>state.householdId,
   findRow:id=>state.recipeRows?.find(r=>r.id===id),
   findSource:source=>state.recipeRows?.find(r=>r.draft.source===source),
-  onSaved:(id,refreshed)=>{showTab("archive");byId("archive-status").textContent=(id?"Rezept gspeicheret.":"Rezept glöscht.")+(refreshed?"":" Bitte neu lade, zum de aktuelli Stand z gseh.");}});
+  onSaved:(id,refreshed)=>{showTab("archive");byId("archive-status").textContent=(id?"Rezept gespeichert.":"Rezept gelöscht.")+(refreshed?"":" Lade die Seite neu, um den aktuellen Stand zu sehen.");}});
  byId("new-house-recipe").onclick=()=>editor.open();
  byId("plan-status").addEventListener("click",event=>{
   const button=event.target.closest("[data-review-key]");
@@ -757,12 +747,12 @@ function init(){
  byId("shopping-optional").addEventListener("change",renderShopping);
  byId("shopping-manifest").addEventListener("click",()=>{
   try{
-   if(state.planBlocked)throw Error("Plan bitte zuerst wiederherstelle.");
+   if(state.planBlocked)throw Error("Bitte stelle zuerst den Plan wieder her.");
    const blob=new Blob([serializeManifest(transferManifest())],{type:"application/json"});
    const url=URL.createObjectURL(blob),link=document.createElement("a");
    link.href=url;link.download="wachochemer-bring-"+state.shopping.from+"-"+state.shopping.to+".json";link.click();
    setTimeout(()=>URL.revokeObjectURL(url),1000);
-   byId("shopping-copy-status").textContent="Manifest vorbereitet. Nüt automatisch a Bring! übertrage.";
+   byId("shopping-copy-status").textContent="Exportdatei vorbereitet. Du kannst sie jetzt für den Einkauf verwenden.";
   }catch(err){byId("shopping-copy-status").textContent=err.message}
  });
 
@@ -774,24 +764,24 @@ function init(){
  bindHouseholdForm();
  byId("household-reload").hidden=true;
  byId("household-reload").addEventListener("click",async()=>{
-  if(householdDirty&&!confirm("Ungspeichereti Iistellige verwerfe und de aktuelle Stand lade?"))return;
+  if(householdDirty&&!confirm("Ungespeicherte Einstellungen verwerfen und den aktuellen Stand laden?"))return;
   householdDirty=false;
-  try{await account.refresh();byId("household-status").textContent="Aktuelle Stand glade.";byId("household-reload").hidden=true}
+  try{await account.refresh();byId("household-status").textContent="Aktueller Stand geladen.";byId("household-reload").hidden=true}
   catch(err){byId("household-status").textContent=err.message}
  });
  byId("meal-reload").addEventListener("click",async()=>{
-  if(!confirm("Dä Entwurf verwerfe und de aktuelle Stand lade?"))return;
+  if(!confirm("Diesen Entwurf verwerfen und den aktuellen Stand laden?"))return;
   try{await account.refresh();state.editorRevisions={...state.revisions};loadMealEditor()}
   catch(err){byId("meal-editor-error").textContent=err.message}
  });
  byId("recipe-share-save").addEventListener("click",async()=>{
   const epoch=sessionEpoch;
   try{
-   const id=byId("meal-recipe").value;if(!state.recipes[id])throw Error("Zuerst es Rezept wähle.");
+   const id=byId("meal-recipe").value;if(!state.recipes[id])throw Error("Wähle zuerst ein Rezept.");
    const share=parseDecimal(byId("recipe-child-share").value);portion(share,true);
    const next={...state.recipeShares,[id]:{childrenShare:share}};
    if(cloudEnabled)await saveSharedSettings({recipeShares:next});
-   else if(!save("wachochemer:recipeShares",next))throw Error("Speichere fehlgschlage.");
+   else if(!save("wachochemer:recipeShares",next))throw Error("Speichern fehlgeschlagen.");
    if(epoch!==sessionEpoch)return;
    state.recipeShares=next;
    const need=householdNeed(state.household,next[id]);byId("meal-consumed").value=need;byId("meal-servings").value=need;reflectMealPortions();
@@ -843,7 +833,7 @@ function init(){
   try{parseDay(event.target.value);state.editingDate=event.target.value}
   catch{
    byId("meal-editor-error").hidden=false;
-   byId("meal-editor-error").textContent="Bitte es gültigs Datum wähle.";
+   byId("meal-editor-error").textContent="Bitte wähle ein gültiges Datum.";
   }
  });
  byId("meal-editor-close").addEventListener("click",()=>byId("meal-editor").close());
@@ -870,11 +860,11 @@ function init(){
  byId("shopping-copy").addEventListener("click",async()=>{
   const status=byId("shopping-copy-status");
   try{
-   if(!navigator.clipboard?.writeText)throw Error("Zwüschespeicher isch i däm Browser nöd verfügbar");
+   if(!navigator.clipboard?.writeText)throw Error("Die Zwischenablage ist in diesem Browser nicht verfügbar");
    await navigator.clipboard.writeText(shoppingTransferText());
-   status.textContent="Zutate kopiert. In Bring! müend si no übernoh werde. En direkte Gesamtimport isch no nöd bestätigt.";
+   status.textContent="Zutaten kopiert. Übernimm sie jetzt in deine Bring!-Liste.";
   }catch(err){
-   status.textContent="Kopiere nöd möglich: "+err.message;
+   status.textContent="Kopieren fehlgeschlagen: "+err.message;
   }
  });
  byId("shopping-seven").addEventListener("click",()=>{const w=shoppingWindow(localToday());changeShoppingRange(w.from,w.to)});
@@ -921,7 +911,7 @@ function init(){
  },30000);
  updateDisplay();
  byId("recipe-search").addEventListener("input",e=>{state.query=e.target.value;renderArchive()});
- const filters=[["all","Alli"],["favorites","Favoritä"]];
+ const filters=[["all","Alle"],["favorites","Favoriten"]];
  byId("recipe-filters").innerHTML=filters.map(([id,label])=>'<button type="button" class="filter-chip'+(id===state.filter?' active':'')+'" data-filter="'+id+'">'+label+'</button>').join("");
  byId("recipe-filters").addEventListener("click",e=>{const target=e.target.closest("[data-filter]");if(!target)return;state.filter=target.dataset.filter;renderArchive()});
  byId("start-day").value=String(state.startDay);
@@ -972,22 +962,22 @@ function updateInstallHelp(){
 }
 if (/iPhone|iPad|iPod/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1))
- byId("install-help-text").textContent='Öffne die Siite in Safari. Tippe uf «Teilen», denn uf «Zum Home-Bildschirm» und «Hinzufügen».';
+ byId("install-help-text").textContent='Öffne die Seite in Safari. Tippe auf «Teilen», dann auf «Zum Home-Bildschirm» und «Hinzufügen».';
 installedMode.addEventListener("change",updateInstallHelp);
 updateInstallHelp();
 
 const helpPages=[
- ["Wuche plane","Am Mittwuch tippsch uf «Nächsti Wuche plane». Wähl en Tag und bearbeit s Menü mit em Stift. D Planig wird mit dim Haushalt teilt."],
- ["Zmittag und Znacht","Wisch uf de grosse Tageskarte nach links für Znacht und nach rechts für Zmittag. Du chasch au d Mahlziit unde i de Karte antippe. D Tage wählsch obe. I de installierte App chasch in Untermenüs vom linke Inhaltsrand nach rechts wische, zum zruggzgah."],
- ["Rezept und Chochmodus","Im Chochchischtli öffnisch es Rezept. Mit «Chochmodus starte» chasch Portione aapasse, Zutate abhake und d'Schritt durre schaffe."],
- ["Rezept erfasse","Im Chochchischtli tippsch uf «Rezept erfasse». Trag dis Rezept ii oder lies en Link ii. Für kopierte Rezepttext chasch d KI verwände. Prüef Portione, Zutate und Schritt i de Vorschau. Mit «Im Haushalt speichere» wird s Rezept für alli Mitglieder sichtbar."],
- ["Zäme teste","I de Iistellige unter «Mitglieder und Iiladige» erstellsch en Iiladigslink. D Person erstellt es eigenes Konto und tritt dim Haushalt bii. Die Hilf findsch jederzeit i de Iistellige."]
+ ["Woche planen","Tippe am Mittwoch auf «Nächste Woche planen». Wähle einen Tag und bearbeite das Menü über das Stiftsymbol. Alle im Haushalt sehen den gemeinsamen Plan."],
+ ["Mittagessen und Abendessen","Wische auf der Tageskarte nach links zum Abendessen oder nach rechts zum Mittagessen. Du kannst die Mahlzeit auch unten antippen. Den Tag wählst du oben. In der installierten App kommst du aus Untermenüs zurück, indem du vom linken Rand nach rechts wischst."],
+ ["Rezept und Kochmodus","Öffne ein Rezept im Kochbuch und tippe auf «Kochmodus starten». Dort kannst du Portionen anpassen, Zutaten abhaken und die Zubereitung Schritt für Schritt lesen."],
+ ["Rezept erfassen","Tippe im Kochbuch auf das Plus neben der Suche. Erfasse dein Rezept von Hand oder importiere einen Link. Für kopierten Rezepttext kannst du die KI verwenden. Prüfe Zutaten, Portionen und Schritte in der Vorschau. Tippe auf «Im Haushalt speichern», um das Rezept mit deinem Haushalt zu teilen."],
+ ["Gemeinsam planen","Unter «Einstellungen» findest du «Mitglieder und Einladungen». Sende eine Einladung oder teile den Link. Die eingeladene Person kann mit ihrem Konto dem Haushalt beitreten. Diese Hilfe findest du jederzeit in den Einstellungen."]
 ];
 let helpPage=0;
 function renderHelp(){
  byId("help-title").textContent=helpPages[helpPage][0];
  byId("help-content").textContent=helpPages[helpPage][1];
- byId("help-next").textContent=helpPage===helpPages.length-1?"Los gahts":"Wiiter";
+ byId("help-next").textContent=helpPage===helpPages.length-1?"Los geht’s":"Weiter";
 }
 function openHelp(){
  helpPage=0;renderHelp();byId("help-dialog").showModal();

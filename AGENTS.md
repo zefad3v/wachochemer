@@ -15,7 +15,7 @@ Ein Supabase-Projekt darf erst nach eindeutig bestätigter Zuordnung zu Wachoche
 - Jeder Haushaltszugriff braucht eine Mitgliedschaft. Auch RPC-Schreibvorgänge und Restenreservierungen müssen diese Prüfung serverseitig durchsetzen.
 - Einzige Ausnahme für die ausdrücklich gewünschte Einladungsvorschau vor der Anmeldung: Mit einem gültigen, zufälligen Einladungs-UUID dürfen ausschliesslich die Ziel-E-Mail und der Haushaltsname angezeigt werden. Kein Auflisten oder Suchen nach E-Mail/Haushalt, keine weiteren Daten und keine Schreibrechte. Abgelaufene, zurückgezogene oder unbekannte Links geben keine Vorschau. Der Beitritt selbst braucht weiterhin die passende bestätigte Kontoadresse und gegebenenfalls AAL2; weitere Haushaltszugriffe erfordern Mitgliedschaft.
 - Fremde Änderungen dürfen nicht still überschrieben werden. Versionskonflikte müssen den Entwurf erhalten und ein ausdrückliches Neuladen erlauben.
-- Rezepttexte sind Deutsch (CH), Bedienoberfläche ist Schweizerdeutsch. Technische Schlüssel wie `lunch` gehören nicht in sichtbare Titel.
+- Die Bedienoberfläche verwendet Deutsch (Schweiz). Der App-Name «Wa chochemer» und die Überschrift «Wucheplan» bleiben im Dialekt. Technische Schlüssel wie `lunch` gehören nicht in sichtbare Titel.
 
 ## Prüfung
 
@@ -43,7 +43,7 @@ Lies **vor jeder Codeänderung** `docs/ki-roadmap.md`, `docs/architecture.md` un
 - Grundlage sind strukturierte Rezept- und Zutatendaten in `data/recipes/*.json` und `data/ingredients.json`. Referenzen, IDs und Slugs stabil halten; keine zweite, hartcodierte Quelle für reale Rezepte.
 - Demo-Gerichte klar als Demo markieren und niemals als fertig gespeicherte echte Rezepte ausgeben.
 - Die Familienregeln zu Donnerstag-bis-Mittwoch-Wochen, Portionen, Montags-bis-Donnerstags-Resten und einfachem Mittwoch stehen in `docs/ki-roadmap.md`. Sie sind fachliche Akzeptanzkriterien, nicht bloss UI-Vorschläge.
-- Bei Rezepten und Zutaten Deutsch (Schweiz), für UI-Begriffe Schweizerdeutsch. Keine deutschen ß im Text.
+- Bei Rezepten und Zutaten Deutsch (Schweiz), für UI-Begriffe ebenfalls Deutsch (Schweiz) mit den oben genannten Ausnahmen. Keine deutschen ß im Text.
 - Keine erfundenen Bring!-Funktionen oder nicht bestätigten Grossverteiler-APIs. Der Aktionenabgleich steht separat in `docs/aktionsabgleich.md` und ist vorerst P2.
 - UI nicht weiter grundlegend umgestalten. Priorität haben funktionale Korrektheit, mobile Bedienbarkeit, Tests und persistente Daten.
 - Erst das Problem und die minimal nötigen Dateien identifizieren, dann Tests und Code ändern. Vor Abgabe passende Node-/Generator-Tests ausführen und nicht durchgeführte iPhone-Tests klar ausweisen.

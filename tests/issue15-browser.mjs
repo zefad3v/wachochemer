@@ -8,7 +8,7 @@ const out=process.env.SCREENSHOT_DIR||'/tmp/issue15-screenshots';mkdirSync(out,{
 try{
  for(const [width,height] of [[390,844],[393,852],[844,390],[932,430]]){
  const page=await browser.newPage({viewport:{width,height},hasTouch:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:8765/prototype/');await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('No nüt plant'));
+ await page.goto('http://127.0.0.1:8765/prototype/');await page.waitForFunction(()=>document.querySelector('#day-card').textContent.includes('Noch nichts geplant'));
  await page.locator('#choose-dinner').click();await page.locator('#day-card').click();
  check(await page.locator('#meal-editor').isVisible(),'empty card opens planning');
  check(await page.locator('#meal-need').inputValue()==='','first run does not assume one portion');

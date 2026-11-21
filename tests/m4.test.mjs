@@ -20,7 +20,7 @@ test('separate cooked, consumed and multiple reserved amounts',()=>{
  let p=updateMeal(plan(),a,leftover(),recipes);p=updateMeal(p,b,leftover(.75),recipes);
  assert.deepEqual(assessPlan(p,recipes).balances[source],{cooked:6,consumed:2.5,reserved:3.25,available:.25,shortfall:0});
  assert.equal(plan().entries[a],undefined);
- assert.throws(()=>updateMeal(p,'2027-01-03|lunch',leftover(.5),recipes),/Portione fehled/);
+ assert.throws(()=>updateMeal(p,'2027-01-03|lunch',leftover(.5),recipes),/Portionen fehlen/);
 });
 test('source meal identity, same-day lunch to dinner, no cycles or future sources',()=>{
  const p={version:2,entries:{'2026-12-31|lunch':recipe(4,1),[source]:recipe(5,2)}};
@@ -29,8 +29,8 @@ test('source meal identity, same-day lunch to dinner, no cycles or future source
  for(const key of [a,b,'2026-12-30|lunch','bad'])assert.throws(()=>updateMeal(plan(),a,leftover(2,key),recipes));
  let linked=updateMeal(plan(),a,leftover(),recipes);
  assert.throws(()=>updateMeal(linked,b,leftover(1,a),recipes));
- assert.throws(()=>updateMeal(linked,source,null,recipes),/Ursprungsrezept/);
- assert.throws(()=>updateMeal(linked,source,recipe(3,2),recipes),/fehled/);
+ assert.throws(()=>updateMeal(linked,source,null,recipes),/ursprüngliche Rezept/);
+ assert.throws(()=>updateMeal(linked,source,recipe(3,2),recipes),/fehlen/);
 });
 test('shopping only buys cooking events, even when range starts after source',()=>{
  const p=updateMeal(plan(),a,leftover(),recipes);
@@ -75,5 +75,5 @@ test('unsupported/corrupt formats and quota errors never overwrite originals',()
  storage.setItem=()=>{throw Error('quota')};
  assert.equal(loadPlan(storage).plan,null);
  assert.throws(()=>storePlan(storage,plan()),/quota/);
- assert.throws(()=>restorePlan(memory()),/Sicherig/);
+ assert.throws(()=>restorePlan(memory()),/Sicherung/);
 });

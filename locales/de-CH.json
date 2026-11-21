@@ -1,0 +1,13 @@
+{
+  "locale": "de-CH",
+  "labels": {
+    "brand": "Wa chochemer",
+    "archive": "Kochbuch",
+    "weeklyPlan": "Wucheplan",
+    "shoppingList": "Einkaufsliste",
+    "ingredients": "Zutaten",
+    "instructions": "Zubereitung",
+    "importToBring": "Zutaten in Bring! übernehmen",
+    "servings": "Portionen"
+  }
+}

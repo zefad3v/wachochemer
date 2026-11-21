@@ -43,3 +43,15 @@ test('horizontal swipes target the two meal pages; weekdays remain directly sele
  assert.match(js,/if\(day\)setDay\(Number\(day\.dataset\.day\)\)/);
  assert.match(html,/class="day-navigation">[^]*?id="week-strip"[^]*?class="view-switch"/);
 });
+
+test('PWA title and week heading use their requested names across entry points',()=>{
+ const manifest=JSON.parse(readFileSync(new URL('../prototype/manifest.webmanifest',import.meta.url),'utf8'));
+ assert.equal(manifest.name,'Wa chochemer');
+ assert.equal(manifest.short_name,manifest.name);
+ assert.equal(manifest.lang,'de-CH');
+ assert.match(html,/<title>Wa chochemer<\/title>/);
+ assert.match(html,/name="apple-mobile-web-app-title" content="Wa chochemer"/);
+ assert.match(html,/id="week-title">Wucheplan</);
+ assert.match(html,/id="mobile-page-title"[^>]*>Wucheplan</);
+ assert.match(js,/week:"Wucheplan",archive:"Kochbuch"/);
+});

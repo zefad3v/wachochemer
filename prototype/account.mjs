@@ -1,121 +1,121 @@
 import {sessionStorageChoice} from './auth-session.mjs';
 import {backendConfig} from './backend-config.js';
-import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261121-recipe-management';
+import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261121-de-ch';
 
 export const cloudEnabled = Boolean(backendConfig.url || backendConfig.publishableKey);
 const html = `
 <section id="account-gate" class="account-gate" hidden>
   <div class="account-panel">
-    <h1>Wa chochemer?</h1>
+    <h1>Wa chochemer</h1>
     <section id="account-invitation" class="invitation-preview" hidden>
       <h2 id="account-invitation-title"></h2>
       <p id="account-invitation-detail"></p>
-      <button type="button" id="account-dismiss-invitation">Ohni Iiladig wiiter</button>
+      <button type="button" id="account-dismiss-invitation">Ohne Einladung fortfahren</button>
     </section>
     <p id="account-status" role="status"></p>
     <form id="account-login">
-      <h2>Aamelde</h2>
+      <h2>Anmelden</h2>
       <label>E-Mail<input name="email" type="email" autocomplete="username" required></label>
       <label>Passwort<input name="password" type="password" autocomplete="current-password" minlength="8" required></label>
-      <label class="remember-choice"><input name="remember" type="checkbox" role="switch" checked>Aagmeldet bliibe</label>
-      <button class="main-action" type="submit">Aamelde</button>
-      <p>No kei Konto?</p>
-      <button type="button" id="account-register">Neus Konto erstelle</button>
-      <button type="button" id="account-reset">Passwort vergesse</button>
+      <label class="remember-choice"><input name="remember" type="checkbox" role="switch" checked>Angemeldet bleiben</label>
+      <button class="main-action" type="submit">Anmelden</button>
+      <p>Noch kein Konto?</p>
+      <button type="button" id="account-register">Neues Konto erstellen</button>
+      <button type="button" id="account-reset">Passwort vergessen</button>
     </form>
     <form id="account-signup" hidden>
-      <h2>Neus Konto erstelle</h2>
-      <p>Wähl es eigets Passwort mit mindestens 8 Zeiche. Danach bestätigsch dini E-Mail und nimmsch d Iiladig aa.</p>
+      <h2>Neues Konto erstellen</h2>
+      <p>Wähle ein Passwort mit mindestens 8 Zeichen. Bestätige danach deine E-Mail-Adresse und nimm die Einladung an.</p>
       <label>E-Mail<input name="email" type="email" autocomplete="username" required></label>
-      <label>Neus Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
-      <label>Passwort wiederhole<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
-      <label class="remember-choice"><input name="remember" type="checkbox" role="switch" checked>Aagmeldet bliibe</label>
-      <button class="main-action" type="submit">Konto erstelle</button>
-      <button type="button" id="account-signup-login">Ich ha scho es Konto</button>
+      <label>Neues Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Passwort wiederholen<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label class="remember-choice"><input name="remember" type="checkbox" role="switch" checked>Angemeldet bleiben</label>
+      <button class="main-action" type="submit">Konto erstellen</button>
+      <button type="button" id="account-signup-login">Ich habe bereits ein Konto</button>
     </form>
     <section id="account-confirmation" hidden>
-      <h2 id="account-confirmation-title" tabindex="-1">Bitte E-Mail bestätige</h2>
-      <p>Öffne d Bestätigungsmail für <strong id="account-confirmation-email"></strong> und tippe uf «E-Mail bestätige».</p>
-      <p>Falls d Mail fehlt, lueg au im Spam-Ordner.</p>
-      <button type="button" id="account-back-to-login">Zrugg zur Aameldig</button>
+      <h2 id="account-confirmation-title" tabindex="-1">Bitte E-Mail-Adresse bestätigen</h2>
+      <p>Öffne die Bestätigungsmail für <strong id="account-confirmation-email"></strong> und tippe auf «E-Mail-Adresse bestätigen».</p>
+      <p>Schau auch im Spamordner nach, falls die E-Mail fehlt.</p>
+      <button type="button" id="account-back-to-login">Zurück zur Anmeldung</button>
     </section>
     <form id="account-password" hidden>
-      <p>Wähl es neus Passwort mit mindestens 8 Zeiche.</p>
-      <label>Neus Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
-      <label>Passwort wiederhole<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
-      <button class="main-action">Passwort speichere</button>
+      <p>Wähle ein neues Passwort mit mindestens 8 Zeichen.</p>
+      <label>Neues Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Passwort wiederholen<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+      <button class="main-action">Passwort speichern</button>
     </form>
     <form id="account-challenge" hidden>
-      <p id="account-challenge-hint">Bestätige dini Aameldig mit dim Authenticator.</p>
+      <p id="account-challenge-hint">Bestätige deine Anmeldung mit deiner Authenticator-App.</p>
       <label>Authenticator<select id="account-factor"></select></label>
       <label>Bestätigungscode<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" required></label>
-      <button class="main-action">Bestätige</button>
+      <button class="main-action">Bestätigen</button>
     </form>
     <section id="account-households" hidden>
-      <h2>Din Haushalt</h2><div id="account-household-list"></div>
-      <button type="button" id="account-accept" hidden>Iiladig aanäh</button>
+      <h2>Dein Haushalt</h2><div id="account-household-list"></div>
+      <button type="button" id="account-accept" hidden>Einladung annehmen</button>
       <form id="account-create">
-        <label>Haushaltsname<input name="name" maxlength="100" required placeholder="Üse Haushalt"></label>
-        <button class="main-action">Haushalt erstelle</button>
+        <label>Haushaltsname<input name="name" maxlength="100" required placeholder="Unser Haushalt"></label>
+        <button class="main-action">Haushalt erstellen</button>
       </form>
     </section>
-    <button type="button" id="account-retry">Erneut lade</button>
-    <button type="button" id="account-gate-logout" hidden>Abmelde</button>
+    <button type="button" id="account-retry">Neu laden</button>
+    <button type="button" id="account-gate-logout" hidden>Abmelden</button>
   </div>
 </section>`;
 const settings = `
 <section id="account-settings" class="settings-card account-panel">
   <h2>Konto und Haushalt</h2><p id="account-identity"></p>
   <output id="account-settings-status" role="status"></output>
-  <button type="button" id="account-switch">Haushalt wechsle</button>
-  <button type="button" id="account-logout">Abmelde</button>
-  <details><summary>Passwort ändere</summary>
+  <button type="button" id="account-switch">Haushalt wechseln</button>
+  <button type="button" id="account-logout">Abmelden</button>
+  <details><summary>Passwort ändern</summary>
     <form id="account-change-password">
-      <label>Neus Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
-      <label>Passwort wiederhole<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
-      <label id="account-password-nonce" hidden>Code us de E-Mail<input name="nonce" disabled inputmode="numeric" autocomplete="one-time-code"></label>
-      <button>Passwort speichere</button>
+      <label>Neues Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Passwort wiederholen<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label id="account-password-nonce" hidden>Code aus der E-Mail<input name="nonce" disabled inputmode="numeric" autocomplete="one-time-code"></label>
+      <button>Passwort speichern</button>
     </form>
   </details>
-  <details><summary>Mitglieder und Iiladige</summary>
+  <details><summary>Mitglieder und Einladungen</summary>
     <div id="account-members"></div>
     <form id="account-invite">
-      <label>E-Mail vo de Person<input name="email" type="email" required></label>
-      <button type="submit" value="send" class="main-action">Iiladig per E-Mail schicke</button>
-      <button type="submit" value="link">Link zum Teile erstelle</button>
+      <label>E-Mail-Adresse der Person<input name="email" type="email" required></label>
+      <button type="submit" value="send" class="main-action">Einladung per E-Mail senden</button>
+      <button type="submit" value="link">Link zum Teilen erstellen</button>
     </form>
     <output id="account-invite-status" role="status"></output>
-    <label id="account-link-label" hidden>Iiladigslink zum Teile<input id="account-link" readonly></label>
-    <button type="button" id="account-copy" hidden>Link kopiere</button>
-    <button type="button" id="account-share" hidden>Link teile</button>
+    <label id="account-link-label" hidden>Einladungslink zum Teilen<input id="account-link" readonly></label>
+    <button type="button" id="account-copy" hidden>Link kopieren</button>
+    <button type="button" id="account-share" hidden>Link teilen</button>
     <div id="account-invitations"></div>
   </details>
-  <details><summary>Zwei-Faktor-Aameldig</summary>
-    <p>Füg en Authenticator hinzu. Mit eme zweite Authenticator hesch en Ersatzzuegang.</p>
+  <details><summary>Zwei-Faktor-Anmeldung</summary>
+    <p>Füge eine Authenticator-App hinzu. Mit einer zweiten hast du bei einem Geräteverlust weiterhin Zugang.</p>
     <div id="account-factors"></div>
-    <button type="button" id="account-enroll">Authenticator hinzuefüege</button>
+    <button type="button" id="account-enroll">Authenticator hinzufügen</button>
     <form id="account-enrollment" hidden>
-      <img id="account-qr" alt="QR-Code für de Authenticator">
-      <label>Schlüssel zum manuell Iitrage<input id="account-secret" readonly></label>
+      <img id="account-qr" alt="QR-Code für die Authenticator-App">
+      <label>Schlüssel zur manuellen Eingabe<input id="account-secret" readonly></label>
       <label>Bestätigungscode<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" required></label>
-      <button>Aktiviere</button><button type="button" id="account-cancel-enroll">Abbräche</button>
+      <button>Aktivieren</button><button type="button" id="account-cancel-enroll">Abbrechen</button>
     </form>
   </details>
-  <details><summary>Plan vo däm Grät übernäh</summary>
-    <p>Übernimmt de bisherige lokale Plan in en leere gemeinsame Wucheplan.</p>
-    <button type="button" id="account-import">Lokale Plan übernäh</button>
+  <details><summary>Plan von diesem Gerät übernehmen</summary>
+    <p>Übernimm den lokalen Plan in den leeren Wochenplan deines Haushalts.</p>
+    <button type="button" id="account-import">Lokalen Plan übernehmen</button>
   </details>
 </section>`;
 
 export async function startAccount({onSnapshot, onLock, onImport}) {
   document.body.insertAdjacentHTML('afterbegin', html);
   document.querySelector('#household-form').insertAdjacentHTML('afterend', settings);
-  document.querySelector('.settings-note').textContent = 'De Haushalt und Wucheplan werded online gspeicheret. D Aazeige-Iistellige gelted für dä Browser.';
+  document.querySelector('.settings-note').textContent = 'Dein Haushalt und der Wochenplan werden online gespeichert. Die Anzeigeeinstellungen gelten für diesen Browser.';
   // Account tasks get separate panels, with a stable full-width navigation list.
   const account = document.getElementById('account-settings');
   const navigation = document.createElement('nav');
   navigation.className = 'account-navigation';
-  navigation.setAttribute('aria-label', 'Kontoiistellige');
+  navigation.setAttribute('aria-label', 'Kontoeinstellungen');
   for (const detail of [...account.querySelectorAll(':scope > details')]) {
     const summary = detail.querySelector('summary');
     const label = summary.textContent;
@@ -123,7 +123,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     const panel = document.createElement('section');
     panel.className = 'account-task'; panel.hidden = true;
     const heading = document.createElement('h3'); heading.textContent = label; heading.tabIndex = -1;
-    const back = document.createElement('button'); back.type = 'button'; back.textContent = 'Kontoiistellige';
+    const back = document.createElement('button'); back.type = 'button'; back.textContent = 'Kontoeinstellungen';
     back.addEventListener('click', () => { panel.hidden = true; navigation.hidden = false; open.focus(); });
     panel.append(back, heading, ...detail.childNodes);
     const open = document.createElement('button'); open.type = 'button'; open.textContent = label + ' ›';
@@ -154,7 +154,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   const inviteStatus = text => { el('account-invite-status').textContent = text; };
   const startup = el('account-startup');
   const startupTimer = setTimeout(() => {
-    el('account-startup-status').textContent = 'S Lade dauert länger. Bitte prüef dini Internetverbindig.';
+    el('account-startup-status').textContent = 'Das Laden dauert länger. Bitte prüfe deine Internetverbindung.';
     el('account-startup-retry').hidden = false;
   }, 15000);
   el('account-startup-retry').addEventListener('click', () => location.reload());
@@ -166,23 +166,23 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     el('account-register').hidden = false;
     for (const id of ['account-login', 'account-signup']) el(id).elements.email.readOnly = false;
     if (!pending) return;
-    el('account-invitation-title').textContent = 'Dini Iiladig';
-    el('account-invitation-detail').textContent = 'Iiladig wird prüeft …';
+    el('account-invitation-title').textContent = 'Deine Einladung';
+    el('account-invitation-detail').textContent = 'Einladung wird geprüft …';
     try {
       if (/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(pending))
         invitationInfo = unwrap(await client.rpc('household_invitation_preview', {invitation: pending}));
       if (!invitationInfo) {
-        el('account-invitation-detail').textContent = 'D Iiladig isch nöd meh gültig. Bitte en neue Link afordere.';
+        el('account-invitation-detail').textContent = 'Diese Einladung ist abgelaufen oder wurde zurückgezogen. Bitte fordere einen neuen Link an.';
         return;
       }
-      el('account-invitation-title').textContent = 'Iiladig zum Haushalt «' + invitationInfo.household_name + '»';
-      el('account-invitation-detail').textContent = 'Für ' + invitationInfo.email + '. Meld di aa oder erstell es neus Konto. Danach chasch em Haushalt biiträte.';
+      el('account-invitation-title').textContent = 'Einladung zum Haushalt «' + invitationInfo.household_name + '»';
+      el('account-invitation-detail').textContent = 'Für ' + invitationInfo.email + '. Melde dich an oder erstelle ein Konto. Danach kannst du dem Haushalt beitreten.';
       for (const id of ['account-login', 'account-signup']) {
         el(id).elements.email.value = invitationInfo.email;
         el(id).elements.email.readOnly = true;
       }
     } catch {
-      el('account-invitation-detail').textContent = 'D Iiladig het sich nöd lade lah. Bitte Internet prüefe und «Erneut lade» wähle.';
+      el('account-invitation-detail').textContent = 'Die Einladung konnte nicht geladen werden. Prüfe deine Internetverbindung und tippe auf «Neu laden».';
     } finally {
       el('account-register').hidden = !invitationInfo;
     }
@@ -210,13 +210,13 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   async function updateInvitationList(version) {
     try { await members(); }
     catch {
-      if (version === generation) inviteStatus(el('account-invite-status').textContent + ' D Liste het sich nöd aktualisiere lah.');
+      if (version === generation) inviteStatus(el('account-invite-status').textContent + ' Die Liste konnte nicht aktualisiert werden.');
     }
   }
 
   async function sendInvitation(target, invitation, email) {
     const version = generation;
-    inviteStatus('Iiladig wird verschickt …');
+    inviteStatus('Einladung wird gesendet …');
     let sent = false, wait = false;
     try {
       const {data, error} = await client.functions.invoke('send-household-invitation', {
@@ -228,12 +228,12 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
       // A lost response can leave SMTP acceptance unknown.
     }
     if (version !== generation || shared.id !== target) return;
-    if (sent) inviteStatus('Iiladig per E-Mail verschickt a ' + email + '.');
+    if (sent) inviteStatus('Einladung per E-Mail gesendet an ' + email + '.');
     else {
       showInvitationLink(invitation);
       inviteStatus(wait
-        ? 'Bitte wart es bitz vor em nächste Versand. De Link chasch jetzt teile.'
-        : 'De Versand het sich nöd bestätige lah. Du chasch de Link teile oder de Versand nomal probiere.');
+        ? 'Bitte warte vor dem nächsten Versand. Du kannst den Link bereits teilen.'
+        : 'Der Versand wurde nicht bestätigt. Teile den Link oder versuche es erneut.');
     }
     await updateInvitationList(version);
   }
@@ -267,7 +267,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     report('');
     try { await work(); } catch (error) {
       if (!startup.hidden) stage('login');
-      report(error.message || 'Verbindig fehlgschlage. Bitte nomal probiere.');
+      report(error.message || 'Verbindung fehlgeschlagen. Bitte versuche es erneut.');
     }
     finally {
       busy = false;
@@ -286,7 +286,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
   function passwordValue(form) {
     if (!form.reportValidity()) return null;
     if (form.elements.password.value !== form.elements.confirmPassword.value)
-      throw Error('D Passwörter stimmed nöd überii.');
+      throw Error('Die Passwörter stimmen nicht überein.');
     return form.elements.password.value;
   }
   function resetPasswordChange() {
@@ -334,10 +334,10 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     for (const person of people) {
       const row = document.createElement('p'), button = document.createElement('button');
       row.append(document.createTextNode(person.email + ' '));
-      button.textContent = person.user_id === user.id ? 'Haushalt verlah' : 'Entferne';
+      button.textContent = person.user_id === user.id ? 'Haushalt verlassen' : 'Entfernen';
       button.disabled = people.length === 1;
       button.addEventListener('click', () => {
-        if (people.length === 1 || !confirm(person.email + ' us däm Haushalt entferne?')) return;
+        if (people.length === 1 || !confirm(person.email + ' aus diesem Haushalt entfernen?')) return;
         action(async () => {
           unwrap(await client.rpc('remove_household_member', {target: shared.id, member_id: person.user_id}));
           if (person.user_id === user.id) { shared.id = null; await authenticate(false); }
@@ -353,7 +353,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
       const summary = document.createElement('p');
       const expires = new Date(invitation.expires_at);
       const expired = expires.getTime() <= Date.now();
-      summary.textContent = invitation.email + (expired ? ' · Abgloffe' : ' · Offe bis ' + expires.toLocaleDateString('de-CH'));
+      summary.textContent = invitation.email + (expired ? ' · Abgelaufen' : ' · Offen bis ' + expires.toLocaleDateString('de-CH'));
       row.append(summary);
       if (!expired) {
         if (invitation.email_sent_at) {
@@ -362,7 +362,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
         }
         const send = document.createElement('button');
         send.type = 'button';
-        send.textContent = invitation.email_sent_at ? 'Nomal verschicke' : 'Per E-Mail schicke';
+        send.textContent = invitation.email_sent_at ? 'Erneut senden' : 'Per E-Mail senden';
         send.addEventListener('click', () => action(() => {
           el('account-invite-status').scrollIntoView({block: 'nearest'});
           return sendInvitation(target, invitation.id, invitation.email);
@@ -370,23 +370,23 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
         row.append(send);
         const share = document.createElement('button');
         share.type = 'button';
-        share.textContent = 'Link zum Teile';
+        share.textContent = 'Link zum Teilen';
         share.addEventListener('click', () => {
           showInvitationLink(invitation.id);
-          inviteStatus('Link für ' + invitation.email + ' bereit zum Teile.');
+          inviteStatus('Link für ' + invitation.email + ' ist bereit zum Teilen.');
           el('account-invite-status').scrollIntoView({block: 'nearest'});
         });
         row.append(share);
       }
       const revoke = document.createElement('button');
       revoke.type = 'button';
-      revoke.textContent = 'Iiladig zruggzieh';
+      revoke.textContent = 'Einladung zurückziehen';
       revoke.addEventListener('click', () => action(async () => {
         unwrap(await client.rpc('revoke_household_invitation', {target, invitation: invitation.id}));
         if (version !== generation) return;
         if (selectedInvitation === invitation.id) clearInvitationLink();
         await members();
-        if (version === generation) inviteStatus('Iiladig isch zruggzoge.');
+        if (version === generation) inviteStatus('Einladung zurückgezogen.');
       }, inviteStatus));
       row.append(revoke);
       el('account-invitations').append(row);
@@ -398,9 +398,9 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     for (const factor of list.filter(f => f.status === 'verified')) {
       const row = document.createElement('p'), button = document.createElement('button');
       row.append(document.createTextNode((factor.friendly_name || 'Authenticator') + ' '));
-      button.textContent = 'Entferne';
+      button.textContent = 'Entfernen';
       button.addEventListener('click', () => {
-        if (!confirm('Dä Authenticator entferne?')) return;
+        if (!confirm('Diesen Authenticator entfernen?')) return;
         action(async () => { unwrap(await client.auth.mfa.unenroll({factorId: factor.id})); await factors(); });
       });
       row.append(button); el('account-factors').append(row);
@@ -420,8 +420,8 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     if (assurance.nextLevel === 'aal2' && assurance.currentLevel !== 'aal2') {
       stage('challenge');
       el('account-challenge-hint').textContent = recovery
-        ? 'Bestätige zuerst din Authenticator-Code. Danach chasch es neus Passwort wähle.'
-        : 'Bestätige dini Aameldig mit dim Authenticator.';
+        ? 'Bestätige zuerst deinen Authenticator-Code. Danach kannst du ein neues Passwort wählen.'
+        : 'Bestätige deine Anmeldung mit deiner Authenticator-App.';
       const list = unwrap(await client.auth.mfa.listFactors()).totp.filter(f => f.status === 'verified');
       if (version !== generation) return;
       el('account-factor').replaceChildren(...list.map(f => new Option(f.friendly_name || 'Authenticator', f.id)));
@@ -434,11 +434,11 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     const pending = sessionStorage.getItem('wachochemer:invitation');
     const matchesInvitation = invitationInfo && user.email.toLowerCase() === invitationInfo.email.toLowerCase();
     el('account-accept').hidden = !pending || !matchesInvitation;
-    el('account-accept').textContent = invitationInfo ? 'Em Haushalt «' + invitationInfo.household_name + '» biiträte' : 'Iiladig aanäh';
+    el('account-accept').textContent = invitationInfo ? 'Dem Haushalt «' + invitationInfo.household_name + '» beitreten' : 'Einladung annehmen';
     el('account-create').hidden = Boolean(pending);
     if (pending && invitationInfo && !matchesInvitation)
-      status('Du bisch als ' + user.email + ' aagmeldet. Die Iiladig isch für ' + invitationInfo.email + '. Bitte abmelde und mit däre E-Mail wiiterfahre.');
-    else if (pending && matchesInvitation) status('Du bisch als ' + user.email + ' aagmeldet. Nimm jetzt d Iiladig aa.');
+      status('Du bist als ' + user.email + ' angemeldet. Die Einladung ist für ' + invitationInfo.email + '. Bitte melde dich ab und verwende diese E-Mail-Adresse.');
+    else if (pending && matchesInvitation) status('Du bist als ' + user.email + ' angemeldet. Du kannst die Einladung jetzt annehmen.');
     el('account-household-list').replaceChildren(...households.map(h => {
       const button = document.createElement('button');
       button.type = 'button'; button.textContent = h.name;
@@ -460,9 +460,9 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     el('account-gate-logout').hidden = true;
   }
   lock(); stage('loading');
-  el('account-startup-status').textContent = 'Aameldig wird prüeft …';
+  el('account-startup-status').textContent = 'Anmeldung wird geprüft …';
   try {
-    if (!backendConfig.url || !backendConfig.publishableKey) throw Error('De gemeinsame Haushalt isch no nöd fertig iigrichtet.');
+    if (!backendConfig.url || !backendConfig.publishableKey) throw Error('Der gemeinsame Haushalt ist noch nicht eingerichtet.');
     const {createClient} = await import('./vendor/supabase.js');
     const storageKey = 'sb-' + new URL(backendConfig.url).hostname.split('.')[0] + '-auth-token';
     storage = sessionStorageChoice(localStorage, sessionStorage, storageKey);
@@ -496,13 +496,13 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
       form.elements.email.value = invitationInfo?.email || el('account-login').elements.email.value;
       el('account-login').elements.password.value = '';
       stage('signup');
-      status('Erstell dis eigets Konto. Wenn du scho es Konto hesch, wähl «Ich ha scho es Konto».');
+      status('Erstelle dein eigenes Konto. Hast du schon eines, wähle «Ich habe bereits ein Konto».');
       (form.elements.email.value ? form.elements.password : form.elements.email).focus();
     });
     bind('account-signup-login', 'click', () => {
       el('account-signup').elements.password.value = '';
       el('account-signup').elements.confirmPassword.value = '';
-      stage('login'); status('Meld di mit dim bestehende Konto aa.');
+      stage('login'); status('Melde dich mit deinem bestehenden Konto an.');
     });
     bind('account-signup', 'submit', async () => {
       const form = el('account-signup'), password = passwordValue(form);
@@ -526,7 +526,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
       const email = el('account-login').elements.email;
       if (!email.reportValidity()) return;
       unwrap(await client.auth.resetPasswordForEmail(email.value, {redirectTo: callbackUrl}));
-      status('Wenn es Konto existiert, bechunsch en Link per E-Mail.');
+      status('Wenn ein Konto mit dieser Adresse existiert, erhältst du einen Link per E-Mail.');
     });
     bind('account-password', 'submit', async () => {
       const form = el('account-password'), password = passwordValue(form);
@@ -537,8 +537,8 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
       }
       unwrap(await client.auth.updateUser({password}));
       form.reset(); clearRecovery(); stage('households');
-      try { await authenticate(); status('Dis Passwort isch gänderet.'); }
-      catch (error) { status('Dis Passwort isch gänderet. ' + error.message); }
+      try { await authenticate(); status('Dein Passwort wurde geändert.'); }
+      catch (error) { status('Dein Passwort wurde geändert. ' + error.message); }
     });
     bind('account-change-password', 'submit', async () => {
       const form = el('account-change-password'), password = passwordValue(form);
@@ -549,7 +549,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
         el('account-password-nonce').hidden = false;
         form.elements.nonce.disabled = false; form.elements.nonce.required = true;
         form.elements.nonce.focus();
-        status('Bestätige de Passwortwechsel mit em Code us de E-Mail.');
+        status('Bestätige die Passwortänderung mit dem Code aus der E-Mail.');
         return;
       }
       if (result.error?.code === 'insufficient_aal') {
@@ -560,7 +560,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
       }
       unwrap(result);
       resetPasswordChange();
-      status('Dis Passwort isch gänderet.');
+      status('Dein Passwort wurde geändert.');
     });
     bind('account-challenge', 'submit', async () => {
       unwrap(await client.auth.mfa.challengeAndVerify({factorId: el('account-factor').value, code: el('account-challenge').elements.code.value}));
@@ -603,23 +603,23 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
         return;
       }
       showInvitationLink(id);
-      inviteStatus('Link für ' + email + ' bereit zum Teile.');
+      inviteStatus('Link für ' + email + ' ist bereit zum Teilen.');
       await updateInvitationList(version);
     }, inviteStatus);
     bind('account-copy', 'click', async () => {
       try {
         await navigator.clipboard.writeText(el('account-link').value);
-        inviteStatus('Link kopiert. Jetzt chasch ihn i dini Nachricht iifüege.');
+        inviteStatus('Link kopiert. Du kannst ihn jetzt in deine Nachricht einfügen.');
       } catch {
         el('account-link').select();
-        inviteStatus('Kopier de markierti Link im Textfeld.');
+        inviteStatus('Kopiere den markierten Link im Textfeld.');
       }
     }, inviteStatus);
     bind('account-share', 'click', async () => {
       try {
-        await navigator.share({title: 'Iiladig zu Wa chochemer?', url: el('account-link').value});
+        await navigator.share({title: 'Einladung zu Wa chochemer', url: el('account-link').value});
       } catch (error) {
-        if (error.name !== 'AbortError') inviteStatus('Teile het nöd klappt. Du chasch de Link kopiere.');
+        if (error.name !== 'AbortError') inviteStatus('Der Link konnte nicht geteilt werden. Du kannst ihn kopieren.');
       }
     }, inviteStatus);
     bind('account-enroll', 'click', async () => {
@@ -635,9 +635,9 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     });
     bind('account-enrollment', 'submit', async () => {
       unwrap(await client.auth.mfa.challengeAndVerify({factorId: enrollment.id, code: el('account-enrollment').elements.code.value}));
-      clearEnrollment(); status('Zwei-Faktor-Aameldig aktiviert.'); await factors();
+      clearEnrollment(); status('Zwei-Faktor-Anmeldung aktiviert.'); await factors();
     });
-    bind('account-import', 'click', async () => { await onImport(shared); await refresh(); status('Lokale Plan übernoh.'); });
+    bind('account-import', 'click', async () => { await onImport(shared); await refresh(); status('Lokaler Plan übernommen.'); });
     const poll = async () => {
       if (busy || document.hidden || !shared.id || !gate.hidden || document.querySelector('dialog[open]')) return;
       const version = generation;
@@ -647,7 +647,7 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
         if (error.code === '42501' || error.code === 'PGRST301') {
           generation++; lock(); stage('households'); status(error.message);
         } else {
-          el('account-connection').textContent = 'Kei aktuelli Verbindig. Bitte Internet prüefe; Änderige chönd im Moment nöd gspeicheret werde.';
+          el('account-connection').textContent = 'Die Verbindung ist unterbrochen. Änderungen können im Moment nicht gespeichert werden.';
           el('account-connection').hidden = false;
         }
       }
@@ -658,42 +658,42 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
     const session = unwrap(await client.auth.getSession()).session;
     await loadInvitation();
     if (session) await authenticate();
-    else { stage('login'); status('Meld di aa oder erstell mit diner Iiladig es neus Konto.'); }
+    else { stage('login'); status('Melde dich an oder erstelle mit deiner Einladung ein Konto.'); }
   } catch (error) { stage('login'); status(error.message); }
   finally { clearTimeout(startupTimer); }
   return {
     async importRecipe(target, input) {
-      if (!target || shared.id!==target || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst de Haushalt lade.');
+      if (!target || shared.id!==target || !currentSnapshot || !gate.hidden) throw Error('Bitte lade zuerst deinen Haushalt.');
       const result=await client.functions.invoke('recipe-import',{body:{...input,householdId:target}});
       if (result.error) {
         const body=await result.error.context?.json?.().catch(()=>null);
-        throw Object.assign(Error('Import fehlgschlage. Bitte Verbindig prüefe.'),{code:body?.code});
+        throw Object.assign(Error('Import fehlgeschlagen. Bitte prüfe deine Internetverbindung.'),{code:body?.code});
       }
       return result.data;
     },
     async saveRecipe(target,id,revision,draft) {
-      if (!target || shared.id!==target || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst de Haushalt lade.');
+      if (!target || shared.id!==target || !currentSnapshot || !gate.hidden) throw Error('Bitte lade zuerst deinen Haushalt.');
       const version=generation;
       unwrap(await client.rpc('save_household_recipe',{target,recipe_id:id,expected:revision,draft}));
       if(version!==generation)return {refreshed:false};
       try{await refresh();return {refreshed:true};}catch{return {refreshed:false};}
     },
     async deleteRecipe(target,id,revision) {
-      if (!target || shared.id!==target || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst de Haushalt lade.');
+      if (!target || shared.id!==target || !currentSnapshot || !gate.hidden) throw Error('Bitte lade zuerst deinen Haushalt.');
       const version=generation;
       unwrap(await client.rpc('delete_household_recipe',{target,recipe_id:id,expected:revision}));
       if(version!==generation)return {refreshed:false};
       try{await refresh();return {refreshed:true};}catch{return {refreshed:false};}
     },
     async saveMeal(key, entry, revision) {
-      if (!shared?.id || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst aamelde und de Haushalt lade.');
+      if (!shared?.id || !currentSnapshot || !gate.hidden) throw Error('Bitte melde dich an und lade deinen Haushalt.');
       const version = generation;
       await shared.saveMeal(key, entry, revision);
       if (version !== generation) return;
       await refresh();
     },
     async saveSettings(profile, revision) {
-      if (!shared?.id || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst de Haushalt lade.');
+      if (!shared?.id || !currentSnapshot || !gate.hidden) throw Error('Bitte lade zuerst deinen Haushalt.');
       const version = generation;
       await shared.saveSettings(profile, revision);
       if (version !== generation) return;

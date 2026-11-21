@@ -139,7 +139,7 @@ Für **jedes** Paket:
 1. Vor dem Codieren `AGENTS.md`, diese Roadmap und die relevanten bestehenden Dateien lesen.
 2. Nur **ein Paket oder einen klar begrenzten vertikalen Teil** pro Pull Request bearbeiten. Vorher Änderungen, Datenmigrationen und erwartete Dateien kurz planen.
 3. Akzeptanzkriterien und Tests **vor oder zusammen mit dem Code** ergänzen. Wenn ein Test nur manuell in Safari möglich ist, als ausstehenden Test ausweisen.
-4. Bestehende JSON-Strukturen, Slugs, Zutaten-IDs, deutsche Rezepttexte und schweizerdeutsche UI-Texte beibehalten. Änderungen am Schema nur begründet und migrationssicher.
+4. Bestehende JSON-Strukturen, Slugs, Zutaten-IDs, Rezepttexte in Originalsprache und Schweizer Standarddeutsch für die Oberfläche beibehalten. Änderungen am Schema nur begründet und migrationssicher.
 5. Prüfen: `node --check prototype/app.js` (solange der Prototyp genutzt wird), `node --check scripts/build.mjs`, Generatorlauf `node scripts/build.mjs` und relevante projektinterne Tests; GitHub Actions nicht als iPhone-Ersatz betrachten.
 6. Im PR klar berichten: real implementiert / weiterhin Demo; automatisiert geprüft / manuell offen; bekannte Risiken; Rollback; betroffene Dokumentation.
 7. Kein automatischer Merge oder Hostingwechsel ohne explizite Freigabe. Keine neuen externen Services, Bezahlprodukte oder ungeprüften Scraping-Integrationen selbstständig aktivieren.

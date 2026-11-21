@@ -12,7 +12,7 @@ export function loadPlan(storage){
   if(storage.getItem(LEGACY+':backup')===null)storage.setItem(LEGACY+':backup',old);
   storage.setItem(PLAN_KEY,JSON.stringify(plan));
   return {plan,error:null};
- }catch(err){return {plan:null,error:'Plan nöd glade: '+err.message+' Original bliibt erhalte; kei Überschriibe.'}}
+ }catch(err){return {plan:null,error:'Plan konnte nicht geladen werden: '+err.message+' Die ursprünglichen Daten bleiben erhalten.'}}
 }
 export function storePlan(storage,plan){
  const previous=storage.getItem(PLAN_KEY);
@@ -21,7 +21,7 @@ export function storePlan(storage,plan){
 }
 export function restorePlan(storage){
  const backup=storage.getItem(PLAN_KEY+':backup')??storage.getItem(LEGACY+':backup')??storage.getItem(LEGACY);
- if(backup===null)throw Error('Kei Sicherig verfügbar.');
+ if(backup===null)throw Error('Keine Sicherung verfügbar.');
  const plan=migratePlan(JSON.parse(backup));
  storage.setItem(PLAN_KEY,JSON.stringify(plan));return plan;
 }

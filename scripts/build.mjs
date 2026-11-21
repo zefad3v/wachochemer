@@ -6,7 +6,7 @@ import {fileURLToPath} from "node:url";
 const root=join(dirname(fileURLToPath(import.meta.url)),"..");
 const read = path => JSON.parse(readFileSync(join(root,path),"utf8"));
 const catalog=read("data/ingredients.json");
-const labels=read("locales/gsw-CH.json").labels;
+const labels=read("locales/de-CH.json").labels;
 function buildHtml(recipe, catalog, labels) {
   const esc = value => String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   const decimal = n => Number(n).toLocaleString("de-CH",{maximumFractionDigits:2});
@@ -49,10 +49,10 @@ h1{font-size:2.5rem;margin:.2em 0}h2{margin-top:1.6em}a{color:#28664a}
 <h2>${esc(labels.ingredients)}</h2><ul>${lines.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>
 <h2>${esc(labels.instructions)}</h2><ol>${instructions.map(i=>`<li>${esc(i)}</li>`).join("")}</ol>
 <h2>${esc(labels.importToBring)}</h2>
-<p>Mit em Bring! Button chasch d Zutate grad uf dini Iichaufslischte überneh. Grundrezept: ${recipe.baseServings} Portione.</p>
+<p>Über die Bring!-Schaltfläche kannst du die Zutaten auf deine Einkaufsliste übernehmen. Grundrezept: ${recipe.baseServings} Portionen.</p>
 <div data-bring-import data-bring-language="de" data-bring-theme="light" data-bring-base-quantity="${recipe.baseServings}" data-bring-requested-quantity="${recipe.baseServings}" style="display:none"><a href="https://www.getbring.com">Bring! Einkaufsliste App</a></div>
-<p class="meta">Alternativ chasch s Rezept im Safari-Menü über «Rezept übertragen» importiere.</p>
-</article></main><footer>${esc(labels.brand)} · Chochchischtli</footer>
+<p class="meta">Alternativ kannst du das Rezept im Safari-Menü über «Rezept übertragen» importieren.</p>
+</article></main><footer>${esc(labels.brand)} · Kochbuch</footer>
 </body></html>
 `;
 }
