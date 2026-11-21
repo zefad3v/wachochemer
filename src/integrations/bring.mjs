@@ -56,7 +56,7 @@ export function buildTransferManifest(plan,recipes,from,to,{includeOptional=fals
 }
 export const serializeManifest=manifest=>JSON.stringify(manifest,null,2)+'\n';
 export function manifestText(manifest,names={}){
- const amount=x=>x.quantity===null?'nach Geschmack':new Intl.NumberFormat('de-CH',{maximumFractionDigits:2}).format(x.quantity)+(x.unit==='to_taste'?'':' '+x.unit);
+ const amount=x=>x.quantity===null?'nach Geschmack':new Intl.NumberFormat('de-CH',{maximumFractionDigits:2}).format(x.quantity)+(x.quantityMax!=null?'–'+new Intl.NumberFormat('de-CH',{maximumFractionDigits:2}).format(x.quantityMax):'')+(x.unit==='to_taste'?'':' '+x.unit);
  return ['Wachochemer, '+manifest.range.from+' bis '+manifest.range.to,
   ...manifest.items.map(x=>(names[x.ingredientId]||x.ingredientId)+' — '+amount(x)+(x.optional?' (optional)':'')),
   ...manifest.extras.map(x=>x.title),...manifest.warnings.map(x=>'Achtung: '+x.key+': '+x.message),

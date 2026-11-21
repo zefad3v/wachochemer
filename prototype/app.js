@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261121-recipe-fields";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261121-ranges";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -51,7 +51,7 @@ function formatIngredient(row,factor=1){
  const name=state.names[row.ingredientId]||row.ingredientId.replaceAll("_"," ");
  const unit=units[row.unit]??row.unit;
  const quantity=scaledQuantity(row.quantity,row.unit,factor);
- const amount=row.quantity===null||row.unit==="to_taste" ? "Etwas" : moneyLike(quantity)+(unit?" "+unit:"");
+ const amount=row.quantity===null||row.unit==="to_taste" ? "Etwas" : moneyLike(quantity)+(row.quantityMax!=null?'–'+moneyLike(scaledQuantity(row.quantityMax,row.unit,factor)):'')+(unit?" "+unit:"");
  const plurals={wheat_tortilla_small:"kleine Weizentortillas",toast_bread_slice:"Scheiben Toastbrot"};
  return amount+" "+(plurals[row.ingredientId]||name)+(row.optional?" (optional)":"");
 }
@@ -462,7 +462,7 @@ function renderShopping(){
  const rows=items.length?items.map(row=>{
   const label=state.names[row.ingredientId]||row.ingredientId;
   const unit=units[row.unit]||row.unit;
-  const quantity=row.quantity===null?"Nach Gschmack":moneyLike(Math.round(row.quantity*100)/100)+(unit?" "+unit:"");
+  const quantity=row.quantity===null?"Nach Gschmack":moneyLike(Math.round(row.quantity*100)/100)+(row.quantityMax!=null?'–'+moneyLike(Math.round(row.quantityMax*100)/100):'')+(unit?" "+unit:"");
   return '<div class="shopping-row"><span class="shopping-name">'+escapeHtml(label)+'</span>'+
    '<span class="shopping-amount">'+escapeHtml(quantity)+'</span></div>';
  }).join(""):'<p class="empty-message">Kei Rezept-Zutate i däm Ziitruum.</p>';

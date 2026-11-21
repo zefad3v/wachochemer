@@ -1,5 +1,4 @@
-import {parseDecimal} from './locale-number.mjs';
-import {canonicalSource,parseIngredient,unitLabels,validateDraft} from './household-recipes.mjs';
+import {canonicalSource,parseAmount,parseIngredient,unitLabels,validateDraft} from './household-recipes.mjs';
 
 const el=id=>document.getElementById(id);
 const blankIngredient=()=>({name:'',quantity:null,unit:'',optional:false});
@@ -24,13 +23,13 @@ export function recipeEditor({account,household,findRow,onSaved}) {
     const wrap=document.createElement('div');
     wrap.className='house-ingredient';
     wrap.innerHTML='<label>Zutat<input class="name" required maxlength="200"></label>'+
-      '<div class="ingredient-measure"><label>Menge<input class="quantity" inputmode="decimal"></label>'+
+      '<div class="ingredient-measure"><label>Menge<input class="quantity" inputmode="text" placeholder="z. B. 2 oder 2–2½"></label>'+
       '<label>Einheit<select class="unit" required><option value="">Bitte wähle</option></select></label></div>'+
       '<div class="ingredient-footer"><label><input class="optional" type="checkbox"> Optional</label>'+
       '<button type="button">Entferne</button></div>';
     const name=wrap.querySelector('.name'),qty=wrap.querySelector('.quantity'),unit=wrap.querySelector('.unit');
     for(const [key,label] of Object.entries(unitLabels))unit.add(new Option(label,key));
-    name.value=row.name; qty.value=row.quantity??''; unit.value=row.unit;
+    name.value=row.name; qty.value=row.quantityMax!=null?row.quantity+'–'+row.quantityMax:row.quantity??''; unit.value=row.unit;
     wrap.querySelector('.optional').checked=!!row.optional;
     const toggle=()=>{qty.disabled=unit.value==='to_taste';qty.required=!qty.disabled;};
     toggle(); unit.addEventListener('change',toggle);
@@ -52,7 +51,7 @@ export function recipeEditor({account,household,findRow,onSaved}) {
       source:canonicalSource(fields.source.value),steps:fields.steps.value.split(/\n/).map(x=>x.trim()).filter(Boolean),
       ingredients:Array.from(container.children,wrap=>{
         const unit=wrap.querySelector('.unit').value,qty=wrap.querySelector('.quantity').value.trim().replace(',','.');
-        return {name:wrap.querySelector('.name').value.trim(),unit,quantity:unit==='to_taste'?null:parseDecimal(qty),
+        return {name:wrap.querySelector('.name').value.trim(),unit,...(unit==='to_taste'?{quantity:null}:parseAmount(qty)),
           optional:wrap.querySelector('.optional').checked};
       })});
   }
@@ -119,7 +118,7 @@ export function recipeEditor({account,household,findRow,onSaved}) {
       el('house-preview-meta').textContent=[preview.baseServings+' Portione',preview.prepMinutes!=null?preview.prepMinutes+' Min. zuebereite':'',preview.cookMinutes!=null?preview.cookMinutes+' Min. choche':'',preview.totalMinutes!=null?preview.totalMinutes+' Min. bis uf em Tisch':''].filter(Boolean).join(' · ');
       const image=el('house-preview-image');image.hidden=!preview.image;if(preview.image)image.src=preview.image;else image.removeAttribute('src');
       el('house-preview-source').textContent=preview.source;
-      list('house-preview-ingredients',preview.ingredients.map(r=>[r.quantity,unitLabels[r.unit],r.name,r.optional?'(optional)':''].filter(x=>x!=null&&x!=='').join(' ')));
+      list('house-preview-ingredients',preview.ingredients.map(r=>[r.quantityMax!=null?r.quantity+'–'+r.quantityMax:r.quantity,unitLabels[r.unit],r.name,r.optional?'(optional)':''].filter(x=>x!=null&&x!=='').join(' ')));
       list('house-preview-steps',preview.steps);
       el('house-editor-title').textContent='Rezept prüefe';el('house-editor-input').hidden=true;el('house-preview').hidden=false;
       dialog.scrollTop=0;el('house-revise').focus();

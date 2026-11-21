@@ -66,10 +66,14 @@ export function ingredientTotals(entries,recipes,from,to,{includeOptional=false}
    if(row.optional&&!includeOptional)continue;
    const id=row.ingredientId+'|'+row.unit;
    const quantity=row.quantity===null?null:row.quantity*entry.servings/recipe.baseServings;
-   if(!out.has(id))out.set(id,{ingredientId:row.ingredientId,unit:row.unit,quantity,optional:!!row.optional});
+   const quantityMax=row.quantityMax!=null?row.quantityMax*entry.servings/recipe.baseServings:quantity;
+   if(!out.has(id))out.set(id,{ingredientId:row.ingredientId,unit:row.unit,quantity,...(row.quantityMax!=null?{quantityMax}:{}),optional:!!row.optional});
    else{
     const existing=out.get(id);
-    if(existing.quantity!==null&&quantity!==null)existing.quantity+=quantity;
+    if(existing.quantity!==null&&quantity!==null){
+     if(existing.quantityMax!=null||row.quantityMax!=null)existing.quantityMax=(existing.quantityMax??existing.quantity)+quantityMax;
+     existing.quantity+=quantity;
+    }
    }
   }
  }
