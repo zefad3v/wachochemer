@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261121-unquantified";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261121-recipe-management";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -732,7 +732,8 @@ function bindHouseholdForm(){
 function init(){
  editor=recipeEditor({account:()=>account,household:()=>state.householdId,
   findRow:id=>state.recipeRows?.find(r=>r.id===id),
-  onSaved:id=>{showTab("archive");openRecipe(state.archiveEntries.find(r=>r.id==="haushalt-"+id));}});
+  findSource:source=>state.recipeRows?.find(r=>r.draft.source===source),
+  onSaved:(id,refreshed)=>{showTab("archive");byId("archive-status").textContent=(id?"Rezept gspeicheret.":"Rezept glöscht.")+(refreshed?"":" Bitte neu lade, zum de aktuelli Stand z gseh.");}});
  byId("new-house-recipe").onclick=()=>editor.open();
  byId("plan-status").addEventListener("click",event=>{
   const button=event.target.closest("[data-review-key]");

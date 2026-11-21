@@ -1,6 +1,6 @@
 import {sessionStorageChoice} from './auth-session.mjs';
 import {backendConfig} from './backend-config.js';
-import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261121-unquantified';
+import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261121-recipe-management';
 
 export const cloudEnabled = Boolean(backendConfig.url || backendConfig.publishableKey);
 const html = `
@@ -675,7 +675,15 @@ export async function startAccount({onSnapshot, onLock, onImport}) {
       if (!target || shared.id!==target || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst de Haushalt lade.');
       const version=generation;
       unwrap(await client.rpc('save_household_recipe',{target,recipe_id:id,expected:revision,draft}));
-      if(version===generation)await refresh();
+      if(version!==generation)return {refreshed:false};
+      try{await refresh();return {refreshed:true};}catch{return {refreshed:false};}
+    },
+    async deleteRecipe(target,id,revision) {
+      if (!target || shared.id!==target || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst de Haushalt lade.');
+      const version=generation;
+      unwrap(await client.rpc('delete_household_recipe',{target,recipe_id:id,expected:revision}));
+      if(version!==generation)return {refreshed:false};
+      try{await refresh();return {refreshed:true};}catch{return {refreshed:false};}
     },
     async saveMeal(key, entry, revision) {
       if (!shared?.id || !currentSnapshot || !gate.hidden) throw Error('Bitte zuerst aamelde und de Haushalt lade.');
