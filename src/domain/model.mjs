@@ -40,6 +40,7 @@ export function validateRecipe(recipe,ingredientIds){
   check(ingredientIds.has(entry.ingredientId),ctx,'unknown ingredientId');
   check(unitSet.has(entry.unit),ctx,'unknown unit');
   check(entry.optional===undefined||typeof entry.optional==='boolean',ctx,'invalid optional');
+  if(entry.quantityMax!=null)check(positive(entry.quantityMax)&&entry.quantityMax>=entry.quantity&&entry.unit!=='to_taste',ctx,'invalid quantity range');
   if(entry.unit==='to_taste')check(entry.quantity===null,ctx,'to_taste needs null');
   else check(positive(entry.quantity),ctx,'invalid quantity');
  }

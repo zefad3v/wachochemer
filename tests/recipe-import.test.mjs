@@ -62,3 +62,23 @@ test('optional household times, total time, image and pinch survive conversion',
  assert.throws(()=>validateDraft({...d,totalMinutes:-1}));
  assert.throws(()=>validateDraft({...d,image:'javascript:alert(1)'}));
 });
+
+test('Swissmilk quantity ranges retain unit, ingredient name and both bounds',()=>{
+ const salt=parseIngredient('2 - 2½ TL Salz');
+ assert.equal(salt.name,'Salz');assert.equal(salt.unit,'tsp');assert.equal(salt.quantity,2);assert.equal(salt.quantityMax,2.5);
+ const water=parseIngredient('2 - 3 l Salzwasser, zum Garen');
+ assert.equal(water.quantity,2);assert.equal(water.quantityMax,3);assert.equal(water.unit,'l');
+ const d={title:'Spätzli',description:'',source:'',baseServings:5,prepMinutes:null,cookMinutes:null,ingredients:[salt],steps:['Mischen.']};
+ validateDraft(d);assert.equal(householdRecipe({id:'range',draft:d},{}).recipe.ingredients[0].quantityMax,2.5);
+ assert.throws(()=>validateDraft({...d,ingredients:[{...salt,quantityMax:1}]}));
+});
+
+test('quantity ranges scale and aggregate both endpoints',async()=>{
+ const {parseAmount}=await import('../prototype/household-recipes.mjs');
+ const {ingredientTotals}=await import('../prototype/planner.mjs');
+ assert.deepEqual(parseAmount('2–2½'),{quantity:2,quantityMax:2.5});
+ assert.deepEqual(parseAmount('2,5'),{quantity:2.5});
+ const recipes={r:{baseServings:5,ingredients:[{ingredientId:'salt',unit:'tsp',quantity:2,quantityMax:2.5}]}};
+ const total=ingredientTotals({'2026-11-21|lunch':{type:'recipe',recipeId:'r',servings:10}},recipes,'2026-11-21','2026-11-21');
+ assert.equal(total.items[0].quantity,4);assert.equal(total.items[0].quantityMax,5);
+});
