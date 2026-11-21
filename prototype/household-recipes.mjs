@@ -1,6 +1,6 @@
 import {UNITS,validateRecipe} from '../src/domain/model.mjs';
 
-export const unitLabels = {g:'g',kg:'kg',ml:'ml',l:'l',piece:'Stück',tbsp:'EL',tsp:'TL',pinch:'Prise',to_taste:'nach Geschmack'};
+export const unitLabels = {g:'g',kg:'kg',ml:'ml',l:'l',piece:'Stück',tbsp:'EL',tsp:'TL',pinch:'Prise',unspecified:'ohni Mengenangab',to_taste:'nach Geschmack'};
 const fractions={'½':'1/2','¼':'1/4','¾':'3/4','⅓':'1/3','⅔':'2/3','⅛':'1/8'};
 const numeric = s => s.split(/\s+/).reduce((sum,part)=>{
   const [a,b]=part.replace(',','.').split('/').map(Number);
@@ -33,7 +33,7 @@ export function parseIngredient(line) {
     // Leave ranges and unrecognised measures intact for review.
     const count=s.match(/^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?)\s+((?:(?:grosse|kleine|mittelgrosse|rotschalige|reife|rote|gelbe)\s+)?(?:Eier?|Äpfel|Apfel|Zitronen?|Zwiebeln?|Karotten?|Tomaten?|Bananen?|Kartoffeln?))(,.*)?$/i);
     if(count)return {...unknown,name:count[2]+(count[3]||''),quantity:numeric(count[1]),unit:'piece'};
-    return unknown;
+    return /\d/.test(s)?unknown:{...unknown,unit:'unspecified'};
   }
   const key=m[2].toLowerCase(), quantity=numeric(m[1])*(key==='dl'?100:key==='cl'?10:1);
   return {...unknown,name:m[3],unit:aliases[key],quantity};
@@ -73,9 +73,9 @@ export function validateDraft(d) {
   if(!d.steps.length || d.steps.length>100 || d.steps.some(s=>!s.trim()||s.length>3000))throw Error('Bitte d Zuebereitig prüefe. Pro Zeile ein Schritt.');
   if(!d.ingredients.length||d.ingredients.length>100)throw Error('Es brucht 1 bis 100 Zutate.');
   for(const [i,row] of d.ingredients.entries()){
-    if(row.quantityMax!=null && (row.unit==='to_taste'||!Number.isFinite(row.quantityMax)||row.quantityMax<row.quantity||row.quantityMax>1e6))throw Error('Bitte en gültige Mengenbereich iiträge.');
+    if(row.quantityMax!=null && (['to_taste','unspecified'].includes(row.unit)||!Number.isFinite(row.quantityMax)||row.quantityMax<row.quantity||row.quantityMax>1e6))throw Error('Bitte en gültige Mengenbereich iiträge.');
     if(!row.name || row.name.length>200 || !UNITS.includes(row.unit) ||
-      (row.unit==='to_taste'?row.quantity!==null:!Number.isFinite(row.quantity)||row.quantity<=0||row.quantity>1e6))
+      (['to_taste','unspecified'].includes(row.unit)?row.quantity!==null:!Number.isFinite(row.quantity)||row.quantity<=0||row.quantity>1e6))
       throw Error('Zutat '+(i+1)+': Bitte Name, Menge und Einheit prüefe.');
   }
   return d;

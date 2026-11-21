@@ -1,6 +1,6 @@
 // Independent business rules. Recipe JSON remains the source of truth.
 export const SCHEMA_VERSION=1;
-export const UNITS=Object.freeze(['g','kg','ml','l','piece','tbsp','tsp','pinch','to_taste']);
+export const UNITS=Object.freeze(['g','kg','ml','l','piece','tbsp','tsp','pinch','unspecified','to_taste']);
 const unitSet=new Set(UNITS), slug=/^[a-z0-9]+(?:-[a-z0-9]+)*$/, ingredientId=/^[a-z][a-z0-9_]*$/, datePattern=/^\d{4}-\d{2}-\d{2}$/;
 const object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const positive=x=>typeof x==='number'&&Number.isFinite(x)&&x>0;
@@ -40,8 +40,8 @@ export function validateRecipe(recipe,ingredientIds){
   check(ingredientIds.has(entry.ingredientId),ctx,'unknown ingredientId');
   check(unitSet.has(entry.unit),ctx,'unknown unit');
   check(entry.optional===undefined||typeof entry.optional==='boolean',ctx,'invalid optional');
-  if(entry.quantityMax!=null)check(positive(entry.quantityMax)&&entry.quantityMax>=entry.quantity&&entry.unit!=='to_taste',ctx,'invalid quantity range');
-  if(entry.unit==='to_taste')check(entry.quantity===null,ctx,'to_taste needs null');
+  if(entry.quantityMax!=null)check(positive(entry.quantityMax)&&entry.quantityMax>=entry.quantity&&!['to_taste','unspecified'].includes(entry.unit),ctx,'invalid quantity range');
+  if(['to_taste','unspecified'].includes(entry.unit))check(entry.quantity===null,ctx,'to_taste needs null');
   else check(positive(entry.quantity),ctx,'invalid quantity');
  }
  return recipe;
@@ -76,7 +76,7 @@ export function weekDates(dateISO,weekStartsOn=4){
 export function scaleQuantity(entry,baseServings,desiredServings){
  check(object(entry)&&unitSet.has(entry.unit),'quantity','invalid unit');
  check(positive(baseServings)&&positive(desiredServings),'quantity','invalid servings');
- if(entry.unit==='to_taste'){check(entry.quantity===null,'quantity','to_taste needs null');return null}
+ if(['to_taste','unspecified'].includes(entry.unit)){check(entry.quantity===null,'quantity','to_taste needs null');return null}
  check(positive(entry.quantity),'quantity','invalid amount');
  return entry.quantity*desiredServings/baseServings; // no premature rounding
 }
