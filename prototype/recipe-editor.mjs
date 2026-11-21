@@ -15,7 +15,7 @@ const messages={
   ai_busy:'D KI isch grad usglaschtet oder s API-Guthabe längt nöd.',
   ai_failed:'D KI het s Rezept nöd chönne läse. Dini Iigabe bliibt da.'
 };
-export function recipeEditor({account,household,findRow,onSaved}) {
+export function recipeEditor({account,household,findRow,findSource,onSaved}) {
   const dialog=el('house-recipe-editor'),form=el('house-recipe-form'), fields=form.elements;
   const status=el('house-editor-status'),container=el('house-ingredients');
   let id,revision,target,preview,dirty=false,busy=false,generation=0;
@@ -59,14 +59,14 @@ export function recipeEditor({account,household,findRow,onSaved}) {
     generation++;busy=false;dirty=false;target=household();id=row?.id??crypto.randomUUID();revision=row?.revision??0;
     preview=null;edit(row?.draft??blank());el('house-import').hidden=!!row;el('house-import').open=false;
     el('house-import-url').value='';el('house-ai-text').value='';status.textContent='';
-    el('house-reload-recipe').hidden=true;
+    el('house-reload-recipe').hidden=true;el('house-delete').hidden=!row;
     el('house-editor-title').textContent=row?'Rezept bearbeite':'Rezept erfasse';
     setBusy(false);if(!dialog.open)dialog.showModal();
     dialog.scrollTop=0;
   }
   function setBusy(value){
     busy=value;
-    for(const key of ['house-read-link','house-read-ai','house-save','house-reload-recipe'])el(key).disabled=value;
+    for(const key of ['house-read-link','house-read-ai','house-save','house-reload-recipe','house-delete','house-source-image'])el(key).disabled=value;
     el('house-editor-input').inert=value;el('house-revise').disabled=value;
   }
   function close(){
@@ -83,7 +83,8 @@ export function recipeEditor({account,household,findRow,onSaved}) {
     const active=()=>turn===generation && target===household() && dialog.open;
     try{await action(active);}catch(e){
       if(active()){
-        status.textContent=messages[e.code] || (e.code==='23505'?'Dä Link isch im Haushalt scho als Rezept gspeicheret.':e.message);
+        status.textContent=messages[e.code] || (e.code==='23505'?'Nöd gspeicheret. Dä Link isch scho vorhanden. Bitte s bestehende Rezept bearbeite.':e.message);
+        status.scrollIntoView({block:'nearest'});
         if(e.code==='40001')el('house-reload-recipe').hidden=false;
       }
     }finally{if(active())setBusy(false);}
@@ -135,8 +136,34 @@ export function recipeEditor({account,household,findRow,onSaved}) {
   el('house-save').onclick=()=>job(async active=>{
     if(!preview)return;
     status.textContent='Rezept wird gspeicheret …';
-    await account().saveRecipe(target,id,revision,preview);
-    if(active()){dirty=false;dialog.close();onSaved(id);}
+    if(!revision && preview.source){
+      await account().refresh();if(!active())return;
+      const existing=findSource(preview.source);
+      if(existing){
+        if(!confirm('Dä Link isch scho gspeicheret. S bestehende Rezept mit däm Entwurf aktualisiere?')){status.textContent='Nöd gspeicheret. Du chasch de Entwurf wiiter bearbeite.';return;}
+        id=existing.id;revision=existing.revision;
+      }
+    }
+    const result=await account().saveRecipe(target,id,revision,preview);
+    if(active()){dirty=false;dialog.close();onSaved(id,result?.refreshed!==false);}
   });
+  el('house-source-image').onclick=()=>job(async active=>{
+    const url=canonicalSource(fields.source.value);
+    if(!url)throw Error('Bitte zuerst d Rezeptquelle iiträge.');
+    status.textContent='Rezeptbild wird glade …';
+    const result=await account().importRecipe(target,{url,text:'',mode:'link'});
+    if(active()){
+      if(!result.draft.image)throw Error('D Quelle liefert kei Rezeptbild. Du chasch en Bildlink iiträge.');
+      fields.image.value=result.draft.image;dirty=true;status.textContent='Rezeptbild übernoh. Bitte speichere.';
+    }
+  });
+  el('house-delete').onclick=()=>{
+    if(busy||!revision||!confirm('Das Rezept endgültig us em Haushalt lösche?'))return;
+    job(async active=>{
+      status.textContent='Rezept wird glöscht …';
+      const result=await account().deleteRecipe(target,id,revision);
+      if(active()){dirty=false;dialog.close();onSaved(null,result?.refreshed!==false);}
+    });
+  };
   return {open};
 }
