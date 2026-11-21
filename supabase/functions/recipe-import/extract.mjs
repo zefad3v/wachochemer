@@ -53,12 +53,30 @@ const minutes = time => {
   const m = /^PT(?:(\d+)H)?(?:(\d+)M)?$/i.exec(time||'');
   return m ? Number(m[1]||0)*60+Number(m[2]||0) : null;
 };
+function microdataRecipe(doc) {
+  const root = doc.querySelector?.('[itemscope][itemtype$="/Recipe"]');
+  if (!root) return null;
+  const property = name => {
+    const node = root.querySelector(`[itemprop~="${name}"]`);
+    return node?.getAttribute('content') ?? node?.getAttribute('datetime') ?? node?.textContent ?? '';
+  };
+  const recipeIngredient = [...root.querySelectorAll('[itemprop~="recipeIngredient"]')]
+    .filter(node => node.tagName !== 'TR' || node.querySelector('.Ingredient--amount'))
+    .map(node => [...node.children].map(child => child.textContent.trim()).join(' ').replace(/\s+/g, ' ').trim());
+  return {
+    name: property('name'), description: property('description'), recipeYield: property('recipeYield'),
+    prepTime: property('prepTime'), cookTime: property('cookTime'), totalTime: property('totalTime'),
+    recipeIngredient,
+    recipeInstructions: [...root.querySelectorAll('[itemprop~="recipeInstructions"]')]
+      .map(node => (node.querySelector('[itemprop~="text"]') ?? node).textContent.trim())
+  };
+}
 export function extractRecipe(doc, plain) {
   const found=[], refs=new Map();
   for (const script of doc.querySelectorAll('script[type="application/ld+json"]')) {
     try { recipeNodes(JSON.parse(script.textContent),found,refs); } catch { /* another block can still contain Recipe */ }
   }
-  const r=found.find(node=>node.name && node.recipeIngredient) || found[0];
+  const r=found.find(node=>node.name && node.recipeIngredient) || found[0] || microdataRecipe(doc);
   if (!r) throw Error('no_recipe');
   function steps(obj, depth=0) {
     if (depth>20 || !obj) return [];
