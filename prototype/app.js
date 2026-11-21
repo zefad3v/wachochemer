@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261120-recipes";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261121-recipe-fields";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -13,7 +13,7 @@ let publicRecipes=[],publicNames={},editor;
 const weekdays=["Sunntig","Mäntig","Zischtig","Mittwuch","Dunschtig","Friitig","Samschtig"];
 const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
 const mealLabels={lunch:"Zmittag",dinner:"Znacht"};
-const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL"};
+const units={g:"g",kg:"kg",ml:"ml",l:"l",piece:"",tbsp:"EL",tsp:"TL",pinch:"Prise"};
 import {recipeImages,imageFor} from "./recipe-images.mjs?v=20261119-photos";
 const archiveImages=recipeImages;
 
@@ -95,7 +95,7 @@ function itemForDay(date,requestedMeal=null){
  }
  if(entry.type==="recipe"){
   const recipe=state.recipes[entry.recipeId],meta=state.archiveEntries.find(x=>x.id===entry.recipeId);
-  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:(recipe?.prepMinutes||0)+(recipe?.cookMinutes||0),image:meta?.image||null,imageDemo:meta?.imageDemo||false,imageGenerated:meta?.imageGenerated||false,real:!!recipe,planned:true,mealLabel,servings:entry.cookedServings??entry.servings};
+  return {id:entry.recipeId,title:recipe?.title||"Rezept nöd verfügbar",description:recipe?.description||"",minutes:recipe?.totalMinutes??((recipe?.prepMinutes||0)+(recipe?.cookMinutes||0)),image:meta?.image||null,imageDemo:meta?.imageDemo||false,imageGenerated:meta?.imageGenerated||false,real:!!recipe,planned:true,mealLabel,servings:entry.cookedServings??entry.servings};
  }
  if(entry.type==="manual")return {id:"manual-"+iso,title:entry.title,description:"Eigenes Menü",minutes:0,image:null,real:false,planned:true,mealLabel};
  return {id:"leftover-"+iso,...leftoverDisplay(entry),minutes:0,real:false,planned:true,mealLabel};
@@ -493,7 +493,7 @@ function renderPortions(recipe){
  byId("portion-count").textContent=count+" "+(count===1?"Portion":"Portionen");
  byId("portion-minus").disabled=count<=0.5;
  byId("portion-plus").disabled=count>=1000;
- byId("dialog-meta").innerHTML='<span>◷ '+(recipe.prepMinutes+recipe.cookMinutes)+' Min.</span><span>♙ '+count+' '+(count===1?'Portion':'Portionen')+'</span>';
+ byId("dialog-meta").innerHTML='<span>◷ '+(recipe.totalMinutes??((recipe.prepMinutes||0)+(recipe.cookMinutes||0)))+' Min.</span><span>♙ '+count+' '+(count===1?'Portion':'Portionen')+'</span>';
  byId("portion-session-note").hidden=state.plannedServings===null||count===state.plannedServings;
  const list=byId("dialog-ingredients");
  const checked=new Set([...list.querySelectorAll('input:checked')].map(el=>Number(el.dataset.index)));
@@ -535,7 +535,7 @@ function openRecipe(item){
  byId("dialog-category").textContent=recipe?(recipe.householdRecipe?"ÜSES REZEPT":(item.imageGenerated?"STARTREZEPT · KI-BILD":"STARTREZEPT")):"REZEPT NICHT VERFÜGBAR";
  byId("dialog-title").textContent=recipe?.title||item.title;
  byId("dialog-description").textContent=recipe?.description||item.description;
- byId("dialog-meta").innerHTML='<span>◷ '+(recipe?recipe.prepMinutes+recipe.cookMinutes:item.minutes)+' Min.</span><span>♙ '+(recipe?.baseServings||3)+' Portione</span>';
+ byId("dialog-meta").innerHTML='<span>◷ '+(recipe?(recipe.totalMinutes??((recipe.prepMinutes||0)+(recipe.cookMinutes||0))):item.minutes)+' Min.</span><span>♙ '+(recipe?.baseServings||3)+' Portione</span>';
  byId("dialog-favourite").textContent=state.favorites.has(item.id)?"♥":"♡";
  byId("dialog-favourite").classList.toggle("liked",state.favorites.has(item.id));
  byId("dialog-favourite").dataset.id=item.id;
@@ -596,7 +596,7 @@ function setRecipeCatalog(rows){
  }
  state.names=names;
  state.recipes=Object.fromEntries(recipes.map(recipe=>[recipe.id,recipe]));
- state.archiveEntries=archiveEntries(recipes,archiveImages).map(item=>({...item,...imageFor(item.id)}));
+ state.archiveEntries=archiveEntries(recipes,archiveImages).map(item=>({...item,...imageFor(item.id),image:item.image||imageFor(item.id).image}));
 }
 async function loadRecipes(){
  try{

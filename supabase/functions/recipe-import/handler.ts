@@ -47,12 +47,13 @@ export async function handleRecipeImport(request:Request) {
     if (access.status===429) return reply(429,{code:'limit'});
     if (!access.ok) return reply([401,403].includes(access.status)?403:503,{code:access.status<500?'auth':'unavailable'});
     if (!(await access.json())) return reply(429,{code:'limit'});
-    let source=input.url, text=input.text.trim(), draft;
+    let source=input.url, text=input.text.trim(), draft, image='';
     if (!ai || !text) {
       const page=await fetchPage(input.url);
       source=page.source;
       const doc=parseHTML(page.html).document;
       if (ai) {
+        try {image=extractRecipe(doc,(s:string)=>s).image;}catch{/* The source can still supply plain recipe text. */}
         for (const elem of doc.querySelectorAll('script,style,nav,footer,header,noscript,form,svg')) elem.remove();
         const article=doc.querySelector('article,main') || doc.body;
         text=(article.textContent || '').slice(0,20000);
@@ -61,7 +62,7 @@ export async function handleRecipeImport(request:Request) {
         draft=extractRecipe(doc,plain);
       }
     }
-    if (ai) draft=await aiDraft(text,key!);
+    if (ai) draft={...await aiDraft(text,key!),image};
     return reply(200,{draft,source});
   } catch (error) {
     const code=error instanceof Error?error.message:'failed';

@@ -51,3 +51,14 @@ test('approved redirects only, source limit and unavailable sites',async()=>{
  assert.equal(page.html,'Recipe');
  await assert.rejects(readLimited(new Response('abcdefgh').body,3),/size/);
 });
+
+test('optional household times, total time, image and pinch survive conversion',()=>{
+ const d={title:'Quarkspätzli',description:'',source:'',baseServings:5,prepMinutes:null,cookMinutes:null,
+  totalMinutes:35,image:'https://images.example/recipe.jpg',ingredients:[parseIngredient('2 Prisen Muskatnuss')],steps:['Mischen.']};
+ assert.equal(d.ingredients[0].unit,'pinch');assert.equal(d.ingredients[0].quantity,2);
+ validateDraft(d);
+ const {recipe}=householdRecipe({id:'test',draft:d},{});
+ assert.equal(recipe.prepMinutes,null);assert.equal(recipe.totalMinutes,35);assert.equal(recipe.image,d.image);
+ assert.throws(()=>validateDraft({...d,totalMinutes:-1}));
+ assert.throws(()=>validateDraft({...d,image:'javascript:alert(1)'}));
+});

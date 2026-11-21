@@ -1,13 +1,13 @@
 import {UNITS,validateRecipe} from '../src/domain/model.mjs';
 
-export const unitLabels = {g:'g',kg:'kg',ml:'ml',l:'l',piece:'Stück',tbsp:'EL',tsp:'TL',to_taste:'nach Geschmack'};
+export const unitLabels = {g:'g',kg:'kg',ml:'ml',l:'l',piece:'Stück',tbsp:'EL',tsp:'TL',pinch:'Prise',to_taste:'nach Geschmack'};
 const fractions={'½':'1/2','¼':'1/4','¾':'3/4','⅓':'1/3','⅔':'2/3','⅛':'1/8'};
 const numeric = s => s.split(/\s+/).reduce((sum,part)=>{
   const [a,b]=part.replace(',','.').split('/').map(Number);
   return sum+a/(b??1);
 },0);
 const aliases={g:'g',gramm:'g',kg:'kg',kilogramm:'kg',ml:'ml',l:'l',liter:'l',dl:'ml',cl:'ml',
-  el:'tbsp',esslöffel:'tbsp',tl:'tsp',teelöffel:'tsp',stück:'piece',stk:'piece'};
+  el:'tbsp',esslöffel:'tbsp',tl:'tsp',teelöffel:'tsp',stück:'piece',stk:'piece',prise:'pinch',prisen:'pinch'};
 export function parseIngredient(line) {
   const raw=String(line).trim(), unknown={name:raw,unit:'',quantity:null,optional:false};
   const s=raw.replace(/([½¼¾⅓⅔⅛])/g,(_m,ch)=>' '+fractions[ch]).trim();
@@ -44,7 +44,7 @@ export function householdRecipe(row,catalogNames) {
     return {ingredientId,quantity,unit,optional};
   });
   const recipe={schemaVersion:1,locale:'de-CH',id,slug:id,title:d.title,description:d.description,
-    baseServings:d.baseServings,prepMinutes:d.prepMinutes,cookMinutes:d.cookMinutes,
+    baseServings:d.baseServings,prepMinutes:d.prepMinutes,cookMinutes:d.cookMinutes,totalMinutes:d.totalMinutes??null,image:d.image||null,
     ingredients,instructions:{'de-CH':d.steps},householdRecipe:true};
   validateRecipe(recipe,new Set(Object.keys(names)));
   return {recipe,names};
@@ -53,7 +53,8 @@ export function validateDraft(d) {
   if (!d.title || d.title.length>160 || d.description.length>2000 || d.source.length>2000)
     throw Error('Bitte Titel, Beschriibig und Quelle prüefe.');
   if(!Number.isInteger(d.baseServings)||d.baseServings<1||d.baseServings>999)throw Error('Bitte d Basisportione iiträge.');
-  if([d.prepMinutes,d.cookMinutes].some(n=>!Number.isInteger(n)||n<0||n>9999))throw Error('Bitte beidi Ziite i Minute iiträge.');
+  if([d.prepMinutes,d.cookMinutes,d.totalMinutes].some(n=>n!=null&&(!Number.isInteger(n)||n<0||n>9999)))throw Error('Bitte gültigi Ziite i Minute iiträge.');
+  if(d.image)canonicalSource(d.image);
   if(!d.steps.length || d.steps.length>100 || d.steps.some(s=>!s.trim()||s.length>3000))throw Error('Bitte d Zuebereitig prüefe. Pro Zeile ein Schritt.');
   if(!d.ingredients.length||d.ingredients.length>100)throw Error('Es brucht 1 bis 100 Zutate.');
   for(const [i,row] of d.ingredients.entries()){

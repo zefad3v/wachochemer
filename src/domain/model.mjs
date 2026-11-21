@@ -1,6 +1,6 @@
 // Independent business rules. Recipe JSON remains the source of truth.
 export const SCHEMA_VERSION=1;
-export const UNITS=Object.freeze(['g','kg','ml','l','piece','tbsp','tsp','to_taste']);
+export const UNITS=Object.freeze(['g','kg','ml','l','piece','tbsp','tsp','pinch','to_taste']);
 const unitSet=new Set(UNITS), slug=/^[a-z0-9]+(?:-[a-z0-9]+)*$/, ingredientId=/^[a-z][a-z0-9_]*$/, datePattern=/^\d{4}-\d{2}-\d{2}$/;
 const object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const positive=x=>typeof x==='number'&&Number.isFinite(x)&&x>0;
@@ -30,7 +30,7 @@ export function validateRecipe(recipe,ingredientIds){
  check(recipe.locale==='de-CH',where,'unsupported locale');
  check(typeof recipe.title==='string'&&recipe.title.trim(),where,'missing title');
  check(Number.isSafeInteger(recipe.baseServings)&&recipe.baseServings>0,where,'invalid servings');
- check(integer(recipe.prepMinutes)&&integer(recipe.cookMinutes),where,'invalid times');
+ check((integer(recipe.prepMinutes)||(recipe.householdRecipe&&recipe.prepMinutes===null))&&(integer(recipe.cookMinutes)||(recipe.householdRecipe&&recipe.cookMinutes===null)),where,'invalid times');
  check(Array.isArray(recipe.ingredients)&&recipe.ingredients.length>0,where,'missing ingredients');
  check(Array.isArray(recipe.instructions?.['de-CH'])&&recipe.instructions['de-CH'].length>0&&recipe.instructions['de-CH'].every(x=>typeof x==='string'&&x.trim()),where,'invalid instructions');
  check(ingredientIds instanceof Set,where,'missing ingredient IDs');
