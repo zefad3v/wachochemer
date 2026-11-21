@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="Wa chochemer? Wucheplan für Wucheplan, Chochchischtli und Iichaufslischte.">
   <title>Wa chochemer?</title>
-  <link rel="stylesheet" href="./styles.css?v=20261120-recipes">
-  <script src="./app.js?v=20261120-recipes" type="module"></script>
+  <link rel="stylesheet" href="./styles.css?v=20261121-recipe-fields">
+  <script src="./app.js?v=20261121-recipe-fields" type="module"></script>
 </head>
 <body>
 <section id="account-startup" class="account-gate" aria-labelledby="account-startup-title">
@@ -242,9 +242,10 @@
           <label>Beschriibig<textarea name="description" rows="2" maxlength="2000"></textarea></label>
           <div class="recipe-numbers">
             <label>Portione<input name="servings" type="number" min="1" max="999" required></label>
-            <label>Vorbereite (Min.)<input name="prep" type="number" min="0" max="9999" required></label>
-            <label>Choche (Min.)<input name="cook" type="number" min="0" max="9999" required></label>
-          </div>
+            <label>Zuebereite (Min., optional)<input name="prep" type="number" min="0" max="9999"></label>
+            <label>Choche (Min., optional)<input name="cook" type="number" min="0" max="9999"></label>
+          <label>Uf em Tisch (Min., optional)<input name="total" type="number" min="0" max="9999"></label></div>
+          <label>Rezeptbild (HTTPS-Link, optional)<input name="image" type="url" maxlength="2000"></label>
           <fieldset><legend>Zutate</legend><div id="house-ingredients"></div>
             <button type="button" id="house-add-ingredient">Zutat dezue</button>
           </fieldset>
@@ -254,6 +255,7 @@
         </form>
       </div>
       <section id="house-preview" hidden>
+        <img id="house-preview-image" alt="Rezeptbild" hidden style="width:100%;max-height:260px;object-fit:contain" referrerpolicy="no-referrer">
         <h3 id="house-preview-name"></h3><p id="house-preview-description"></p><p id="house-preview-meta"></p>
         <h4>Zutate</h4><ul id="house-preview-ingredients"></ul><h4>Zuebereitig</h4><ol id="house-preview-steps"></ol>
         <p id="house-preview-source"></p><div class="meal-editor-actions">

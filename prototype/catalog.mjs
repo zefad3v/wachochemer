@@ -29,8 +29,8 @@ export async function fetchArchiveData(fetchJson,base='../data'){
 export function archiveEntries(recipes,images={}){
  return recipes.map(recipe=>({
   id:recipe.id,slug:recipe.slug,title:recipe.title,description:recipe.description,
-  minutes:recipe.prepMinutes+recipe.cookMinutes,
-  image:images[recipe.id]||null,real:true
+  minutes:recipe.totalMinutes??((recipe.prepMinutes||0)+(recipe.cookMinutes||0)),
+  image:recipe.image||images[recipe.id]||null,real:true
  })).sort((a,b)=>a.title.localeCompare(b.title,'de-CH'));
 }
 const searchText=text=>String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('de-CH');

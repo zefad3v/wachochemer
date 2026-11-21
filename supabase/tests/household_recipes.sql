@@ -26,6 +26,11 @@ begin
   perform public.save_household_recipe(target,rid,1,jsonb_set(draft,'{ingredients,0,quantity}','null'));
   raise exception 'Invalid quantity accepted';
  exception when check_violation then null; end;
+ begin
+  assert public.save_household_recipe(target,rid,1,draft||'{"prepMinutes":null,"cookMinutes":null,"totalMinutes":35,"image":"https://images.example/recipe.jpg","ingredients":[{"name":"Muskatnuss","unit":"pinch","quantity":2,"optional":false}]}')=2;
+  assert (select r.draft->'prepMinutes' from public.household_recipes r where r.id=rid)='null'::jsonb;
+  raise exception 'Rollback optional-field fixture' using errcode='P0002';
+ exception when no_data_found then null; end;
  assert public.save_household_recipe(target,rid,1,draft||'{"title":"Neu"}')=2;
  for i in 1..10 loop assert public.reserve_recipe_import(target,true); end loop;
  assert not public.reserve_recipe_import(target,true);

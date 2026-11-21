@@ -4,7 +4,7 @@ import {canonicalSource,parseIngredient,unitLabels,validateDraft} from './househ
 const el=id=>document.getElementById(id);
 const blankIngredient=()=>({name:'',quantity:null,unit:'',optional:false});
 const blank=()=>({title:'',description:'',baseServings:null,prepMinutes:null,cookMinutes:null,
-  source:'',ingredients:[blankIngredient()],steps:[]});
+  source:'',image:'',totalMinutes:null,ingredients:[blankIngredient()],steps:[]});
 const messages={
   source:'Dä Link wird nöd unterstützt. Füeg de Rezepttext fürs Iiläse mit KI ii.',
   no_recipe:'Kei vollständigs Rezept gfunde. Prüef de Link oder füeg de Rezepttext ii.',
@@ -41,13 +41,14 @@ export function recipeEditor({account,household,findRow,onSaved}) {
   function edit(d) {
     fields.title.value=d.title; fields.description.value=d.description;
     fields.servings.value=d.baseServings??''; fields.prep.value=d.prepMinutes??'';
-    fields.cook.value=d.cookMinutes??''; fields.steps.value=d.steps.join('\n');
+    fields.cook.value=d.cookMinutes??''; fields.total.value=d.totalMinutes??''; fields.image.value=d.image??''; fields.steps.value=d.steps.join('\n');
     fields.source.value=d.source;container.replaceChildren();d.ingredients.forEach(ingredient);
     el('house-preview').hidden=true;el('house-editor-input').hidden=false;
   }
   function read() {
     return validateDraft({title:fields.title.value.trim(),description:fields.description.value.trim(),
-      baseServings:fields.servings.valueAsNumber,prepMinutes:fields.prep.valueAsNumber,cookMinutes:fields.cook.valueAsNumber,
+      baseServings:fields.servings.valueAsNumber,prepMinutes:fields.prep.value===''?null:fields.prep.valueAsNumber,cookMinutes:fields.cook.value===''?null:fields.cook.valueAsNumber,
+      totalMinutes:fields.total.value===''?null:fields.total.valueAsNumber,image:canonicalSource(fields.image.value),
       source:canonicalSource(fields.source.value),steps:fields.steps.value.split(/\n/).map(x=>x.trim()).filter(Boolean),
       ingredients:Array.from(container.children,wrap=>{
         const unit=wrap.querySelector('.unit').value,qty=wrap.querySelector('.quantity').value.trim().replace(',','.');
@@ -115,7 +116,8 @@ export function recipeEditor({account,household,findRow,onSaved}) {
       preview=read();status.textContent='';
       el('house-preview-name').textContent=preview.title;
       el('house-preview-description').textContent=preview.description;
-      el('house-preview-meta').textContent=preview.baseServings+' Portione · '+preview.prepMinutes+' Min. vorbereite · '+preview.cookMinutes+' Min. choche';
+      el('house-preview-meta').textContent=[preview.baseServings+' Portione',preview.prepMinutes!=null?preview.prepMinutes+' Min. zuebereite':'',preview.cookMinutes!=null?preview.cookMinutes+' Min. choche':'',preview.totalMinutes!=null?preview.totalMinutes+' Min. bis uf em Tisch':''].filter(Boolean).join(' · ');
+      const image=el('house-preview-image');image.hidden=!preview.image;if(preview.image)image.src=preview.image;else image.removeAttribute('src');
       el('house-preview-source').textContent=preview.source;
       list('house-preview-ingredients',preview.ingredients.map(r=>[r.quantity,unitLabels[r.unit],r.name,r.optional?'(optional)':''].filter(x=>x!=null&&x!=='').join(' ')));
       list('house-preview-steps',preview.steps);

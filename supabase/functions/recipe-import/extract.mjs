@@ -64,7 +64,7 @@ function microdataRecipe(doc) {
     .filter(node => node.tagName !== 'TR' || node.querySelector('.Ingredient--amount'))
     .map(node => [...node.children].map(child => child.textContent.trim()).join(' ').replace(/\s+/g, ' ').trim());
   return {
-    name: property('name'), description: property('description'), recipeYield: property('recipeYield'),
+    image: property('image'), name: property('name'), description: property('description'), recipeYield: property('recipeYield'),
     prepTime: property('prepTime'), cookTime: property('cookTime'), totalTime: property('totalTime'),
     recipeIngredient,
     recipeInstructions: [...root.querySelectorAll('[itemprop~="recipeInstructions"]')]
@@ -90,7 +90,11 @@ export function extractRecipe(doc, plain) {
   const range=/\d\s*(?:[-–—/]|bis|to)\s*\d/i.test(yieldText);
   const servings=range?null:yieldText.trim().match(/^(\d+)\s*$/) || yieldText.match(/\b(\d+)\s*(?:Portion|Person|serving)/i);
   const prepMinutes=minutes(r.prepTime), cookMinutes=minutes(r.cookTime);
-  return {title:plain(r.name||''),description:plain(r.description||''),baseServings:servings?Number(servings[1]):null,
+  const imageValue=[r.image].flat()[0];
+  const candidate=typeof imageValue==='string'?imageValue:imageValue?.url||imageValue?.contentUrl;
+  let image='';
+  try {const url=new URL(candidate);if(url.protocol==='https:'&&!url.username&&!url.password)image=url.href;}catch{}
+  return {image,title:plain(r.name||''),description:plain(r.description||''),baseServings:servings?Number(servings[1]):null,
     prepMinutes,cookMinutes,totalMinutes:minutes(r.totalTime),
     lines:items.map(x=>typeof x==='string'?plain(x):[x?.value,x?.unitText,x?.name].filter(Boolean).join(' ')).filter(Boolean),
     steps:steps(r.recipeInstructions)};
