@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="Wa chochemer? Wucheplan für Wucheplan, Chochchischtli und Iichaufslischte.">
   <title>Wa chochemer?</title>
-  <link rel="stylesheet" href="./styles.css?v=20261121-ranges">
-  <script src="./app.js?v=20261121-ranges" type="module"></script>
+  <link rel="stylesheet" href="./styles.css?v=20261121-unquantified">
+  <script src="./app.js?v=20261121-unquantified" type="module"></script>
 </head>
 <body>
 <section id="account-startup" class="account-gate" aria-labelledby="account-startup-title">
@@ -112,7 +112,7 @@
         <div><input id="shopping-extra" placeholder="z. B. Milch oder Windle" maxlength="120" required><button type="submit">Hinzuefüege</button></div>
       </form>
       <p class="shopping-disclaimer">Nur gplanti Rezepte wärded zämegfasst. Eigeni Menüs ohni Zutate und Reschte erzeuged kei zweite Iichauf.</p>
-      <label><input type="checkbox" id="shopping-optional"> Optionali Zutate iischlüsse</label>
+      <label><input type="checkbox" role="switch" id="shopping-optional"> Optionali Zutate iischlüsse</label>
       <p id="bring-warnings" role="status"></p>
       <div id="bring-imports" aria-label="Offizielli Einzelrezeptimporte"></div>
       <p>Ob es Rezept in Bring! gspeicheret isch und ob Zutate uf de Bring!-Liste stönd, isch unabhängig und da nöd prüefbar. Bi jedem Import in Bring! selber kontrolliere.</p>
@@ -207,7 +207,7 @@
         </div>
         <div id="meal-simple-portions"><p id="meal-portion-note" role="status"></p>
 <label for="meal-need">Portione für die Mahlziit</label><div class="portion-stepper"><button type="button" id="meal-minus" aria-label="Halbi Portion weniger">−</button><input id="meal-need" type="text" inputmode="decimal" autocomplete="off" aria-label="Portionen für die Mahlzeit" placeholder="z. B. 2.5"><button type="button" id="meal-plus" aria-label="Halbi Portion meh">+</button></div>
-<label><input id="meal-extra-enabled" type="checkbox"> Zusätzlich für spöter choche</label><label id="meal-extra-line" hidden>Zusätzlichi Portione<input id="meal-extra" type="text" inputmode="decimal" autocomplete="off" value="0" aria-label="Zusätzliche Portionen"></label><output id="meal-total" aria-live="polite"></output></div>
+<label><input id="meal-extra-enabled" type="checkbox" role="switch"> Zusätzlich für spöter choche</label><label id="meal-extra-line" hidden>Zusätzlichi Portione<input id="meal-extra" type="text" inputmode="decimal" autocomplete="off" value="0" aria-label="Zusätzliche Portionen"></label><output id="meal-total" aria-live="polite"></output></div>
 <details id="meal-advanced"><summary>Erwiiterti Portionsplanig</summary><label id="meal-servings-line">Kochmenge (Portione)<input id="meal-servings" type="text" required inputmode="decimal" autocomplete="off" value="1"></label>
         <label id="meal-consumed-line">Verzehr bi dere Mahlziit<input id="meal-consumed" type="text" required inputmode="decimal" autocomplete="off"></label>
         </details><details><summary>Rezeptspezifischi Chind-Portion</summary><label>Chind-Anteil<input id="recipe-child-share" type="text" inputmode="decimal" autocomplete="off"></label><button type="button" id="recipe-share-save">Für das Rezept merke und awände</button></details>

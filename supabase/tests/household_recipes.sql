@@ -27,7 +27,7 @@ begin
   raise exception 'Invalid quantity accepted';
  exception when check_violation then null; end;
  begin
-  assert public.save_household_recipe(target,rid,1,draft||'{"prepMinutes":null,"cookMinutes":null,"totalMinutes":35,"image":"https://images.example/recipe.jpg","ingredients":[{"name":"Muskatnuss","unit":"pinch","quantity":2,"quantityMax":2.5,"optional":false}]}')=2;
+  assert public.save_household_recipe(target,rid,1,draft||'{"prepMinutes":null,"cookMinutes":null,"totalMinutes":35,"image":"https://images.example/recipe.jpg","ingredients":[{"name":"Muskatnuss","unit":"unspecified","quantity":null,"optional":false}]}')=2;
   assert (select r.draft->'prepMinutes' from public.household_recipes r where r.id=rid)='null'::jsonb;
   raise exception 'Rollback optional-field fixture' using errcode='P0002';
  exception when no_data_found then null; end;

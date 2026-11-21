@@ -1,6 +1,6 @@
 import {sessionStorageChoice} from './auth-session.mjs';
 import {backendConfig} from './backend-config.js';
-import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261121-ranges';
+import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261121-unquantified';
 
 export const cloudEnabled = Boolean(backendConfig.url || backendConfig.publishableKey);
 const html = `
@@ -17,7 +17,7 @@ const html = `
       <h2>Aamelde</h2>
       <label>E-Mail<input name="email" type="email" autocomplete="username" required></label>
       <label>Passwort<input name="password" type="password" autocomplete="current-password" minlength="8" required></label>
-      <label class="remember-choice"><input name="remember" type="checkbox" checked>Aagmeldet bliibe</label>
+      <label class="remember-choice"><input name="remember" type="checkbox" role="switch" checked>Aagmeldet bliibe</label>
       <button class="main-action" type="submit">Aamelde</button>
       <p>No kei Konto?</p>
       <button type="button" id="account-register">Neus Konto erstelle</button>
@@ -29,7 +29,7 @@ const html = `
       <label>E-Mail<input name="email" type="email" autocomplete="username" required></label>
       <label>Neus Passwort<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
       <label>Passwort wiederhole<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
-      <label class="remember-choice"><input name="remember" type="checkbox" checked>Aagmeldet bliibe</label>
+      <label class="remember-choice"><input name="remember" type="checkbox" role="switch" checked>Aagmeldet bliibe</label>
       <button class="main-action" type="submit">Konto erstelle</button>
       <button type="button" id="account-signup-login">Ich ha scho es Konto</button>
     </form>

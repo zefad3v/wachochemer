@@ -41,7 +41,7 @@ test('source normalisation, quantities, stable private recipes and catalog ingre
    ingredients:['0,5 kg Reis','Salz nach Geschmack'].map(parseIngredient),steps:['Mischen.']};
  validateDraft(draft);const {recipe,names}=householdRecipe({id:'0123',draft},{salt:'Salz'});
  assert.equal(recipe.ingredients[1].ingredientId,'salt');assert.equal(names[recipe.ingredients[0].ingredientId],'Reis');
- assert.throws(()=>validateDraft({...draft,ingredients:[parseIngredient('eine Handvoll Kräuter')]}));
+ assert.throws(()=>validateDraft({...draft,ingredients:[parseIngredient('2 Becher Kräuter')]}));
 });
 test('approved redirects only, source limit and unavailable sites',async()=>{
  let called=0;
@@ -81,4 +81,13 @@ test('quantity ranges scale and aggregate both endpoints',async()=>{
  const recipes={r:{baseServings:5,ingredients:[{ingredientId:'salt',unit:'tsp',quantity:2,quantityMax:2.5}]}};
  const total=ingredientTotals({'2026-11-21|lunch':{type:'recipe',recipeId:'r',servings:10}},recipes,'2026-11-21','2026-11-21');
  assert.equal(total.items[0].quantity,4);assert.equal(total.items[0].quantityMax,5);
+});
+
+test('ingredients without source quantities can be saved without inventing a measure',()=>{
+ const butter=parseIngredient('Butterflocken');
+ assert.equal(butter.unit,'unspecified');assert.equal(butter.quantity,null);assert.equal(butter.name,'Butterflocken');
+ const draft={title:'Spätzli',description:'',source:'',baseServings:5,prepMinutes:null,cookMinutes:null,ingredients:[butter],steps:['Mit Butterflocken belegen.']};
+ validateDraft(draft);assert.equal(householdRecipe({id:'butter',draft},{}).recipe.ingredients[0].quantity,null);
+ assert.equal(parseIngredient('2 Becher Milch').unit,'');
+ assert.throws(()=>validateDraft({...draft,ingredients:[{...butter,quantity:1}]}));
 });

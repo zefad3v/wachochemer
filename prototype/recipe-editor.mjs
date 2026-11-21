@@ -25,13 +25,13 @@ export function recipeEditor({account,household,findRow,onSaved}) {
     wrap.innerHTML='<label>Zutat<input class="name" required maxlength="200"></label>'+
       '<div class="ingredient-measure"><label>Menge<input class="quantity" inputmode="text" placeholder="z. B. 2 oder 2–2½"></label>'+
       '<label>Einheit<select class="unit" required><option value="">Bitte wähle</option></select></label></div>'+
-      '<div class="ingredient-footer"><label><input class="optional" type="checkbox"> Optional</label>'+
+      '<div class="ingredient-footer"><label><input class="optional" type="checkbox" role="switch"> Optional</label>'+
       '<button type="button">Entferne</button></div>';
     const name=wrap.querySelector('.name'),qty=wrap.querySelector('.quantity'),unit=wrap.querySelector('.unit');
     for(const [key,label] of Object.entries(unitLabels))unit.add(new Option(label,key));
     name.value=row.name; qty.value=row.quantityMax!=null?row.quantity+'–'+row.quantityMax:row.quantity??''; unit.value=row.unit;
     wrap.querySelector('.optional').checked=!!row.optional;
-    const toggle=()=>{qty.disabled=unit.value==='to_taste';qty.required=!qty.disabled;};
+    const toggle=()=>{qty.disabled=['to_taste','unspecified'].includes(unit.value);qty.required=!qty.disabled;};
     toggle(); unit.addEventListener('change',toggle);
     wrap.querySelector('button').onclick=()=>{wrap.remove();dirty=true;};
     container.append(wrap);
@@ -51,7 +51,7 @@ export function recipeEditor({account,household,findRow,onSaved}) {
       source:canonicalSource(fields.source.value),steps:fields.steps.value.split(/\n/).map(x=>x.trim()).filter(Boolean),
       ingredients:Array.from(container.children,wrap=>{
         const unit=wrap.querySelector('.unit').value,qty=wrap.querySelector('.quantity').value.trim().replace(',','.');
-        return {name:wrap.querySelector('.name').value.trim(),unit,...(unit==='to_taste'?{quantity:null}:parseAmount(qty)),
+        return {name:wrap.querySelector('.name').value.trim(),unit,...(['to_taste','unspecified'].includes(unit)?{quantity:null}:parseAmount(qty)),
           optional:wrap.querySelector('.optional').checked};
       })});
   }

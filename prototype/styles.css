@@ -578,3 +578,27 @@ html{overscroll-behavior-y:none}
 #house-recipe-editor .main-action { border:0; border-radius:12px; padding:.65rem; background:#dfebbe; color:#203323; font-weight:650 }
 #house-recipe-editor button:disabled { opacity:.6 }
 #house-editor-status:empty { display:none }
+
+/* Boolean choices use the same switch treatment throughout the app. */
+input[type="checkbox"][role="switch"] {
+ appearance:none; -webkit-appearance:none; box-sizing:border-box;
+ width:48px!important; min-width:48px; height:28px; min-height:28px!important;
+ padding:3px!important; border:1px solid #8b9d86; border-radius:999px;
+ background:#334a3a; display:inline-grid; align-items:center;
+ vertical-align:middle; cursor:pointer; flex-shrink:0;
+}
+input[type="checkbox"][role="switch"]::before {
+ content:""; width:20px; height:20px; border-radius:50%; background:#f1f1df;
+ box-shadow:0 1px 3px #0004; transition:transform .15s;
+}
+input[type="checkbox"][role="switch"]:checked { background:#dae7ae; border-color:#dae7ae }
+input[type="checkbox"][role="switch"]:checked::before { transform:translateX(20px); background:#223b2d }
+input[type="checkbox"][role="switch"]:focus-visible { outline:2px solid #f1f1df; outline-offset:4px }
+input[type="checkbox"][role="switch"]:disabled { opacity:.5; cursor:default }
+#house-import { border:1px solid var(--line,#65785f); border-radius:18px; margin:16px 0; overflow:hidden }
+#house-import > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; list-style:none; font-weight:600 }
+#house-import > summary::-webkit-details-marker { display:none }
+#house-import > summary::after { content:"+"; font-size:24px; line-height:1 }
+#house-import[open] > summary::after { content:"−" }
+#house-import > .editor-fields { padding:0 16px 16px }
+@media(prefers-reduced-motion:reduce){input[type="checkbox"][role="switch"]::before{transition:none}}
