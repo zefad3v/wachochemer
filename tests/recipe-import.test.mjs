@@ -3,6 +3,26 @@ import assert from 'node:assert/strict';
 import {extractRecipe,fetchPage,readLimited} from '../supabase/functions/recipe-import/extract.mjs';
 import {parseIngredient,canonicalSource,householdRecipe,validateDraft} from '../prototype/household-recipes.mjs';
 
+test('Swissmilk microdata imports ingredients without equipment and preserves uncertain amounts',()=>{
+ const properties={name:'Quarkspätzli',recipeYield:'5 Portionen',prepTime:'PT35M',totalTime:'PT35M'};
+ const ingredient=(amount,name)=>({tagName:'TR',children:[{textContent:amount},{textContent:name}],
+  querySelector:()=>({textContent:amount})});
+ const rows=[{tagName:'TR',querySelector:()=>null},ingredient('500\n g','Halbfettquark'),
+  ingredient('2 - 2½ TL','Salz'),ingredient('','Butterflocken')];
+ const root={querySelector:selector=>{
+  const name=/"(.*?)"/.exec(selector)[1];
+  return name in properties?{getAttribute:()=>null,textContent:properties[name]}:null;
+ },querySelectorAll:selector=>selector.includes('recipeIngredient')?rows:
+  [{querySelector:()=>({textContent:'Teig mischen.'})}]};
+ const doc={querySelectorAll:()=>[],querySelector:()=>root};
+ const recipe=extractRecipe(doc,s=>s);
+ assert.equal(recipe.title,'Quarkspätzli');assert.equal(recipe.baseServings,5);
+ assert.equal(recipe.prepMinutes,35);assert.equal(recipe.cookMinutes,null);
+ assert.deepEqual(recipe.lines,['500 g Halbfettquark','2 - 2½ TL Salz','Butterflocken']);
+ assert.deepEqual(recipe.steps,['Teig mischen.']);
+ assert.throws(()=>extractRecipe({querySelectorAll:()=>[],querySelector:()=>null},s=>s),/no_recipe/);
+});
+
 test('Recipe graph, referenced sections, missing values and multilingual units',()=>{
  const graph=[{'@id':'s','@type':'HowToStep',text:'Umrühren.'},{'@type':['Recipe'],name:'Brei',recipeYield:'4 Personen',
    recipeIngredient:['1 ½ dl Milch','2–3 Äpfel'],recipeInstructions:[{'@type':'HowToSection',itemListElement:[{'@id':'s'}]}]}];
