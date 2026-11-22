@@ -5,11 +5,11 @@ const blankIngredient=()=>({name:'',quantity:null,unit:'',optional:false});
 const blank=()=>({title:'',description:'',baseServings:null,prepMinutes:null,cookMinutes:null,
   source:'',image:'',totalMinutes:null,activeMinutes:null,ingredients:[blankIngredient()],steps:[]});
 const messages={
-  source:'Diese Seite wird nicht unterstützt. Füge den Rezepttext für den KI-Import ein.',
+  source:'Bitte verwende einen öffentlichen HTTPS-Rezeptlink ohne Anmeldung.',
   no_recipe:'Kein vollständiges Rezept gefunden. Prüfe den Link oder füge den Rezepttext ein.',
   page:'Die Rezeptseite konnte nicht gelesen werden. Füge den Rezepttext ein.',
   size:'Die Seite ist zu gross. Füge den Rezepttext ein.',
-  ai_setup:'Der KI-Import ist noch nicht eingerichtet. Du kannst das Rezept von Hand erfassen oder einen unterstützten Link importieren.',
+  ai_setup:'Der KI-Import ist noch nicht eingerichtet. Du kannst das Rezept von Hand erfassen oder einen Rezeptlink importieren.',
   limit:'Dein Haushalt hat das heutige Importlimit erreicht.',
   auth:'Prüfe deine Anmeldung und den ausgewählten Haushalt.',
   ai_busy:'Die KI ist ausgelastet oder das API-Guthaben reicht nicht aus.',

@@ -43,7 +43,7 @@ test('source normalisation, quantities, stable private recipes and catalog ingre
  assert.equal(recipe.ingredients[1].ingredientId,'salt');assert.equal(names[recipe.ingredients[0].ingredientId],'Reis');
  assert.throws(()=>validateDraft({...draft,ingredients:[parseIngredient('2 Becher Kräuter')]}));
 });
-test('approved redirects only, source limit and unavailable sites',async()=>{
+test('public HTTPS redirects only, source limit and unavailable sites',async()=>{
  let called=0;
  await assert.rejects(fetchPage('https://fooby.ch/r',async()=>{called++;return Response.redirect('https://outside.example/');}),/source/);
  assert.equal(called,1);
@@ -111,4 +111,17 @@ test('counted vegetables and bunches retain their quantities through persistence
  assert.equal(result.recipe.ingredients[3].unit,'bunch');
  assert.equal(parseIngredient('2 Becher Milch').unit,'');
  assert.throws(()=>validateDraft({...draft,activeMinutes:-1}));
+});
+
+import {publicAddress} from '../supabase/functions/recipe-import/public-fetch.mjs';
+import {publisherUrl} from '../supabase/functions/recipe-import/extract.mjs';
+test('publisher independent import accepts public HTTPS and rejects local targets',async()=>{
+ assert.equal(publisherUrl('https://kochkarussell.com/gelbes-thai-curry-haehnchen/#x').hostname,'kochkarussell.com');
+ for(const address of ['127.0.0.1','10.0.0.1','169.254.169.254','100.64.0.1','192.168.2.1','::1','::ffff:127.0.0.1','fc00::1','fe80::1'])assert.equal(publicAddress(address),false,address);
+ assert(publicAddress('8.8.8.8'));assert(publicAddress('2606:4700:4700::1111'));
+ for(const url of ['http://kochkarussell.com/r','https://127.1/r','https://[::1]/r','https://user:pw@example.org/r','https://server.local/r'])assert.throws(()=>publisherUrl(url));
+ let calls=0;
+ const page=await fetchPage('https://kochkarussell.com/r',async()=>++calls===1?Response.redirect('https://another-publisher.org/r'):new Response('recipe',{headers:{'content-type':'text/html'}}));
+ assert.equal(calls,2);assert.equal(page.source,'https://another-publisher.org/r');
+ await assert.rejects(fetchPage('https://kochkarussell.com/r',async()=>Response.redirect('https://127.0.0.1/')),/source/);
 });

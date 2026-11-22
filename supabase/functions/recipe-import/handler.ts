@@ -27,7 +27,8 @@ async function aiDraft(text:string,key:string) {
   if (!draft?.title || !draft.lines?.length || !draft.steps?.length) throw Error('no_recipe');
   return draft;
 }
-export async function handleRecipeImport(request:Request) {
+export function createRecipeImportHandler(loadPage=fetchPage) {
+return async function handleRecipeImport(request:Request) {
   if (request.method==='OPTIONS') return new Response(null,{status:204,headers:cors});
   if (request.method!=='POST') return reply(405,{code:'method'});
   const auth=request.headers.get('Authorization');
@@ -49,7 +50,7 @@ export async function handleRecipeImport(request:Request) {
     if (!(await access.json())) return reply(429,{code:'limit'});
     let source=input.url, text=input.text.trim(), draft, image='';
     if (!ai || !text) {
-      const page=await fetchPage(input.url);
+      const page=await loadPage(input.url);
       source=page.source;
       const doc=parseHTML(page.html).document;
       if (ai) {
@@ -62,6 +63,9 @@ export async function handleRecipeImport(request:Request) {
         draft=extractRecipe(doc,plain);
       }
     }
+    if (ai && text && input.url && !image) {
+      try {const page=await loadPage(input.url);image=extractRecipe(parseHTML(page.html).document,(s:string)=>s).image;}catch{/* Image lookup must never prevent text import. */}
+    }
     if (ai) draft={...await aiDraft(text,key!),image};
     return reply(200,{draft,source});
   } catch (error) {
@@ -69,3 +73,6 @@ export async function handleRecipeImport(request:Request) {
     return reply(422,{code:['size','source','page','no_recipe','ai_busy','ai_failed'].includes(code)?code:'unavailable'});
   }
 }
+
+}
+export const handleRecipeImport=createRecipeImportHandler();
