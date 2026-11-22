@@ -1,4 +1,4 @@
-import {canonicalSource,parseAmount,parseIngredient,unitLabels,validateDraft} from './household-recipes.mjs';
+import {canonicalSource,parseAmount,parseIngredient,unitLabels,validateDraft} from './household-recipes.mjs?v=20261122-amounts';
 
 const el=id=>document.getElementById(id);
 const blankIngredient=()=>({name:'',quantity:null,unit:'',optional:false});
