@@ -38,6 +38,19 @@ export function parseIngredient(line) {
   if(amount.quantityMax==null && counted.test(remainder))return {...unknown,name:remainder,quantity:amount.quantity,unit:'piece'};
   return unknown;
 }
+// Expand only unmeasured, unambiguous spice lists. Parentheses often come from publisher notes.
+export function parseIngredientLines(lines) {
+ return lines.flatMap(line=>{
+  const raw=String(line).trim();
+  const taste=/^(?:etwas)\s+|[, ]+nach Geschmack$/i;
+  const list=raw.replace(taste,'');
+  const spices=list.match(/\b(?:Cayennepfeffer|Paprikapulver|Chilipulver|Muskatnuss|Pfeffer|Chili|Salz)\b/gi)||[];
+  const remainder=list.replace(/\b(?:Cayennepfeffer|Paprikapulver|Chilipulver|Muskatnuss|Pfeffer|Chili|Salz)\b/gi,'').replace(/\bund\b/gi,'').replace(/[\s,()&]+/g,'');
+  if(spices.length<2||remainder)return [parseIngredient(raw)];
+  const seasoned=taste.test(raw);
+  return spices.map(name=>parseIngredient(name+(seasoned?' nach Geschmack':'')));
+ });
+}
 export function canonicalSource(text) {
   if (!text.trim()) return '';
   let url;
