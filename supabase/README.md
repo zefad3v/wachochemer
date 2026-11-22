@@ -165,3 +165,7 @@ Der Linkimport unterstützt HTTPS auf den angegebenen Portalen und prüft jeden 
 ## Anbieterunabhängiger Rezeptimport, 22. November 2026
 
 Öffentliche HTTPS-Seiten werden ohne Anbieterliste eingelesen. Jeder Redirect wird erneut geprüft. DNS-Adressen werden auf öffentliche Ziele beschränkt und für die TLS-Verbindung festgehalten. Interne Adressen, Zugangsdaten in URLs und andere Ports sind gesperrt. Fehlende Rezeptdaten, nicht erreichbare Seiten und Grössenlimits ergeben eine Rückmeldung. Bei KI-Text plus Link wird das Rezeptbild zusätzlich versucht; ein Bildfehler verhindert den Textimport nicht. Kochkarussell wurde mit vier Portionen, zwölf Zutaten, drei Schritten, 10/20/30 Minuten und Bild geprüft.
+
+## Transportkorrektur für die Edge-Laufzeit
+
+Der HTTPS-Import verbindet sich mit der geprüften öffentlichen IP über Deno.connect und startet TLS mit dem ursprünglichen Hostnamen. Zertifikatsprüfung und SNI bleiben aktiv. Der Supabase-Edge-Runtime fehlen die Node-HTTPS-Option lookup und die neuere TCP-Proxy-Option von Deno.createHttpClient. Deshalb genügt ein Test mit aktuellem Deno allein nicht. Der Curry-Abruf samt zwölf Zutaten, drei Schritten, Zeit und Bild wurde am 22. November direkt in der bereitgestellten Supabase-Funktion verifiziert. Temporäre Diagnoserouten sind anschliessend entfernt worden.
