@@ -21,6 +21,8 @@ await context.addInitScript(()=>{
  const original=window.matchMedia.bind(window);
  window.matchMedia=q=>q==='(display-mode: standalone)'?{matches:true,media:q,addEventListener(){},removeEventListener(){}}:original(q);
 });
+// Chromium has no installed-PWA CSS emulation; activate the same standalone rules in this isolated fixture.
+await context.route('**/styles.css?*',r=>r.fulfill({contentType:'text/css',body:readFileSync(root+'/prototype/styles.css','utf8').replaceAll('(display-mode:standalone)','(min-width:0px)')}));
 await context.route('**/backend-config.js',r=>r.fulfill({contentType:'text/javascript',body:'export const backendConfig={url:"",publishableKey:""};'}));
 const recipe=JSON.parse(readFileSync(root+'/data/recipes/apfel-omeletten.json'));
 const fixtures=Array.from({length:25},(_,i)=>({...recipe,id:'test-'+i,slug:'test-'+i,title:'Gericht '+String(i).padStart(2,'0')}));
