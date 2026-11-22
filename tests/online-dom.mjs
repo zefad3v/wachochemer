@@ -30,7 +30,7 @@ const client={
       if(name==='recipe-import'){
         importMode=body.mode;
         return ok({source:body.url,draft:{title:'Rezept vom Link',description:'',baseServings:2,prepMinutes:5,cookMinutes:10,
-          lines:['1 dl Milch'],steps:['Mischen.']}});
+          lines:['1 dl Milch','Salz (Pfeffer und Chili)'],steps:['Mischen.']}});
       }
       assert.equal(name,'send-household-invitation');
       assert.equal(body.householdId,'household-1');
@@ -195,12 +195,14 @@ assert.equal(recipeRows.length,0);
 const form=el('house-recipe-form');
 assert.equal(form.elements.title.value,'Rezept vom Link');
 assert.equal(form.querySelector('.quantity').value,'100');
+assert.deepEqual([...form.querySelectorAll('#house-ingredients .name')].map(e=>e.value),['Milch','Salz','Pfeffer','Chili']);
 form.elements.title.value='Üse Brei';
 await submit('house-recipe-form');
 assert.equal(el('house-preview-name').textContent,'Üse Brei');
 assert.equal(el('house-preview').hidden,false);assert.equal(recipeRows.length,0);
 await click('house-revise');await submit('house-recipe-form');await click('house-save');
 assert.equal(recipeRows.length,1);assert.equal(el('house-recipe-editor').open,false);
+assert.deepEqual(Array.from(recipeRows[0].draft.ingredients,r=>r.name),['Milch','Salz','Pfeffer','Chili']);
 assert.equal(el('archive-status').textContent,'Rezept gespeichert.');
 el('recipe-grid').querySelector('[data-recipe="haushalt-'+recipeRows[0].id+'"]').click();
 assert.equal(el('dialog-title').textContent,'Üse Brei');
@@ -215,6 +217,7 @@ await click('house-reload-recipe');assert.equal(form.elements.title.value,'Zweit
 await click('house-editor-close');
 await click('new-house-recipe');fill('house-ai-text','Zutaten und Schritte');await click('house-read-ai');
 assert.equal(importMode,'ai');assert.equal(recipeRows.length,1);
+assert.deepEqual([...form.querySelectorAll('#house-ingredients .name')].map(e=>e.value),['Milch','Salz','Pfeffer','Chili']);
 await click('house-editor-close');w.document.querySelector('[data-tab=week]').click();
 const taskButton=el('account-settings').querySelector('.account-navigation button');
 taskButton.click();

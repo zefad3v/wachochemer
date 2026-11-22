@@ -1,4 +1,4 @@
-import {canonicalSource,parseAmount,parseIngredient,unitLabels,validateDraft} from './household-recipes.mjs?v=20261122-amounts';
+import {canonicalSource,parseAmount,parseIngredientLines,unitLabels,validateDraft} from './household-recipes.mjs?v=20261122-spices';
 
 const el=id=>document.getElementById(id);
 const blankIngredient=()=>({name:'',quantity:null,unit:'',optional:false});
@@ -98,7 +98,7 @@ export function recipeEditor({account,household,findRow,findSource,onSaved}) {
       const result=await account().importRecipe(target,{url,text:mode==='ai'?text:'',mode});
       if(!active())return;
       const d=result.draft;
-      edit({...d,source:canonicalSource(result.source),ingredients:d.lines.map(parseIngredient)});
+      edit({...d,source:canonicalSource(result.source),ingredients:parseIngredientLines(d.lines)});
       dirty=true;el('house-import').open=false;
       status.textContent='Prüfe Mengen, Einheiten, Portionen und Zubereitungsschritte.'+
         (d.totalMinutes!=null && (d.prepMinutes==null||d.cookMinutes==null)?' Die Quelle nennt insgesamt '+d.totalMinutes+' Minuten.':'');

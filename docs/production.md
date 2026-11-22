@@ -55,3 +55,5 @@ Der HTTPS-Import verbindet sich mit der geprüften öffentlichen IP über Deno.c
 ## Mengenerkennung beim Curry-Import
 
 Stückmengen erkennen auch Knoblauchzehen, Limetten, Grössenangaben mit ss oder ß und nachgestellte Hinweise wie «gepresst». Mengenbereiche mit qualifizierten Löffelangaben wie «1 bis 3 grosse EL» bleiben skalierbar; der Löffelhinweis wird beim Zutatennamen bewahrt. Unbekannte Masseinheiten bleiben zur Kontrolle offen. Bereits gespeicherte Rezepte werden nicht automatisch verändert.
+
+Unbemessene, eindeutige Gewürzlisten wie «Salz (Pfeffer und Chili)» werden beim Import in einzelne Zutaten ohne erfundene Mengen aufgeteilt. Mengenangaben, Alternativen und beschreibende Klammerhinweise werden nicht automatisch verteilt. Bereits gespeicherte Rezepte behalten ihren Stand.
