@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import {strict as assert} from 'node:assert';
 import {parseHTML} from 'npm:linkedom@0.18.12';
 import {fetchPage,extractRecipe} from '../supabase/functions/recipe-import/extract.mjs';

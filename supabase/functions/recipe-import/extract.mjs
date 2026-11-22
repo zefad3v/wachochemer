@@ -24,7 +24,9 @@ export async function fetchPage(input, fetcher = publicFetch) {
   let url = publisherUrl(input);
   const signal = AbortSignal.timeout(12000);
   for (let hop = 0; hop <= 4; hop++) {
-    const res = await fetcher(url, {redirect:'manual', signal, headers:{Accept:'text/html'}});
+    let res;
+    try {res = await fetcher(url, {redirect:'manual', signal, headers:{Accept:'text/html'}});}
+    catch(error){throw Error(error.message==='source'?'source':'page');}
     if ([301,302,303,307,308].includes(res.status)) {
       const location = res.headers.get('location');
       await res.body?.cancel();

@@ -63,6 +63,7 @@ return async function handleRecipeImport(request:Request) {
         draft=extractRecipe(doc,plain);
       }
     }
+    if (!ai && (!draft?.title || !draft.lines?.length || !draft.steps?.length)) throw Error('no_recipe');
     if (ai && text && input.url && !image) {
       try {const page=await loadPage(input.url);image=extractRecipe(parseHTML(page.html).document,(s:string)=>s).image;}catch{/* Image lookup must never prevent text import. */}
     }
