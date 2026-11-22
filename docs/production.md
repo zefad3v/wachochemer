@@ -43,3 +43,7 @@ Bring! bietet weiterhin die vorhandene Einzelrezeptübergabe und eine kopierbare
 ## Dokumentation
 
 README, Architektur und Roadmaps beschreiben den aktuellen Stand. Historische UI-Berichte behalten ihre damaligen Messwerte und Screenshots. Ein Hinweis am Anfang verweist auf diesen Betriebsstand. Ihre damaligen Aussagen zu lokalem Speicher, offenen Merges und Demo-Daten sind keine aktuellen Betriebsvorgaben.
+
+## Anbieterunabhängiger Rezeptimport, 22. November 2026
+
+Öffentliche HTTPS-Seiten werden ohne Anbieterliste eingelesen. Jeder Redirect wird erneut geprüft. DNS-Adressen werden auf öffentliche Ziele beschränkt und für die TLS-Verbindung festgehalten. Interne Adressen, Zugangsdaten in URLs und andere Ports sind gesperrt. Fehlende Rezeptdaten, nicht erreichbare Seiten und Grössenlimits ergeben eine Rückmeldung. Bei KI-Text plus Link wird das Rezeptbild zusätzlich versucht; ein Bildfehler verhindert den Textimport nicht. Kochkarussell wurde mit vier Portionen, zwölf Zutaten, drei Schritten, 10/20/30 Minuten und Bild geprüft.

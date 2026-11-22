@@ -41,3 +41,7 @@ Bring!-Einzelrezeptlinks bleiben erhalten. `src/integrations/bring.mjs` bereitet
 ## Prüfungen
 
 Node prüft Fachlogik, PGlite SQL mit Auth-Fixtures und DOM-Tests simulierte Onlineabläufe. Browserprüfungen testen zusätzlich echte Layoutmasse und Ereignisse. Echte Supabase-, E-Mail- und iPhone-Abnahmen werden separat ausgewiesen.
+
+## Anbieterunabhängiger Rezeptimport, 22. November 2026
+
+Öffentliche HTTPS-Seiten werden ohne Anbieterliste eingelesen. Jeder Redirect wird erneut geprüft. DNS-Adressen werden auf öffentliche Ziele beschränkt und für die TLS-Verbindung festgehalten. Interne Adressen, Zugangsdaten in URLs und andere Ports sind gesperrt. Fehlende Rezeptdaten, nicht erreichbare Seiten und Grössenlimits ergeben eine Rückmeldung. Bei KI-Text plus Link wird das Rezeptbild zusätzlich versucht; ein Bildfehler verhindert den Textimport nicht. Kochkarussell wurde mit vier Portionen, zwölf Zutaten, drei Schritten, 10/20/30 Minuten und Bild geprüft.

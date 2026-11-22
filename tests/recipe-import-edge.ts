@@ -1,5 +1,7 @@
 import {strict as assert} from 'node:assert';
-import {handleRecipeImport} from '../supabase/functions/recipe-import/handler.ts';
+import {createRecipeImportHandler} from '../supabase/functions/recipe-import/handler.ts';
+import {fetchPage} from '../supabase/functions/recipe-import/extract.mjs';
+const handleRecipeImport=createRecipeImportHandler((url:string)=>fetchPage(url,globalThis.fetch));
 Deno.test('Import checks access first, bounds AI cost, keeps the API key server side, and only returns a draft', async()=>{
   const originalFetch=globalThis.fetch;
   const env={SUPABASE_URL:'https://project.example',SUPABASE_ANON_KEY:'test-public',OPENAI_API_KEY:'test-only',OPENAI_RECIPE_MODEL:'test-model'};

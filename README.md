@@ -10,7 +10,7 @@ Einladung annehmen oder mit E-Mail und Passwort anmelden. Mehrere Konten gehöre
 
 Der Wochenplan bietet Tages- und Wochenansicht. Wischen auf den Wochentagen wechselt die Woche, Wischen auf der Tageskarte die Mahlzeit. Die Startwoche ist Donnerstag bis Mittwoch und kann in den Einstellungen angepasst werden.
 
-Im Kochbuch stehen öffentliche Startrezepte und private Haushaltsrezepte. Über das Plus lassen sich Rezepte erfassen oder mit Kontrollvorschau importieren. Der Linkimport unterstützt FOOBY, Migusto, Swissmilk, Betty Bossi und Chefkoch. KI-Import verwendet einen serverseitigen OpenAI-Schlüssel und benötigt API-Guthaben.
+Im Kochbuch stehen öffentliche Startrezepte und private Haushaltsrezepte. Über das Plus lassen sich Rezepte erfassen oder mit Kontrollvorschau importieren. Der Linkimport prüft öffentliche HTTPS-Seiten unabhängig vom Anbieter auf strukturierte Rezeptdaten. KI-Import verwendet einen serverseitigen OpenAI-Schlüssel und benötigt API-Guthaben.
 
 Suche, Favoriten, Herkunftsfilter, Dauer und Sortierung helfen bei grösseren Sammlungen. Der Menüeditor zeigt zunächst acht Treffer und lädt auf Wunsch weitere nach. Die Suche berücksichtigt den gesamten Katalog.
 
@@ -37,3 +37,7 @@ node scripts/build-recipe-index.mjs
 ```
 
 Die Datenbanktests verwenden PGlite, die Online-DOM-Tests simulieren Supabase. Sie ersetzen keine echte iPhone- oder Zustellprüfung. Aktuelle Betriebsgrenzen stehen in [production.md](docs/production.md).
+
+## Anbieterunabhängiger Rezeptimport, 22. November 2026
+
+Öffentliche HTTPS-Seiten werden ohne Anbieterliste eingelesen. Jeder Redirect wird erneut geprüft. DNS-Adressen werden auf öffentliche Ziele beschränkt und für die TLS-Verbindung festgehalten. Interne Adressen, Zugangsdaten in URLs und andere Ports sind gesperrt. Fehlende Rezeptdaten, nicht erreichbare Seiten und Grössenlimits ergeben eine Rückmeldung. Bei KI-Text plus Link wird das Rezeptbild zusätzlich versucht; ein Bildfehler verhindert den Textimport nicht. Kochkarussell wurde mit vier Portionen, zwölf Zutaten, drei Schritten, 10/20/30 Minuten und Bild geprüft.

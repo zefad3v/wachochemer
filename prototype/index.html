@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="Wa chochemer hilft deinem Haushalt, Mahlzeiten zu planen, Rezepte zu sammeln und den Einkauf vorzubereiten.">
   <title>Wa chochemer</title>
-  <link rel="stylesheet" href="./styles.css?v=20261122-alpha">
-  <script src="./app.js?v=20261122-alpha" type="module"></script>
+  <link rel="stylesheet" href="./styles.css?v=20261122-import">
+  <script src="./app.js?v=20261122-import" type="module"></script>
 </head>
 <body>
 <section id="account-startup" class="account-gate" aria-labelledby="account-startup-title">
@@ -234,7 +234,7 @@
           <div class="editor-fields">
             <label>Rezeptlink<input type="url" id="house-import-url" placeholder="https://" maxlength="2000"></label>
             <button type="button" id="house-read-link">Link importieren</button>
-            <small>Der Linkimport unterstützt FOOBY, Migusto, Swissmilk, Betty Bossi und Chefkoch. Von anderen Seiten kannst du den Rezepttext einfügen.</small>
+            <small>Für öffentliche HTTPS-Rezeptseiten mit strukturierten Rezeptdaten. Falls die Seite nicht eingelesen werden kann, füge den Rezepttext ein.</small>
             <label>Rezepttext für den KI-Import<textarea id="house-ai-text" maxlength="20000" rows="4"></textarea></label>
             <small>Beim Klick auf «Mit KI importieren» wird der eingefügte Text oder der Inhalt der verlinkten Seite an OpenAI gesendet.</small>
             <button type="button" id="house-read-ai">Mit KI importieren</button>

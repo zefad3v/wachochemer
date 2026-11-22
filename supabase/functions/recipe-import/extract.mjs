@@ -1,10 +1,8 @@
-// Only fetch known publisher hosts. Every redirect is checked against the same list.
-const hosts = new Set(['little.fooby.ch','fooby.ch','www.fooby.ch','migusto.migros.ch','swissmilk.ch','www.swissmilk.ch',
-  'bettybossi.ch','www.bettybossi.ch','chefkoch.de','www.chefkoch.de']);
+import {publicFetch} from './public-fetch.mjs';
 export function publisherUrl(input) {
   let url;
   try { url = new URL(input); } catch { throw Error('source'); }
-  if (url.protocol !== 'https:' || url.username || url.password || url.port || !hosts.has(url.hostname)) throw Error('source');
+  if (url.protocol !== 'https:' || url.username || url.password || url.port || !url.hostname.includes('.') || /(^|\.)(localhost|local|internal|test|invalid|example)$/.test(url.hostname) || /^[\d.]+$/.test(url.hostname) || url.hostname.includes(':')) throw Error('source');
   url.hash = '';
   return url;
 }
@@ -22,11 +20,13 @@ export async function readLimited(body, limit) {
     }
   } finally { reader.releaseLock(); }
 }
-export async function fetchPage(input, fetcher = fetch) {
+export async function fetchPage(input, fetcher = publicFetch) {
   let url = publisherUrl(input);
   const signal = AbortSignal.timeout(12000);
   for (let hop = 0; hop <= 4; hop++) {
-    const res = await fetcher(url, {redirect:'manual', signal, headers:{Accept:'text/html'}});
+    let res;
+    try {res = await fetcher(url, {redirect:'manual', signal, headers:{Accept:'text/html'}});}
+    catch(error){throw Error(error.message==='source'?'source':'page');}
     if ([301,302,303,307,308].includes(res.status)) {
       const location = res.headers.get('location');
       await res.body?.cancel();

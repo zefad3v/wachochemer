@@ -30,6 +30,7 @@ jobs:
         with:
           deno-version: v2.9.6
       - run: deno test --node-modules-dir=none --allow-env tests/recipe-import-edge.ts
+      - run: deno test --node-modules-dir=none --allow-net tests/recipe-import-live.ts
       - run: npm run test:database
       - run: npm run test:online
       - run: RECOVERY_RELOAD=1 npm run test:online
