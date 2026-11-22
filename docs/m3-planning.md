@@ -1,5 +1,7 @@
 # M3: Menüplanung, 3D-Revolver und Einkaufszeitraum
 
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 > Historischer Entwicklungsbericht. Die aktive Bedienung wurde in V13 durch [responsive Tages- und Wochenplanung](responsive-day-week-planner.md) ersetzt; 3D-Navigation wird nicht weiterverfolgt.
 
 

@@ -1,33 +1,39 @@
 # Wa chochemer
 
-Eine Schweizer Rezeptplattform im Aufbau. Rezepte, Zutaten und Oberflächentexte werden strukturiert verwaltet. Das erste Testrezept ist **Milde Poulet-Fajitas** mit Bring! Integration.
+Produktiv genutzte Alpha für gemeinsame Haushalte. Die App plant Mahlzeiten, sammelt Rezepte und bereitet den Einkauf vor.
 
-## Projektstruktur
+[App öffnen](https://zefad3v.github.io/wachochemer/) · [Betrieb und Release](docs/production.md) · [Architektur](docs/architecture.md) · [Roadmap](docs/roadmap.md) · [Supabase](supabase/README.md)
 
-* `data/ingredients.json`: zentraler Zutatenstamm, eindeutige IDs und Bezeichnungen.
-* `data/recipes/*.json`: Rezepte und Mengen als strukturierte Quelldaten.
-* `locales/de-CH.json`: Schweizer Standarddeutsch für die öffentlichen Rezeptseiten.
-* `scripts/build.mjs`: statischer Generator für HTML und Schema.org/Recipe.
-* `index.html`: vorläufige Startseite, aus JSON generiert.
-* `rezepte/<slug>/index.html`: generierte Detailseiten.
-* `.github/workflows/generate.yml`: automatische Generierung auf GitHub.
-* `docs/architecture.md` und `docs/roadmap.md`: Entscheidungen und weitere Schritte.
+## Verwendung
 
-## Neues Rezept hinzufügen
+Einladung annehmen oder mit E-Mail und Passwort anmelden. Mehrere Konten gehören zu einem Haushalt und haben dieselben Rechte. Optional sichert eine Authenticator-App das Konto ab.
 
-1. Bei Bedarf fehlende Zutaten mit stabiler ID in `data/ingredients.json` ergänzen.
-2. Eine Rezeptdatei in `data/recipes/` anlegen und auf Zutaten-IDs verweisen.
-3. Lokal `node scripts/build.mjs` ausführen oder auf die GitHub Action warten.
-4. HTML und Bring! Import prüfen. Für alle Rezepte gibt es eine URL unter `rezepte/<slug>/`.
+Der Wochenplan bietet Tages- und Wochenansicht. Wischen auf den Wochentagen wechselt die Woche, Wischen auf der Tageskarte die Mahlzeit. Die Startwoche ist Donnerstag bis Mittwoch und kann in den Einstellungen angepasst werden.
 
-Der Rezeptgenerator benötigt keine npm-Installation. Für die Entwicklung der gemeinsamen Haushalte und deren Tests `npm ci` verwenden. Node.js 22 wird in den GitHub Actions verwendet.
+Im Kochbuch stehen öffentliche Startrezepte und private Haushaltsrezepte. Über das Plus lassen sich Rezepte erfassen oder mit Kontrollvorschau importieren. Der Linkimport unterstützt FOOBY, Migusto, Swissmilk, Betty Bossi und Chefkoch. KI-Import verwendet einen serverseitigen OpenAI-Schlüssel und benötigt API-Guthaben.
 
-## Gemeinsamer Haushalt
+Suche, Favoriten, Herkunftsfilter, Dauer und Sortierung helfen bei grösseren Sammlungen. Der Menüeditor zeigt zunächst acht Treffer und lädt auf Wunsch weitere nach. Die Suche berücksichtigt den gesamten Katalog.
 
-Der Prototyp enthält E-Mail-Anmeldung, optionale 2FA, Einladungen und einen gemeinsamen Wochenplan mit Supabase. Das eigene Projekt in Zürich, die geprüfte Datenbank, der aktive Registrierungshook und die Anmeldeeinstellungen sind eingerichtet. Der SMTP-Absender ist eingerichtet und die erste Login-Adresse freigegeben. Die tatsächliche Mailzustellung und die Abnahme mit zwei regulären Konten stehen noch aus. Einrichtung, Verhalten und Tests sind in [supabase/README.md](supabase/README.md) beschrieben.
+## Entwicklung
 
-## Webseite
+- `prototype/` enthält aus Kompatibilitätsgründen weiterhin die produktive App.
+- `data/recipes/` und `data/ingredients.json` enthalten öffentliche Rezeptdaten.
+- `src/` enthält Fachlogik, gemeinsamen Speicher und Bring!-Vorbereitung.
+- `supabase/` enthält Migrationen, Edge Functions, Mailvorlagen und SQL-Prüfungen.
+- `locales/` enthält Schweizer Standarddeutsch und gemeinsame Formatierung.
+- `scripts/build.mjs` erzeugt öffentliche Rezeptseiten und den App-Einstieg.
 
-https://zefad3v.github.io/wachochemer/
+Mit `npm ci` installieren. Lokal `python -m http.server 8765` im Repository starten. Für vollständigen Onlinebetrieb muss die öffentliche Supabase-Konfiguration zu diesem Projekt passen. Geheimnisse bleiben in Supabase.
 
-Der GitHub-Workflow für die künftige automatische Generierung ist eingerichtet, sein erfolgreicher erster Lauf muss noch bestätigt werden. Details in `docs/architecture.md`.
+## Prüfungen
+
+```sh
+npm test
+npm run test:database
+npm run test:online
+node scripts/check-data.mjs
+node scripts/build.mjs
+node scripts/build-recipe-index.mjs
+```
+
+Die Datenbanktests verwenden PGlite, die Online-DOM-Tests simulieren Supabase. Sie ersetzen keine echte iPhone- oder Zustellprüfung. Aktuelle Betriebsgrenzen stehen in [production.md](docs/production.md).

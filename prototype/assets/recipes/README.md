@@ -1,5 +1,7 @@
 # Rezeptbilder
 
+> Aktueller Release- und Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](../../../docs/production.md). Historische Abnahmeangaben unten bleiben als Nachweis erhalten.
+
 Die drei Bilder wurden am 19. November 2026 mit der integrierten Bildgenerierung erstellt und für die App als WebP gespeichert. Sie sind KI-generierte Illustrationen der gespeicherten Rezepte. Die Rezeptansicht kennzeichnet sie als KI-Bild.
 
 ## Gemeinsame Bildvorgaben

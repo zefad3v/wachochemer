@@ -1,5 +1,7 @@
 # V15 / Issue #9 – UI-Abnahme
 
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 Umfang: M0/UI-Stabilisierung auf Basis von V14/PR #8, kein neues Fachpaket und keine Änderung am Planformat.
 
 - `prototype/app.js`: entfernten `edit-day`-Listener beseitigt; Karte öffnet immer Datum und angezeigte Mahlzeit im Editor. Touchbewegungen unterdrücken nachfolgende Kartentaps. Archivdetails und Planübernahme bleiben erreichbar. Heute und Auswahl sind getrennt, auch über Wochen-/Jahresgrenzen. Manuelle Mahlzeitwahl gilt in der Sitzung bis zum lokalen Tageswechsel; ohne Wahl vor 14 Uhr Zmittag, danach Znacht.

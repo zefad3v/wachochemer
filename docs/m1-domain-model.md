@@ -1,5 +1,7 @@
 # M1: Domänenmodell und Tests
 
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 Status: **abgeschlossen und in main integriert** (31. Oktober 2026, PR #2, Squash-Commit 5fb17463e4b8c10acfde0b38b841ddf76fb11001).
 
 ## Inhalt

@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="Wa chochemer hilft deinem Haushalt, Mahlzeiten zu planen, Rezepte zu sammeln und den Einkauf vorzubereiten.">
   <title>Wa chochemer</title>
-  <link rel="stylesheet" href="./styles.css?v=20261122-import-polish">
-  <script src="./app.js?v=20261122-import-polish" type="module"></script>
+  <link rel="stylesheet" href="./styles.css?v=20261122-alpha">
+  <script src="./app.js?v=20261122-alpha" type="module"></script>
 </head>
 <body>
 <section id="account-startup" class="account-gate" aria-labelledby="account-startup-title">
@@ -189,11 +189,13 @@
   <dialog id="meal-editor" class="meal-editor" aria-labelledby="meal-editor-title">
     <form id="meal-form" novalidate class="meal-form">
       <div class="editor-head"><h2 id="meal-editor-title" tabindex="-1">Menü planen</h2><button type="button" id="meal-editor-close" aria-label="Schliessen">✕</button></div>
-      <label class="editor-date-label" for="meal-date">Datum der Mahlzeit
-        <input id="meal-date" type="date" required>
-      </label>
+      <div class="meal-date-row">
+        <label class="editor-date-label" for="meal-date">Datum
+          <input id="meal-date" type="date" required>
+        </label>
+        <label for="meal-type">Mahlzeit<select id="meal-type"><option value="dinner">Abendessen</option><option value="lunch">Mittagessen</option></select></label>
+      </div>
       <div class="editor-fields">
-        <label>Mahlzeit<select id="meal-type"><option value="dinner">Abendessen</option><option value="lunch">Mittagessen</option></select></label>
         <label>Was gibt es?<select id="meal-kind">
           <option value="recipe">Rezept aus dem Kochbuch</option>
           <option value="manual">Eigenes Menü oder auswärts essen</option>
@@ -203,7 +205,7 @@
         <div id="meal-recipe-line" class="meal-picker">
           <output id="meal-recipe-selected" class="meal-recipe-selected" aria-live="polite">Bitte ein Rezept wählen</output>
           <input id="meal-recipe-search" type="search" autocomplete="off" placeholder="Rezept suchen oder wechseln …" aria-label="Rezept suchen oder wechseln">
-          <div id="meal-recipe-options" class="meal-recipe-options" role="listbox" aria-label="Passende Rezepte"></div>
+          <div id="meal-recipe-options" class="meal-recipe-options" role="listbox" aria-label="Passende Rezepte"></div><p id="meal-recipe-count" role="status"></p><button type="button" id="meal-recipes-more" hidden>Weitere Rezepte anzeigen</button>
           <input id="meal-recipe" type="hidden">
         </div>
         <div id="meal-simple-portions"><p id="meal-portion-note" role="status"></p>

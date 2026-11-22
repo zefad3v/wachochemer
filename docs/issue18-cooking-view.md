@@ -1,5 +1,7 @@
 # V20 / Issue #18 – Rezeptdetails und Kochansicht
 
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 Roadmap: M0/M4-Alltagsbedienung. Basis: PR #17,
 `5b6c8477cbc6d414bdbdcea768dff509c41683f0`.
 Kein Merge, Deployment oder neues Speicherformat.

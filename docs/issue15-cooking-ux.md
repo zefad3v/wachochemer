@@ -1,5 +1,7 @@
 # Issue #15 – Kochen und Alltagsplanung (M0/M4)
 
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 Basis: PR #13, `c9fdc043730f5c0063a11abf3af238614a67356a`. Neuer Branch
 `feat/issue15-cooking-ux`, PR-Basis `feat/m6-bring-transfer-manifest`.
 

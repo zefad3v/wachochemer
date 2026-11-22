@@ -1,5 +1,7 @@
 # Bring! Anbindung: geprüfte Schnittstellen und Produktentscheid
 
+> Fachlicher Recherche- und Entscheidungsstand. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 Stand: 14.11.2026. Quellen: offizielle Bring!-Dokumentation und separat gekennzeichnete inoffizielle Community-Implementierungen.
 
 ## Verifizierte offizielle Integration

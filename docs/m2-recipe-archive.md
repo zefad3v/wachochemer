@@ -1,5 +1,7 @@
 # M2: Echtes Chochchischtli
 
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 **Status:** Implementiert auf `feat/m2-real-recipe-archive` (PR #3), gestapelt auf dem noch offenen UI-PR #1. 14 automatisierte Tests bestanden. iPhone-Retest und Integration nach `main` ausstehend. Neue Review-Mängel und Korrekturen: [`docs/iphone-review-2026-10-31.md`](iphone-review-2026-10-31.md).
 
 ## Lieferumfang

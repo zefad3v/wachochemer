@@ -1,5 +1,7 @@
 # Featurewunsch: Aktionen bei Detailhändlern und Verkaufsstellen abgleichen
 
+> Fachlicher Recherche- und Entscheidungsstand. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 Status: **Idee / spätere Ausbaustufe** (26. Oktober 2026). Noch nicht zur Implementierung freigegeben.
 
 ## Ziel
