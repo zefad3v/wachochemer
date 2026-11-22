@@ -1,5 +1,11 @@
 # Gemeinsamer Haushalt
 
+> Aktueller Release- und Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](../docs/production.md). Historische Abnahmeangaben unten bleiben als Nachweis erhalten.
+
+## Produktiver Alpha-Stand, 22. November 2026
+
+Das Frontend ist über die Projekt-Hauptadresse erreichbar. Auth-Rücksprünge und Einladungslinks verwenden weiterhin den bestehenden App-Pfad. Das Projekt hostet private Haushaltsrezepte mit Bildlinks, Mengenbereichen, Bund und optionaler Aktivzeit. Import und E-Mail-Versand sind als Edge Functions eingerichtet. Mailvorlagen verwenden Deutsch (Schweiz). Ein echter Geräte- oder Zustelltest wird nur mit separatem Nachweis als abgeschlossen geführt.
+
 ## Einladung und Startzustand, 20. November 2026
 
 Der Startbildschirm steht bereits im HTML. Bis SDK, gespeicherte Sitzung und

@@ -1,5 +1,7 @@
 # V16 – Rezeptbilder und sichtbares Glas
 
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 Umfang: M0/UI-Abnahme, gezielte Fortsetzung von PR #10 / V15. Basis: `3ba7711b07d4a8b5492c012d810cbc26d97967ae`. Kein neues Fachpaket, keine Planmigration, kein Merge, kein Deployment.
 
 ## Umsetzung

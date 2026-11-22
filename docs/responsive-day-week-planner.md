@@ -1,5 +1,7 @@
 # V13: Responsive Tages- und Wochenplanung
 
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 ## Basis und Bestandsaufnahme
 
 Ausgangsbranch und PR-Ziel: `feat/ux-review-ferris-wheel-bring-flow`. Bei Arbeitsbeginn am 14. November 2026 war dessen neuester Stand unverändert `3d40f77235bc2648ce053916fe8a2819215a304f`. Arbeitsbranch: `codex/responsive-day-week-planner`. Keine Änderung an main, veröffentlichten Seiten oder Rezeptdaten, kein Deployment und kein Merge.

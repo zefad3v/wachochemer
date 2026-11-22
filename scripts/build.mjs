@@ -65,6 +65,12 @@ for(const recipe of recipes){
  const html=buildHtml(recipe,catalog,labels);
  const dir=join(root,"rezepte",recipe.slug);mkdirSync(dir,{recursive:true});writeFileSync(join(dir,"index.html"),html);
 }
-// Until an archive homepage exists, the first recipe stays available at the root URL.
-writeFileSync(join(root,"index.html"),buildHtml(recipes[0],catalog,labels));
+// Preserve invitation and auth callback parameters when entering through the public root.
+writeFileSync(join(root,"index.html"),`<!doctype html>
+<html lang="de-CH">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#263d30">
+<title>Wa chochemer</title><style>body{background:#263d30;color:#f2eee4;font:18px system-ui;padding:24px}a{color:inherit}</style>
+<script>location.replace("./prototype/"+location.search+location.hash)</script></head>
+<body><h1>Wa chochemer</h1><p><a href="./prototype/">App öffnen</a></p><noscript>Bitte aktiviere JavaScript, um die App zu verwenden.</noscript></body></html>
+`);
 console.log("Generated "+recipes.length+" recipe pages and index.html");

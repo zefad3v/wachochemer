@@ -1,60 +1,43 @@
 # Architektur
 
-## Entwicklungsprototyp: responsive Tages- und Wochenplanung
+Aktueller Stand der produktiven Alpha, 22. November 2026. [Release und Betrieb](production.md).
 
-`prototype/responsive-planner.mjs` kapselt Breitenklassen, Ansichtsvorgaben, Tageswechsel über Wochengrenzen und horizontale Wischschwellen. `prototype/app.js` rendert Tageskarte und Wochenübersicht aus demselben datumsschlüsselbasierten Plan in `prototype/planner.mjs`. Der bestehende Datenspeicher bleibt kompatibel. CSS verwendet normale Grid-/Listenlayouts. Die frühere 3D-Geometrie und `carousel.mjs` wurden entfernt. Details: [responsive-day-week-planner.md](responsive-day-week-planner.md).
+## Frontend und Einstieg
 
-## Entscheidungen
+GitHub Pages liefert die App. Der Root-Einstieg leitet unter Erhalt von Query und Fragment zum bestehenden technischen Pfad `prototype/` weiter. Der Pfad bleibt für PWA-Scope und Sitzungskompatibilität erhalten.
 
-* Die Oberfläche verwendet Deutsch (Schweiz). Die App heisst «Wa chochemer», die Planansicht «Wucheplan». Von Mitgliedern erfasste oder importierte Inhalte behalten ihre Originalsprache.
-* Mehrsprachigkeit ist durch `locales/`, stabile Zutaten-IDs und sprachbezogene Namen vorbereitet, aber noch nicht implementiert.
-* Der Zutatenstamm liegt in `data/ingredients.json`.
-* Rezepte liegen in `data/recipes/*.json`. Mengen sind Zahlen mit festen Einheiten. IDs und `schemaVersion` erleichtern eine spätere Datenbankmigration.
-* Die JSON-Daten sind jetzt die **einzige Quelle** für angezeigte Rezeptinformationen sowie Schema.org/Recipe.
+`prototype/app.js` verbindet Darstellung und Fachlogik. `prototype/responsive-planner.mjs` kapselt Ansichtsgrenzen und Gestenschwellen. `prototype/planner.mjs` und `src/domain/` berechnen Kalender, Portionen, Resten und Zutaten. Tag und Woche verwenden denselben datumsschlüsselbasierten Menüplan.
 
-## Generator
+`#main` scrollt in der installierten mobilen App. Die Navigation liegt darüber und reserviert keine separate Zeile. Unterer Inhaltsabstand hält die letzten Aktionen erreichbar. Die Suchzeile wird abhängig von Scrollrichtung und Fokus sichtbar. Geste auf der Tageskarte wechselt die Mahlzeit, Geste auf der Wochentagsleiste die Woche. Untermenüs unterstützen die bestehende Zurückgeste.
 
-`node scripts/build.mjs` erzeugt `index.html` und für jedes Rezept eine Detailseite unter `rezepte/<slug>/index.html`. Es werden keine npm-Abhängigkeiten benötigt.
+## Speicherung und Schutz
 
-Die GitHub Action `.github/workflows/generate.yml` soll bei Änderungen an Rezepten, Zutaten, Sprache oder Generator auf `main` automatisch neu generieren und die fertigen Dateien committen. Für den Push benötigt GitHub Actions Schreibberechtigung (`contents: write` und passende Repository-Einstellungen). Dieser automatische Lauf ist noch separat zu verifizieren.
+`prototype/account.mjs` und `src/storage/shared-household.mjs` koordinieren Supabase-Sitzung, MFA und Haushaltszustand. Bis zur Sitzungsprüfung ist die Oberfläche gesperrt. Im Onlinebetrieb gibt es keinen lokalen Ersatzplan für fehlgeschlagene Schreibvorgänge.
 
-## Bring!
+Serverseitige Mitgliedschaftsprüfung und AAL2 schützen Haushalt, Menüs und Rezepte. RPC-Schreibvorgänge verwenden Revisionen und Haushaltssperren. Die öffentliche Einladungsvorschau gibt mit gültigem UUID ausschliesslich Zieladresse und Haushaltsname frei. Die Annahme benötigt das passende bestätigte Konto. Details und Einrichtung stehen im [Supabase-Handbuch](../supabase/README.md).
 
-* Das offizielle Bring! Widget bleibt vorhanden.
-* `data-bring-base-quantity` und `data-bring-requested-quantity` werden aus `baseServings` erzeugt.
-* Der HTML-Generator gibt die Zutaten in `schema.org/Recipe` als Text aus.
-* Optionale Zutaten erhalten den Hinweis `(optional)`.
-* Die automatische Bring! Übertragung muss nach dieser Umstellung nochmals auf einem Mobilgerät getestet werden.
+## Rezepte
 
-## Grenzen und nächste Schritte
+Öffentliche Startrezepte liegen in `data/recipes/`, Zutaten in `data/ingredients.json`. Haushaltsrezepte liegen privat in `household_recipes`. Der gemeinsame Katalog verwendet stabile IDs und enthält beide Quellen.
 
-* Die Startseite ist derzeit die erste Rezeptdetailseite, keine Archivübersicht.
-* Die Benennung mancher Einheiten und Pluralformen ist derzeit pragmatisch. Für mehr Rezepte benötigen wir Tests mit Mengen, Zutatenvarianten und Übersetzungen.
-* Die Rezepte sind öffentlich. Persönliche Wochenpläne und Haushaltsprofile verwenden nach Aktivierung der Supabase-Konfiguration einen durch Mitgliedschaften geschützten Datenbereich.
-* Die Browseroberfläche und das Design werden im nächsten Schritt überarbeitet.
+Der Editor unterstützt manuelle Eingabe, gewöhnlichen Linkimport und ausdrücklichen KI-Import. Mengenbereiche bleiben mit beiden Grenzen erhalten. Fehlende Mengen bleiben ohne Mengenangabe. Bund ist eine eigene Einheit. Vorbereitungszeit, Kochzeit, Gesamtzeit und Aktivzeit sind getrennt und optional. Rezeptbild und Quelle werden übernommen oder als HTTPS-Link gepflegt.
 
-## V15-Bedienung
+Die Kontrollvorschau geht dem Speichern voraus. Ein erfolgreicher Schreibvorgang schliesst den Editor. Ein bestehender Quelllink erfordert die ausdrückliche Bestätigung einer Aktualisierung. Löschen ist endgültig, revisionsgeschützt und bei eingeplantem Rezept blockiert.
 
-Die Hauptkarte öffnet den Menüeditor für Datum und angezeigte Mahlzeit; Rezeptdetails bleiben im Archiv. Die Mahlzeitsteuerung liegt als separate Geschwisterschaltfläche innerhalb der Kartenhülle, ohne verschachtelte Buttons. Heute verwendet den lokalen Gerätekalender (`aria-current="date"`), Auswahl `aria-pressed`. Die manuelle Mahlzeitwahl bleibt während der laufenden Sitzung bis zum lokalen Tageswechsel erhalten, auch bei Tages-/Wochennavigation. Sichtbarkeitswechsel und eine sparsame Uhrprüfung aktualisieren Standard und Heute-Markierung. Planformat und Speicherschlüssel bleiben unverändert. Details: [V15-Abnahme](v15-ui.md).
+Suche, Favoriten, Herkunft und Dauer filtern den Katalog, Name und Dauer sortieren ihn. Die Rezeptauswahl im Menüeditor rendert acht Treffer je Schritt. Der Katalog selbst bleibt vollständig geladen, die Suche erfasst alle Einträge.
 
-## V16-Bild- und Materialebenen
+## Darstellung und Sprache
 
-Verifizierte Bilder und opt-in Demo-Bilder sind in `prototype/recipe-images.mjs` von Rezeptdaten getrennt. Nur Darstellungsmetadaten erhalten `imageDemo`; das Planformat bleibt unverändert. Mobile Seitentitel verwenden den normalen Headerfluss; Glass-Blur sitzt auf positionsgebundenen Pseudoelementen, ohne Header/Text/SVG zu filtern. [V16-Abnahme und Screenshots](v16-ui.md).
+Die Oberfläche verwendet Deutsch (Schweiz). «Wa chochemer» und «Wucheplan» bleiben im Dialekt. Rezeptinhalte behalten ihre Originalsprache. `locales/format-de-CH.mjs` formatiert Einheiten und Mahlzeiten.
 
-## V17-Header und Archiv
+Das aktive Rezeptbild wird als schwache Hintergrundatmosphäre eingesetzt. Glasflächen filtern ihren Hintergrund, Text bleibt ungefiltert. Reduzierte Bewegung deaktiviert die Ladeanimation, reduzierte Transparenz verwendet einen deckenden Fallback. Native Auswahlmenüs kommen vom Browser, geschlossene Felder werden per CSS gestaltet.
 
-`app-backdrop`, Headerhintergrund und Header-Vordergrund bilden getrennte Ebenen. Der App-Container selbst bleibt ungefiltert und untransformiert, ohne gemeinsame isolierte Compositing-Gruppe. Der Archiv-Grid nutzt gleich hohe Zeilentracks; Bild/Platzhalter füllen die ganze Kachel, Texte liegen auf einem separaten Overlay. Tag ist ohne gespeicherte Präferenz auf allen Breiten Standard; der Wechsel sitzt bei der Tagesnavigation. [V17-Abnahme](v17-ui.md), mit klarer Grenze zwischen Chromium/Safe-Area-Simulation und echtem iOS-PWA-Test.
+## Generator und Bring!
 
-## Issue #15: Kochen und einfache Portionsplanung
+`scripts/build.mjs` erzeugt den App-Einstieg und öffentliche Rezeptseiten mit Schema.org/Recipe und Bring!-Widget. `scripts/build-recipe-index.mjs` erzeugt das Verzeichnis öffentlicher Rezepte. GitHub Actions prüft die reproduzierbaren Ausgaben.
 
-Geplante Rezeptkarten öffnen `openRecipe` mit unveränderten `cookedServings` (auch Dezimalwerte); ein eigener Stift öffnet den Editor. Archivportionen bleiben unabhängig. Der Kochmodus verwendet dieselben Zutaten und Anleitungen, speichert nur flüchtigen Schrittstatus und schreibt weder Plan noch Einkauf.
+Bring!-Einzelrezeptlinks bleiben erhalten. `src/integrations/bring.mjs` bereitet Zutaten, Warnungen und kopierbaren Export vor. Ein automatischer Gesamtimport ist weiterhin unbestätigt.
 
-Der Editor bildet Mahlzeitenbedarf plus optionale Zusatzmenge auf die bestehenden M4-Felder ab. Ungeklärter V1-Verzehr bleibt leer und muss ausdrücklich geklärt werden. Ohne Haushalt wird erst nach Rezeptwahl dessen Basisportionenzahl als gekennzeichneter Vorschlag gesetzt. Restenquellen stammen aus `assessPlan`, geben beim Editieren die eigene Reservierung zur Auswahl frei und werden beim Speichern weiterhin durch `updateMeal` validiert. Keine Schema- oder Speicherschlüsseländerung; Bring!-Manifest und M4-Domain bleiben unverändert.
+## Prüfungen
 
-## V20: gemeinsame Rezept- und Kochansicht
-
-Der Dialog nutzt eine Scrollfläche, eine Zutatencheckliste und eine nummerierte Anleitung für beide Ansichten. `recipeViewServings` ist ein flüchtiger Override vor `plannedServings` und Archivpräferenz. Nur Archivänderungen speichern weiterhin die vorhandene Präferenz; geplante Kochsitzungen schreiben keinen Speicher. Öffnen/Schliessen setzt den Override zurück. Headercontrols stehen vor dem Titel im Dokumentfluss, Fokus liegt beim Einstieg auf dem benannten Dialog. [Abnahme](issue18-cooking-view.md).
-
-## Rezeptimport und Kochbuchfilter
-
-Haushaltsrezepte unterstützen Bund als Einheit und eine optionale Aktivzeit in Minuten zusätzlich zur Gesamtzeit. Bestehende Rezepte ohne Aktivzeit bleiben gültig. Der Migusto-Import liest die separat angezeigte Aktivzeit aus dem Zeitbereich der Rezeptseite. Kochbuchfilter arbeiten auf dem gemeinsamen Katalog, die Sortierung verändert keine gespeicherten Rezepte. Die Ladeanimation respektiert reduzierte Bewegung. Der Glas-Effekt der Navigation braucht weiterhin eine Sichtprüfung auf dem iPhone.
+Node prüft Fachlogik, PGlite SQL mit Auth-Fixtures und DOM-Tests simulierte Onlineabläufe. Browserprüfungen testen zusätzlich echte Layoutmasse und Ereignisse. Echte Supabase-, E-Mail- und iPhone-Abnahmen werden separat ausgewiesen.

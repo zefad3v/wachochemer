@@ -1,5 +1,7 @@
 # Mobile UX Review V14: kompakte Tagesansicht
 
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 Stand 14.11.2026, aktueller Arbeitszweig `feat/compact-day-view-bring-research`, basiert auf Codex PR #7. Keine Änderung an main und kein produktiver Deploy.
 
 ## Vom iPhone-Screenshot abgeleitete Prioritäten

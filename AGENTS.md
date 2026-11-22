@@ -30,25 +30,12 @@ npm run test:online
 
 Nach einer SDK-Änderung `npm run build:auth` ausführen und Bundle samt Lizenzhinweisen committen. DOM-Tests simulieren Supabase; PGlite prüft PostgreSQL mit Auth-Fixtures. Diese Prüfungen nicht als echte Supabase- oder iPhone-Abnahme ausgeben. Einrichtung und offene Dienstabnahme sind in `supabase/README.md` dokumentiert.
 
-## Historischer Projektstand vor dem gemeinsamen Haushalt
+## Betrieb und Änderungen
 
-# Coding-Agent Leitlinien für Wa chochemer?
+Die App ist eine produktiv genutzte Alpha. Aktuell gelten docs/production.md, docs/architecture.md und docs/roadmap.md. Datierte UI-Berichte sind historische Nachweise.
 
-Lies **vor jeder Codeänderung** `docs/ki-roadmap.md`, `docs/architecture.md` und die für dein Ticket relevanten Quelldateien. Die Roadmap enthält die priorisierten Pakete M0 bis M12, Fachregeln, Akzeptanzkriterien und Definition of Done.
+Öffentliche Startrezepte bleiben in data/recipes, private Rezepte im gemeinsamen Haushalt. Der technische App-Pfad prototype bleibt aus Gründen der PWA- und Sitzungskompatibilität bestehen. Root-Einstieg und öffentliche Rezeptseiten werden durch scripts/build.mjs erzeugt.
 
-## Verbindliche Regeln
+Änderungen müssen bestehende Konten, Haushaltsdaten, Links und Sitzungen erhalten. Keine produktiven Daten zu Testzwecken löschen oder zurücksetzen. Kein Hostingwechsel oder neue kostenpflichtige Dienste ohne Nutzerauftrag. Bestehende Autorisierung für Umsetzung und Veröffentlichung gilt im jeweiligen Auftragsumfang.
 
-- Arbeite an **einem klar abgegrenzten Paket** pro Pull Request. Stelle bei mehreren möglichen Aufgaben zuerst M0, dann M1 usw. in den Vordergrund.
-- Schütze die produktive GitHub-Pages-Seite auf `main`. Der mobile Designprototyp liegt separat in `feat/mobile-revolver-prototype` (PR #1). Keine eigenmächtigen Merges, Deployments oder Hostingwechsel.
-- Grundlage sind strukturierte Rezept- und Zutatendaten in `data/recipes/*.json` und `data/ingredients.json`. Referenzen, IDs und Slugs stabil halten; keine zweite, hartcodierte Quelle für reale Rezepte.
-- Demo-Gerichte klar als Demo markieren und niemals als fertig gespeicherte echte Rezepte ausgeben.
-- Die Familienregeln zu Donnerstag-bis-Mittwoch-Wochen, Portionen, Montags-bis-Donnerstags-Resten und einfachem Mittwoch stehen in `docs/ki-roadmap.md`. Sie sind fachliche Akzeptanzkriterien, nicht bloss UI-Vorschläge.
-- Bei Rezepten und Zutaten Deutsch (Schweiz), für UI-Begriffe ebenfalls Deutsch (Schweiz) mit den oben genannten Ausnahmen. Keine deutschen ß im Text.
-- Keine erfundenen Bring!-Funktionen oder nicht bestätigten Grossverteiler-APIs. Der Aktionenabgleich steht separat in `docs/aktionsabgleich.md` und ist vorerst P2.
-- UI nicht weiter grundlegend umgestalten. Priorität haben funktionale Korrektheit, mobile Bedienbarkeit, Tests und persistente Daten.
-- Erst das Problem und die minimal nötigen Dateien identifizieren, dann Tests und Code ändern. Vor Abgabe passende Node-/Generator-Tests ausführen und nicht durchgeführte iPhone-Tests klar ausweisen.
-- Bei geänderten Datenstrukturen Migration und Kompatibilität dokumentieren. Keine neuen externen Dienste oder versteckten Schlüssel ohne ausdrückliche Freigabe.
-
-## Abschlussbericht pro Aufgabe
-
-Berichte kurz: betroffene Roadmap-ID, geänderte Dateien und Funktionen, automatisierte Tests mit Resultat, manuell ausstehende Prüfungen, Risiken und das nächste sinnvolle Paket.
+Vor Änderungen relevante Quellen lesen. Referenzen und IDs stabil halten, bestehende Fachlogik wiederverwenden. Tests mit realer Aussagekraft ausführen. Automatisierte Tests und tatsächliche iPhone-Abnahme klar unterscheiden. Die Dokumentation im selben Paket nachführen.

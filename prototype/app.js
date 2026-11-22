@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261122-import-polish";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261122-alpha";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -11,6 +11,7 @@ import {householdRecipe} from './household-recipes.mjs';
 import {recipeEditor} from './recipe-editor.mjs';
 import {mealLabels,mealKeyLabel,planDateLabel,unitLabels} from "../locales/format-de-CH.mjs";
 let publicRecipes=[],publicNames={},editor;
+let recipeChoiceLimit=8, recipeChoiceQuery="", lastWeekSwipeAt=0;
 const weekdays=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
 const weekdayShort=["SO","MO","DI","MI","DO","FR","SA"];
 import {recipeImages,imageFor} from "./recipe-images.mjs?v=20261119-photos";
@@ -115,6 +116,7 @@ function showTab(tab){
  }
  if(tab==="settings"&&state.tab==="settings")tab=state.returnTab||"week";
  else if(tab==="settings")state.returnTab=state.tab;
+ byId("screen-archive").classList.remove("search-hidden");
  state.tab=tab;
  byId("app").dataset.tab=tab;
  byId("mobile-page-title").textContent=({week:"Wucheplan",archive:"Kochbuch",shopping:"Für Bring!",settings:"Einstellungen"})[tab];
@@ -249,6 +251,7 @@ async function persistPlan(key){
  if(state.tab==="shopping")renderShopping();
 }
 function openMealEditor(date,meal="dinner",recipeId=null){
+ recipeChoiceLimit=8;recipeChoiceQuery="";
  if(cloudEnabled&&state.planBlocked)return;
  state.editorRevisions={...state.revisions};
  const localDate=typeof date==="string"?date:[date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-");
@@ -290,8 +293,12 @@ function renderMealRecipeOptions(){
  const current=state.archiveEntries.find(item=>item.id===selected);
  byId("meal-recipe-selected").textContent=current?current.title:"Bitte ein Rezept wählen";
  byId("meal-recipe-options").hidden=false;
+ if(query!==recipeChoiceQuery){recipeChoiceLimit=8;recipeChoiceQuery=query;}
  const matching=state.archiveEntries.filter(item=>item.title.toLocaleLowerCase("de-CH").includes(query));
- byId("meal-recipe-options").innerHTML=matching.length?matching.map(item=>
+ const visible=matching.slice(0,recipeChoiceLimit);
+ byId("meal-recipes-more").hidden=visible.length>=matching.length;
+ byId("meal-recipe-count").textContent=matching.length?visible.length+" von "+matching.length+" Rezepten":"";
+ byId("meal-recipe-options").innerHTML=matching.length?visible.map(item=>
   '<button type="button" role="option" aria-selected="'+(item.id===selected)+'" data-pick-recipe="'+escapeHtml(item.id)+'">'+
   searchThumbnail(item)+'<span>'+escapeHtml(item.title)+'<small>'+item.minutes+' Min.</small></span></button>').join(""):'<p>Keine Rezepte gefunden</p>';
 }
@@ -804,6 +811,7 @@ function init(){
  });
  byId("screen-week").addEventListener("click",event=>{
   const day=event.target.closest("[data-day]"),edit=event.target.closest("[data-edit-day]"),view=event.target.closest("button[data-view]");
+  if(day&&Date.now()-lastWeekSwipeAt<420)return;
   if(day)setDay(Number(day.dataset.day));
   if(edit){setDay(Number(edit.dataset.editDay));openMealEditor(weekDays()[state.current].date,displayedMeal())}
   if(view){plannerView=view.dataset.view;viewPreferences[currentClass]=plannerView;save("wachochemer:plannerViews",viewPreferences);renderPlanner()}
@@ -819,6 +827,7 @@ function init(){
  byId("prepare-bring").addEventListener("click",()=>showTab("shopping"));
  byId("shopping-back").addEventListener("click",()=>showTab("week"));
  byId("settings-back").addEventListener("click",()=>showTab(state.returnTab||"week"));
+ byId("meal-recipes-more").addEventListener("click",()=>{recipeChoiceLimit+=8;renderMealRecipeOptions()});
  byId("meal-recipe-search").addEventListener("input",renderMealRecipeOptions);
  byId("meal-recipe-options").addEventListener("click",event=>{
   const btn=event.target.closest("[data-pick-recipe]");
@@ -887,6 +896,33 @@ function init(){
    input.value="";renderShopping();
   }catch(err){if(epoch===sessionEpoch)byId("shopping-copy-status").textContent=err.message}
  });
+ const strip=byId("week-strip");
+ let weekTouch=null;
+ strip.addEventListener("touchstart",event=>{
+  weekTouch=event.touches.length===1?{x:event.touches[0].clientX,y:event.touches[0].clientY}:null;
+ },{passive:true});
+ strip.addEventListener("touchmove",event=>{if(event.touches.length!==1)weekTouch=null},{passive:true});
+ strip.addEventListener("touchcancel",()=>{weekTouch=null},{passive:true});
+ strip.addEventListener("touchend",event=>{
+  const start=weekTouch;weekTouch=null;if(!start||!event.changedTouches.length)return;
+  const touch=event.changedTouches[0],direction=swipeDirection(touch.clientX-start.x,touch.clientY-start.y);
+  if(direction){lastWeekSwipeAt=Date.now();setWeekOffset(direction);}
+ },{passive:true});
+ const main=byId("main"),archive=byId("screen-archive"),search=byId("recipe-search");
+ let lastScroll=0,scrollAnchor=0;
+ function revealSearch(){
+  if(state.tab!=="archive"){lastScroll=0;scrollAnchor=0;return;}
+  const position=Math.max(0,main.scrollTop||window.scrollY||0);
+  if(position<80||search===document.activeElement){
+   archive.classList.remove("search-hidden");scrollAnchor=position;
+  }else if(Math.abs(position-scrollAnchor)>14){
+   archive.classList.toggle("search-hidden",position>lastScroll);scrollAnchor=position;
+  }
+  lastScroll=position;
+ }
+ main.addEventListener("scroll",revealSearch,{passive:true});
+ window.addEventListener("scroll",revealSearch,{passive:true});
+ search.addEventListener("focus",()=>archive.classList.remove("search-hidden"));
  const shell=byId("day-card");
  let startX=0,startY=0,tracking=false;
  shell.addEventListener("touchstart",e=>{tracking=e.touches.length===1;if(tracking){lastSwipeAt=0;startX=e.touches[0].clientX;startY=e.touches[0].clientY}},{passive:true});

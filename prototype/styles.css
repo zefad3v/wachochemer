@@ -629,3 +629,31 @@ input[type="checkbox"][role="switch"]:disabled { opacity:.5; cursor:default }
 @keyframes pot-steam{0%{transform:translateY(0);opacity:0}25%{opacity:.7}100%{transform:translate(3px,-14px);opacity:0}}
 @keyframes pot-simmer{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1deg)}}
 @media(prefers-reduced-motion:reduce){.loading-pot img,.loading-pot i{animation:none}}
+
+/* The dock overlays content so its material samples the actual scroll surface. */
+@media(max-width:1099px){
+ #app .bottom-nav{position:fixed;top:auto;bottom:calc(8px + env(safe-area-inset-bottom));left:17px;right:17px;width:auto;margin:0 auto;max-width:480px;z-index:70;background:transparent;backdrop-filter:blur(16px) saturate(135%);-webkit-backdrop-filter:blur(16px) saturate(135%)}
+ #app .bottom-nav:before{background:linear-gradient(145deg,#ffffff19,#ffffff04 55%,#ffffff0c);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:inset 0 1px 1px #ffffff55,inset 0 -1px 1px #ffffff15}
+ #app .bottom-nav .bottom-link.active{background:#ffffff16;box-shadow:inset 0 1px 1px #ffffff30;color:#fff}
+ #app #main .screen{padding-bottom:calc(108px + env(safe-area-inset-bottom))}
+ #screen-week[data-view=day] .planner-layout{min-height:300px}
+ .archive-search-row{position:sticky;top:0;z-index:12;transition:transform .18s ease,opacity .18s ease;background:#263d3070;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:16px}
+ #screen-archive.search-hidden .archive-search-row{transform:translateY(calc(-100% - 8px));opacity:0;pointer-events:none}
+ #screen-archive:focus-within .archive-search-row{transition:none}
+}
+.app-backdrop:after{inset:0;background-image:linear-gradient(#263d30b8,#263d3077 40%,#14271c55),var(--meal-atmosphere,none);background-position:center;background-size:cover;opacity:.4;filter:blur(18px)}
+.topbar{background:#263d30b8}
+.archive-options select{appearance:none;-webkit-appearance:none;background:linear-gradient(45deg,transparent 50%,#d5e2d1 50%) calc(100% - 18px) 52%/5px 5px no-repeat,linear-gradient(135deg,#d5e2d1 50%,transparent 50%) calc(100% - 13px) 52%/5px 5px no-repeat,#ffffff0d;color:var(--cream);border:1px solid var(--stroke);border-radius:14px;padding:10px 30px 10px 12px}
+.meal-date-row{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;align-items:start;margin-bottom:12px;max-width:100%}
+.meal-date-row label{display:grid;gap:6px;color:#d5e2d1;font-size:13px;min-width:0;max-width:100%;overflow:hidden}
+.meal-date-row input,.meal-date-row select{appearance:none;-webkit-appearance:none;display:block;box-sizing:border-box;width:100%;min-width:0;min-inline-size:0;max-width:100%;height:46px;background:#ffffff0d;color:var(--cream);border:1px solid var(--stroke);border-radius:12px;padding:8px;font-size:16px}
+.meal-date-row input::-webkit-date-and-time-value{text-align:left;min-width:0}
+.meal-date-row input::-webkit-datetime-edit{padding:0;min-width:0}
+.meal-recipe-options{max-height:min(36dvh,320px);overscroll-behavior:contain}
+#meal-recipe-count{font-size:12px;color:var(--muted)}
+#meal-recipes-more{min-height:44px;border:1px solid var(--stroke);border-radius:12px;background:#ffffff0d;color:var(--cream)}
+#week-strip{touch-action:pan-y}
+@media(max-width:360px){.meal-date-row{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.archive-search-row{transition:none}}
+@media(prefers-reduced-transparency:reduce){#app .bottom-nav,.archive-search-row{background:#304334;backdrop-filter:none;-webkit-backdrop-filter:none}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){#app .bottom-nav,.archive-search-row{background:#304334}}

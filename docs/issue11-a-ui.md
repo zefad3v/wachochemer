@@ -1,4 +1,7 @@
 # Issue 11 A: UI-Abschluss
+
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 Keine automatische Rezeptwahl; Treffer erst bei Suchtext, nach Auswahl wieder geschlossen.
 Bestehende Auswahl wird angezeigt. Ungültige Auswahl verhindert Speichern mit zugänglichem Fehler.
 Text/Punktwahl mittig, sieben Tagesfelder in Wochenansicht auf allen Breiten entfernt; Tag-Rücksprung bleibt.

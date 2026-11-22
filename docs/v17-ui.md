@@ -1,5 +1,7 @@
 # V17 – Header-Ebenen, kompakter Tagesplan, einheitliche Archivkacheln
 
+> Historischer Entwicklungsbericht. Aktueller Betriebsstand vom 22. November 2026 siehe [Produktiver Alpha-Betrieb](production.md) und [Roadmap](roadmap.md). Die nachfolgenden Angaben und Messwerte beziehen sich auf den damaligen Entwicklungsstand.
+
 M0/UI-Abnahme auf dem aktuellen Stand von PR #10, Basis `437637010dfc62330d277df60f2ea6de71dfae2a`. Kein neues Fachpaket, keine Änderung an Rezeptdaten oder Planformat.
 
 ## Umsetzung und Grenzen
