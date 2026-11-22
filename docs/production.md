@@ -36,7 +36,7 @@ Die Supabase-Backup-Verfügbarkeit und eine Wiederherstellung mit den tatsächli
 
 ## Abnahmegrenzen
 
-Automatisierte Node-, SQL- und DOM-Prüfungen sowie eine lokale Chromium-Prüfung werden im Releasebericht ausgewiesen. Native iOS-Menüs, Statusbereich, PWA-Rotation, Touchverhalten und der Glas-Eindruck brauchen die Abnahme auf dem echten iPhone. Der Alpha-Status behauptet keine abgeschlossene allgemeine Gerätefreigabe.
+Automatisierte Node-, SQL- und DOM-Prüfungen sowie eine Chromium-Prüfung in CI werden im Releasebericht ausgewiesen. Native iOS-Menüs, Statusbereich, PWA-Rotation, Touchverhalten und der Glas-Eindruck brauchen die Abnahme auf dem echten iPhone. Der Alpha-Status behauptet keine abgeschlossene allgemeine Gerätefreigabe.
 
 Bring! bietet weiterhin die vorhandene Einzelrezeptübergabe und eine kopierbare Zutatenvorbereitung. Ein automatischer Gesamtimport und der tatsächliche Inhalt einer Bring!-Liste sind durch die App nicht bestätigt.
 

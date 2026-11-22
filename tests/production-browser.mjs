@@ -79,6 +79,6 @@ await page.locator('.bottom-nav [data-tab=week]').click();await page.locator('#d
 assert(await page.locator('#meal-date').evaluate(el=>el.getBoundingClientRect().right<=document.querySelector('.meal-date-row').getBoundingClientRect().right+.5));
 await page.locator('#meal-editor-close').click();
 await page.setViewportSize({width:1280,height:900});
-await page.locator('[data-tab=archive]').first().click();
+await page.locator('.bottom-nav [data-tab=archive]').click();
 assert.equal(await page.locator('.archive-card').count(),25);
 await browser.close();await new Promise(resolve=>server.close(resolve));
