@@ -91,3 +91,24 @@ test('ingredients without source quantities can be saved without inventing a mea
  assert.equal(parseIngredient('2 Becher Milch').unit,'');
  assert.throws(()=>validateDraft({...draft,ingredients:[{...butter,quantity:1}]}));
 });
+
+test('Migusto active time stays separate from total and cooking time',()=>{
+ const recipe={'@type':'Recipe',name:'Crevetten',totalTime:'PT30M',recipeIngredient:['2 Frühlingszwiebeln'],recipeInstructions:['Braten.']};
+ const doc={querySelectorAll:()=>[{textContent:JSON.stringify(recipe)}],
+   querySelector:()=>({textContent:'Gesamt: 30 Min. • Aktiv: ca. 30 Minuten'})};
+ const result=extractRecipe(doc,s=>s);
+ assert.equal(result.totalMinutes,30);assert.equal(result.activeMinutes,30);
+ assert.equal(result.cookMinutes,null);assert.equal(result.prepMinutes,null);
+});
+test('counted vegetables and bunches retain their quantities through persistence and scaling',()=>{
+ const rows=['2 Frühlingszwiebeln','1 Pak-Choi','1 Pak Choi','0.5 Bund Koriander','½ Bund Petersilie'].map(parseIngredient);
+ assert.deepEqual(rows.map(r=>[r.quantity,r.unit]),[[2,'piece'],[1,'piece'],[1,'piece'],[.5,'bunch'],[.5,'bunch']]);
+ assert.equal(rows[0].name,'Frühlingszwiebeln');assert.equal(rows[1].name,'Pak-Choi');
+ const draft={title:'Gemüse',description:'',source:'',baseServings:2,prepMinutes:null,cookMinutes:null,totalMinutes:30,activeMinutes:20,ingredients:rows,steps:['Braten.']};
+ validateDraft(draft);
+ const result=householdRecipe({id:'gemuese',draft},{});
+ assert.equal(result.recipe.activeMinutes,20);
+ assert.equal(result.recipe.ingredients[3].unit,'bunch');
+ assert.equal(parseIngredient('2 Becher Milch').unit,'');
+ assert.throws(()=>validateDraft({...draft,activeMinutes:-1}));
+});

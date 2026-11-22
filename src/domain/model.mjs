@@ -1,6 +1,6 @@
 // Independent business rules. Recipe JSON remains the source of truth.
 export const SCHEMA_VERSION=1;
-export const UNITS=Object.freeze(['g','kg','ml','l','piece','tbsp','tsp','pinch','unspecified','to_taste']);
+export const UNITS=Object.freeze(['g','kg','ml','l','piece','tbsp','tsp','pinch','bunch','unspecified','to_taste']);
 const unitSet=new Set(UNITS), slug=/^[a-z0-9]+(?:-[a-z0-9]+)*$/, ingredientId=/^[a-z][a-z0-9_]*$/, datePattern=/^\d{4}-\d{2}-\d{2}$/;
 const object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const positive=x=>typeof x==='number'&&Number.isFinite(x)&&x>0;

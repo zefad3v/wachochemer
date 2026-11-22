@@ -90,12 +90,15 @@ export function extractRecipe(doc, plain) {
   const range=/\d\s*(?:[-–—/]|bis|to)\s*\d/i.test(yieldText);
   const servings=range?null:yieldText.trim().match(/^(\d+)\s*$/) || yieldText.match(/\b(\d+)\s*(?:Portion|Person|serving)/i);
   const prepMinutes=minutes(r.prepTime), cookMinutes=minutes(r.cookTime);
+  const durationText=doc.querySelector?.('[aria-label="Zubereitungszeit"]')?.textContent || '';
+  const active=durationText.match(/Aktiv:\s*(?:ca\.?\s*)?(?:(\d+)\s*(?:Std\.?|Stunden?|h)\s*)?(?:(\d+)\s*(?:Min\.?|Minuten?))?/i);
+  const activeMinutes=active && (active[1]||active[2]) ? Number(active[1]||0)*60+Number(active[2]||0) : null;
   const imageValue=[r.image].flat()[0];
   const candidate=typeof imageValue==='string'?imageValue:imageValue?.url||imageValue?.contentUrl;
   let image='';
   try {const url=new URL(candidate);if(url.protocol==='https:'&&!url.username&&!url.password)image=url.href;}catch{}
   return {image,title:plain(r.name||''),description:plain(r.description||''),baseServings:servings?Number(servings[1]):null,
-    prepMinutes,cookMinutes,totalMinutes:minutes(r.totalTime),
+    prepMinutes,cookMinutes,...(activeMinutes!=null?{activeMinutes}:{}),totalMinutes:minutes(r.totalTime),
     lines:items.map(x=>typeof x==='string'?plain(x):[x?.value,x?.unitText,x?.name].filter(Boolean).join(' ')).filter(Boolean),
     steps:steps(r.recipeInstructions)};
 }

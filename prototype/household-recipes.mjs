@@ -7,7 +7,7 @@ const numeric = s => s.split(/\s+/).reduce((sum,part)=>{
   return sum+a/(b??1);
 },0);
 const aliases={g:'g',gramm:'g',kg:'kg',kilogramm:'kg',ml:'ml',l:'l',liter:'l',dl:'ml',cl:'ml',
-  el:'tbsp',esslöffel:'tbsp',tl:'tsp',teelöffel:'tsp',stück:'piece',stk:'piece',prise:'pinch',prisen:'pinch'};
+  el:'tbsp',esslöffel:'tbsp',tl:'tsp',teelöffel:'tsp',stück:'piece',stk:'piece',prise:'pinch',prisen:'pinch',bund:'bunch',bünde:'bunch'};
 export function parseAmount(text) {
  const s=String(text).replace(/([½¼¾⅓⅔⅛])/g,(_m,ch)=>' '+fractions[ch]).trim();
  const number='(?:\\d+\\s+\\d+/\\d+|\\d+/\\d+|\\d+(?:[.,]\\d+)?)';
@@ -31,7 +31,7 @@ export function parseIngredient(line) {
   const m=s.match(/^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?)\s*([a-zäöü]+)\.?\s+(.+)$/i);
   if (!m || !Object.hasOwn(aliases,m[2].toLowerCase())) {
     // Leave ranges and unrecognised measures intact for review.
-    const count=s.match(/^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?)\s+((?:(?:grosse|kleine|mittelgrosse|rotschalige|reife|rote|gelbe)\s+)?(?:Eier?|Äpfel|Apfel|Zitronen?|Zwiebeln?|Karotten?|Tomaten?|Bananen?|Kartoffeln?))(,.*)?$/i);
+    const count=s.match(/^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?)\s+((?:(?:grosse|kleine|mittelgrosse|rotschalige|reife|rote|gelbe)\s+)?(?:Frühlingszwiebeln?|Pak[- ]?Choi|Eier?|Äpfel|Apfel|Zitronen?|Zwiebeln?|Karotten?|Tomaten?|Bananen?|Kartoffeln?))(,.*)?$/i);
     if(count)return {...unknown,name:count[2]+(count[3]||''),quantity:numeric(count[1]),unit:'piece'};
     return /\d/.test(s)?unknown:{...unknown,unit:'unspecified'};
   }
@@ -59,7 +59,7 @@ export function householdRecipe(row,catalogNames) {
     return {ingredientId,quantity,...(quantityMax!=null?{quantityMax}:{}),unit,optional};
   });
   const recipe={schemaVersion:1,locale:'de-CH',id,slug:id,title:d.title,description:d.description,
-    baseServings:d.baseServings,prepMinutes:d.prepMinutes,cookMinutes:d.cookMinutes,totalMinutes:d.totalMinutes??null,image:d.image||null,
+    baseServings:d.baseServings,prepMinutes:d.prepMinutes,cookMinutes:d.cookMinutes,activeMinutes:d.activeMinutes??null,totalMinutes:d.totalMinutes??null,image:d.image||null,
     ingredients,instructions:{'de-CH':d.steps},householdRecipe:true};
   validateRecipe(recipe,new Set(Object.keys(names)));
   return {recipe,names};
@@ -68,7 +68,7 @@ export function validateDraft(d) {
   if (!d.title || d.title.length>160 || d.description.length>2000 || d.source.length>2000)
     throw Error('Bitte prüfe Titel, Beschreibung und Quelle.');
   if(!Number.isInteger(d.baseServings)||d.baseServings<1||d.baseServings>999)throw Error('Bitte gib die Portionszahl des Grundrezepts ein.');
-  if([d.prepMinutes,d.cookMinutes,d.totalMinutes].some(n=>n!=null&&(!Number.isInteger(n)||n<0||n>9999)))throw Error('Bitte gib eine gültige Dauer in Minuten ein.');
+  if([d.prepMinutes,d.cookMinutes,d.totalMinutes,d.activeMinutes].some(n=>n!=null&&(!Number.isInteger(n)||n<0||n>9999)))throw Error('Bitte gib eine gültige Dauer in Minuten ein.');
   if(d.image)canonicalSource(d.image);
   if(!d.steps.length || d.steps.length>100 || d.steps.some(s=>!s.trim()||s.length>3000))throw Error('Prüfe die Zubereitung. Schreibe jeden Schritt auf eine eigene Zeile.');
   if(!d.ingredients.length||d.ingredients.length>100)throw Error('Gib zwischen 1 und 100 Zutaten an.');

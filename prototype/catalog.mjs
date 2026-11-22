@@ -30,12 +30,18 @@ export function archiveEntries(recipes,images={}){
  return recipes.map(recipe=>({
   id:recipe.id,slug:recipe.slug,title:recipe.title,description:recipe.description,
   minutes:recipe.totalMinutes??((recipe.prepMinutes||0)+(recipe.cookMinutes||0)),
-  image:recipe.image||images[recipe.id]||null,real:true
+  image:recipe.image||images[recipe.id]||null,householdRecipe:!!recipe.householdRecipe,real:true
  })).sort((a,b)=>a.title.localeCompare(b.title,'de-CH'));
 }
 const searchText=text=>String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('de-CH');
-export function filterArchive(entries,{query='',filter='all',favorites=new Set()}={}){
+export function filterArchive(entries,{query='',filter='all',favorites=new Set(),sort='title',duration='all'}={}){
  const needle=searchText(query.trim());
  return entries.filter(entry=>(!needle||searchText(entry.title+' '+entry.description).includes(needle))
-  &&(filter!=='favorites'||favorites.has(entry.id)));
+  &&(filter!=='favorites'||favorites.has(entry.id))
+  &&(filter!=='household'||entry.householdRecipe)
+  &&(filter!=='starter'||!entry.householdRecipe)
+  &&(duration!=='quick'||entry.minutes>0&&entry.minutes<=30))
+  .sort((a,b)=>sort==='time'?(a.minutes||Infinity)-(b.minutes||Infinity)||a.title.localeCompare(b.title,'de-CH'):
+    sort==='title-desc'?b.title.localeCompare(a.title,'de-CH'):a.title.localeCompare(b.title,'de-CH'));
+
 }

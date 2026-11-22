@@ -11,13 +11,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="Wa chochemer hilft deinem Haushalt, Mahlzeiten zu planen, Rezepte zu sammeln und den Einkauf vorzubereiten.">
   <title>Wa chochemer</title>
-  <link rel="stylesheet" href="./styles.css?v=20261121-de-ch">
-  <script src="./app.js?v=20261121-de-ch" type="module"></script>
+  <link rel="stylesheet" href="./styles.css?v=20261122-import-polish">
+  <script src="./app.js?v=20261122-import-polish" type="module"></script>
 </head>
 <body>
 <section id="account-startup" class="account-gate" aria-labelledby="account-startup-title">
   <div class="account-panel startup-panel">
-    <img src="./assets/icons/icon-192.png" width="72" height="72" alt="">
+    <div class="loading-pot" aria-hidden="true"><img src="./assets/icons/icon-192.png" width="72" height="72" alt=""><i></i><i></i><i></i></div>
     <h1 id="account-startup-title">Wa chochemer</h1>
     <p id="account-startup-status" role="status">App wird geladen …</p>
     <button type="button" id="account-startup-retry" hidden>Neu laden</button>
@@ -92,6 +92,8 @@
       <div class="section-title"><span class="eyebrow">FÜR JEDEN TAG</span><h1 id="archive-title">Kochbuch</h1><p>Alle Rezepte an einem Ort.</p></div>
       <div class="archive-search-row"><label class="search-field"><span aria-hidden="true">⌕</span><input type="search" id="recipe-search" placeholder="Rezepte suchen …" autocomplete="off" aria-label="Rezepte suchen"></label><button id="new-house-recipe" class="archive-add" type="button" aria-label="Rezept erfassen" title="Rezept erfassen" hidden>+</button></div><p id="archive-status" role="status" aria-live="polite"></p>
       <div class="filter-row" id="recipe-filters" aria-label="Rezeptfilter"></div>
+      <div class="archive-options"><label>Dauer<select id="archive-duration"><option value="all">Alle Rezepte</option><option value="quick">Bis 30 Minuten</option></select></label>
+      <label>Sortierung<select id="archive-sort"><option value="title">Name A bis Z</option><option value="title-desc">Name Z bis A</option><option value="time">Kürzeste Dauer</option></select></label></div>
       <div class="recipe-grid" id="recipe-grid"></div>
     </section>
     <section class="screen" id="screen-shopping" aria-labelledby="shopping-title">
@@ -243,7 +245,7 @@
             <label>Portionen<input name="servings" type="number" min="1" max="999" required></label>
             <label>Zubereiten (Min., optional)<input name="prep" type="number" min="0" max="9999"></label>
             <label>Kochen (Min., optional)<input name="cook" type="number" min="0" max="9999"></label>
-          <label>Auf dem Tisch (Min., optional)<input name="total" type="number" min="0" max="9999"></label></div>
+          <label>Aktiv (Min., optional)<input name="active" type="number" min="0" max="9999"></label><label>Gesamt (Min., optional)<input name="total" type="number" min="0" max="9999"></label></div>
           <label>Rezeptbild · Bildlink (optional)<input name="image" type="url" maxlength="2000" placeholder="https://…"></label><button id="house-source-image" type="button">Bild aus der Rezeptquelle übernehmen</button>
           <fieldset><legend>Zutaten</legend><div id="house-ingredients"></div>
             <button type="button" id="house-add-ingredient">Zutat hinzufügen</button>

@@ -71,3 +71,15 @@ test('duplicate and unknown recipe ingredients fail validation',()=>{
  const broken=structuredClone(recipes[0]);broken.ingredients[0].ingredientId='not_in_catalog';
  assert.throws(()=>buildRecipeIndex([broken],catalog),/unknown ingredientId/);
 });
+
+test('archive combines search, origin, duration and ordering without changing input',()=>{
+ const rows=[{id:'b',title:'Brei',minutes:20,householdRecipe:true},{id:'s',title:'Suppe',minutes:45},{id:'a',title:'Apfel',minutes:0,householdRecipe:true}];
+ const ids=opts=>filterArchive(rows,opts).map(r=>r.id);
+ assert.deepEqual(ids({filter:'household'}),['a','b']);
+ assert.deepEqual(ids({filter:'starter'}),['s']);
+ assert.deepEqual(ids({filter:'favorites',favorites:new Set(['s']),duration:'quick'}),[]);
+ assert.deepEqual(ids({duration:'quick'}),['b']);
+ assert.deepEqual(ids({sort:'time'}),['b','s','a']);
+ assert.deepEqual(ids({sort:'title-desc'}),['s','b','a']);
+ assert.deepEqual(rows.map(r=>r.id),['b','s','a']);
+});
