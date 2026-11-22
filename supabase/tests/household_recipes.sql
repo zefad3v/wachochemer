@@ -7,7 +7,7 @@ set local role authenticated;
 do $$
 declare
  target uuid; rid uuid:=gen_random_uuid();
- draft jsonb:='{"title":"Test","description":"","source":"https://fooby.ch/example","baseServings":2,"prepMinutes":3,"cookMinutes":5,"ingredients":[{"name":"Mehl","quantity":100,"unit":"g","optional":false}],"steps":["Mischen."]}';
+ draft jsonb:='{"activeMinutes":20,"title":"Test","description":"","source":"https://fooby.ch/example","baseServings":2,"prepMinutes":3,"cookMinutes":5,"ingredients":[{"name":"Mehl","quantity":100,"unit":"bunch","optional":false}],"steps":["Mischen."]}';
 begin
  perform set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-000000000001","aal":"aal1"}',true);
  target:=public.create_household('Küche');

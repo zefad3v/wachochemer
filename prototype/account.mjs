@@ -1,6 +1,6 @@
 import {sessionStorageChoice} from './auth-session.mjs';
 import {backendConfig} from './backend-config.js';
-import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261121-de-ch';
+import {SharedHousehold, unwrap} from '../src/storage/shared-household.mjs?v=20261122-import-polish';
 
 export const cloudEnabled = Boolean(backendConfig.url || backendConfig.publishableKey);
 const html = `

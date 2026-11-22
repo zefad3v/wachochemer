@@ -54,3 +54,7 @@ Der Editor bildet Mahlzeitenbedarf plus optionale Zusatzmenge auf die bestehende
 ## V20: gemeinsame Rezept- und Kochansicht
 
 Der Dialog nutzt eine Scrollfläche, eine Zutatencheckliste und eine nummerierte Anleitung für beide Ansichten. `recipeViewServings` ist ein flüchtiger Override vor `plannedServings` und Archivpräferenz. Nur Archivänderungen speichern weiterhin die vorhandene Präferenz; geplante Kochsitzungen schreiben keinen Speicher. Öffnen/Schliessen setzt den Override zurück. Headercontrols stehen vor dem Titel im Dokumentfluss, Fokus liegt beim Einstieg auf dem benannten Dialog. [Abnahme](issue18-cooking-view.md).
+
+## Rezeptimport und Kochbuchfilter
+
+Haushaltsrezepte unterstützen Bund als Einheit und eine optionale Aktivzeit in Minuten zusätzlich zur Gesamtzeit. Bestehende Rezepte ohne Aktivzeit bleiben gültig. Der Migusto-Import liest die separat angezeigte Aktivzeit aus dem Zeitbereich der Rezeptseite. Kochbuchfilter arbeiten auf dem gemeinsamen Katalog, die Sortierung verändert keine gespeicherten Rezepte. Die Ladeanimation respektiert reduzierte Bewegung. Der Glas-Effekt der Navigation braucht weiterhin eine Sichtprüfung auf dem iPhone.

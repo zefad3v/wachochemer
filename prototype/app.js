@@ -1,5 +1,5 @@
 "use strict";
-import {cloudEnabled,startAccount} from "./account.mjs?v=20261121-de-ch";
+import {cloudEnabled,startAccount} from "./account.mjs?v=20261122-import-polish";
 import {fetchArchiveData,archiveEntries,filterArchive} from "./catalog.mjs";
 import {displayClass,viewForClass,moveDay,swipeDirection} from "./responsive-planner.mjs";
 import {addDays,parseDay,mealKey,mealFor,datesBetween,shoppingWindow} from "./planner.mjs";
@@ -18,7 +18,7 @@ const archiveImages=recipeImages;
 
 const state={
  tab:"week",returnTab:"week",current:0,weekOffset:0,startDay:4,activeRecipeId:null,plannedServings:null,recipeViewServings:null,servings:{},
- recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",
+ recipes:{},names:{},archiveEntries:[],archiveStatus:"loading",favorites:new Set(),checked:new Set(),filter:"all",query:"",sort:"title",duration:"all",
  plan:{version:2,entries:{}},editingDate:null,shopping:null,extras:[],selectedMeal:null
 };
 function readSaved(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
@@ -196,7 +196,7 @@ function renderArchive(){
    :"Rezepte werden geladen …")+'</p>';
   return;
  }
- const all=filterArchive(state.archiveEntries,{query:state.query,filter:state.filter,favorites:state.favorites});
+ const all=filterArchive(state.archiveEntries,{query:state.query,filter:state.filter,favorites:state.favorites,sort:state.sort,duration:state.duration});
  const searching=Boolean(state.query.trim());
  grid.classList.toggle("search-suggestions",searching);
  grid.innerHTML=searching
@@ -483,7 +483,7 @@ function renderPortions(recipe){
  byId("portion-count").textContent=count+" "+(count===1?"Portion":"Portionen");
  byId("portion-minus").disabled=count<=0.5;
  byId("portion-plus").disabled=count>=1000;
- byId("dialog-meta").innerHTML='<span>◷ '+(recipe.totalMinutes??((recipe.prepMinutes||0)+(recipe.cookMinutes||0)))+' Min.</span><span>♙ '+count+' '+(count===1?'Portion':'Portionen')+'</span>';
+ byId("dialog-meta").innerHTML='<span>◷ '+(recipe.totalMinutes??((recipe.prepMinutes||0)+(recipe.cookMinutes||0)))+' Min.</span>'+ (recipe?.activeMinutes!=null?'<span>'+recipe.activeMinutes+' Min. aktiv</span>':'')+'<span>♙ '+count+' '+(count===1?'Portion':'Portionen')+'</span>';
  byId("portion-session-note").hidden=state.plannedServings===null||count===state.plannedServings;
  const list=byId("dialog-ingredients");
  const checked=new Set([...list.querySelectorAll('input:checked')].map(el=>Number(el.dataset.index)));
@@ -525,7 +525,7 @@ function openRecipe(item){
  byId("dialog-category").textContent=recipe?(recipe.householdRecipe?"HAUSHALTSREZEPT":(item.imageGenerated?"STARTREZEPT · KI-BILD":"STARTREZEPT")):"REZEPT NICHT VERFÜGBAR";
  byId("dialog-title").textContent=recipe?.title||item.title;
  byId("dialog-description").textContent=recipe?.description||item.description;
- byId("dialog-meta").innerHTML='<span>◷ '+(recipe?(recipe.totalMinutes??((recipe.prepMinutes||0)+(recipe.cookMinutes||0))):item.minutes)+' Min.</span><span>♙ '+(recipe?.baseServings||3)+' Portionen</span>';
+ byId("dialog-meta").innerHTML='<span>◷ '+(recipe?(recipe.totalMinutes??((recipe.prepMinutes||0)+(recipe.cookMinutes||0))):item.minutes)+' Min.</span>'+ (recipe?.activeMinutes!=null?'<span>'+recipe.activeMinutes+' Min. aktiv</span>':'')+'<span>♙ '+(recipe?.baseServings||3)+' Portionen</span>';
  byId("dialog-favourite").textContent=state.favorites.has(item.id)?"♥":"♡";
  byId("dialog-favourite").classList.toggle("liked",state.favorites.has(item.id));
  byId("dialog-favourite").dataset.id=item.id;
@@ -910,8 +910,9 @@ function init(){
   if(next!==lastClockState){lastClockState=next;if(!document.hidden&&state.tab==="week")renderPlanner()}
  },30000);
  updateDisplay();
+ for(const [id,key] of [["archive-sort","sort"],["archive-duration","duration"]])byId(id).addEventListener("change",event=>{state[key]=event.target.value;renderArchive()});
  byId("recipe-search").addEventListener("input",e=>{state.query=e.target.value;renderArchive()});
- const filters=[["all","Alle"],["favorites","Favoriten"]];
+ const filters=[["all","Alle"],["favorites","Favoriten"],["household","Haushalt"],["starter","Startrezepte"]];
  byId("recipe-filters").innerHTML=filters.map(([id,label])=>'<button type="button" class="filter-chip'+(id===state.filter?' active':'')+'" data-filter="'+id+'">'+label+'</button>').join("");
  byId("recipe-filters").addEventListener("click",e=>{const target=e.target.closest("[data-filter]");if(!target)return;state.filter=target.dataset.filter;renderArchive()});
  byId("start-day").value=String(state.startDay);
