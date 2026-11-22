@@ -51,3 +51,7 @@ README, Architektur und Roadmaps beschreiben den aktuellen Stand. Historische UI
 ## Transportkorrektur für die Edge-Laufzeit
 
 Der HTTPS-Import verbindet sich mit der geprüften öffentlichen IP über Deno.connect und startet TLS mit dem ursprünglichen Hostnamen. Zertifikatsprüfung und SNI bleiben aktiv. Der Supabase-Edge-Runtime fehlen die Node-HTTPS-Option lookup und die neuere TCP-Proxy-Option von Deno.createHttpClient. Deshalb genügt ein Test mit aktuellem Deno allein nicht. Der Curry-Abruf samt zwölf Zutaten, drei Schritten, Zeit und Bild wurde am 22. November direkt in der bereitgestellten Supabase-Funktion verifiziert. Temporäre Diagnoserouten sind anschliessend entfernt worden.
+
+## Mengenerkennung beim Curry-Import
+
+Stückmengen erkennen auch Knoblauchzehen, Limetten, Grössenangaben mit ss oder ß und nachgestellte Hinweise wie «gepresst». Mengenbereiche mit qualifizierten Löffelangaben wie «1 bis 3 grosse EL» bleiben skalierbar; der Löffelhinweis wird beim Zutatennamen bewahrt. Unbekannte Masseinheiten bleiben zur Kontrolle offen. Bereits gespeicherte Rezepte werden nicht automatisch verändert.

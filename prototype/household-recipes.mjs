@@ -22,21 +22,21 @@ export function parseIngredient(line) {
   const s=raw.replace(/([½¼¾⅓⅔⅛])/g,(_m,ch)=>' '+fractions[ch]).trim();
   const taste=s.match(/^(?:etwas|nach Geschmack)\s+(.+)|^(.+?)[, ]+nach Geschmack$/i);
   if(taste)return {...unknown,name:(taste[1]||taste[2]).trim(),unit:'to_taste'};
-  const range=s.match(/^(\d+(?:\s+\d+\/\d+|[.,]\d+)?|\d+\/\d+)\s*(?:[-–—]|bis)\s*(\d+(?:\s+\d+\/\d+|[.,]\d+)?|\d+\/\d+)\s*([a-zäöü]+)\.?\s+(.+)$/i);
-  if(range && Object.hasOwn(aliases,range[3].toLowerCase())){
-    const key=range[3].toLowerCase(),factor=key==='dl'?100:key==='cl'?10:1;
-    const amount=parseAmount(range[1]+'-'+range[2]);
-    return {...unknown,name:range[4],unit:aliases[key],quantity:amount.quantity*factor,quantityMax:amount.quantityMax*factor};
+  const number='(?:\\d+\\s+\\d+/\\d+|\\d+/\\d+|\\d+(?:[.,]\\d+)?)';
+  const amountMatch=new RegExp('^('+number+'(?:\\s*(?:[-–—]|bis)\\s*'+number+')?)\\s*(.+)$','i').exec(s);
+  if(!amountMatch)return /\d/.test(s)?unknown:{...unknown,unit:'unspecified'};
+  let amount;try{amount=parseAmount(amountMatch[1]);}catch{return unknown;}
+  const remainder=amountMatch[2];
+  const measured=remainder.match(/^(?:(gehäufte[nrsm]?|gestrichene[nrsm]?|gro(?:ss|ß)e[nrsm]?)\s+)?([a-zäöü]+)\.?\s+(.+)$/i);
+  if(measured && Object.hasOwn(aliases,measured[2].toLowerCase())){
+    const key=measured[2].toLowerCase(),factor=key==='dl'?100:key==='cl'?10:1;
+    return {...unknown,name:measured[3]+(measured[1]?' ('+measured[1]+' '+measured[2]+')':''),unit:aliases[key],
+      quantity:amount.quantity*factor,...(amount.quantityMax!=null?{quantityMax:amount.quantityMax*factor}:{})};
   }
-  const m=s.match(/^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?)\s*([a-zäöü]+)\.?\s+(.+)$/i);
-  if (!m || !Object.hasOwn(aliases,m[2].toLowerCase())) {
-    // Leave ranges and unrecognised measures intact for review.
-    const count=s.match(/^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?)\s+((?:(?:grosse|kleine|mittelgrosse|rotschalige|reife|rote|gelbe)\s+)?(?:Frühlingszwiebeln?|Pak[- ]?Choi|Eier?|Äpfel|Apfel|Zitronen?|Zwiebeln?|Karotten?|Tomaten?|Bananen?|Kartoffeln?))(,.*)?$/i);
-    if(count)return {...unknown,name:count[2]+(count[3]||''),quantity:numeric(count[1]),unit:'piece'};
-    return /\d/.test(s)?unknown:{...unknown,unit:'unspecified'};
-  }
-  const key=m[2].toLowerCase(), quantity=numeric(m[1])*(key==='dl'?100:key==='cl'?10:1);
-  return {...unknown,name:m[3],unit:aliases[key],quantity};
+  // Infer Stück only for recognised counted ingredients, never for unknown measures.
+  const counted=/^(?:(?:gro(?:ss|ß)e|kleine|mittlere|mittelgro(?:ss|ß)e|rotschalige|reife|rote|gelbe)\s+)?(?:Frühlingszwiebeln?|Pak[- ]?Choi|Ei|Eier|Äpfel|Apfel|Zitronen?|Limetten?|Knoblauchzehen?|Zwiebeln?|Karotten?|Tomaten?|Bananen?|Kartoffeln?)(?=$|[\s,])/i;
+  if(amount.quantityMax==null && counted.test(remainder))return {...unknown,name:remainder,quantity:amount.quantity,unit:'piece'};
+  return unknown;
 }
 export function canonicalSource(text) {
   if (!text.trim()) return '';

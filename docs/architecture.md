@@ -45,3 +45,7 @@ Node prüft Fachlogik, PGlite SQL mit Auth-Fixtures und DOM-Tests simulierte Onl
 ## Anbieterunabhängiger Rezeptimport, 22. November 2026
 
 Öffentliche HTTPS-Seiten werden ohne Anbieterliste eingelesen. Jeder Redirect wird erneut geprüft. DNS-Adressen werden auf öffentliche Ziele beschränkt und für die TLS-Verbindung festgehalten. Interne Adressen, Zugangsdaten in URLs und andere Ports sind gesperrt. Fehlende Rezeptdaten, nicht erreichbare Seiten und Grössenlimits ergeben eine Rückmeldung. Bei KI-Text plus Link wird das Rezeptbild zusätzlich versucht; ein Bildfehler verhindert den Textimport nicht. Kochkarussell wurde mit vier Portionen, zwölf Zutaten, drei Schritten, 10/20/30 Minuten und Bild geprüft.
+
+## Mengenerkennung beim Curry-Import
+
+Stückmengen erkennen auch Knoblauchzehen, Limetten, Grössenangaben mit ss oder ß und nachgestellte Hinweise wie «gepresst». Mengenbereiche mit qualifizierten Löffelangaben wie «1 bis 3 grosse EL» bleiben skalierbar; der Löffelhinweis wird beim Zutatennamen bewahrt. Unbekannte Masseinheiten bleiben zur Kontrolle offen. Bereits gespeicherte Rezepte werden nicht automatisch verändert.
