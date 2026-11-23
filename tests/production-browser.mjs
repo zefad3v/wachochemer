@@ -83,4 +83,29 @@ await page.locator('#meal-editor-close').click();
 await page.setViewportSize({width:1280,height:900});
 await page.locator('.bottom-nav [data-tab=archive]').click();
 assert.equal(await page.locator('.archive-card').count(),25);
+// Open the real editor handler without a cloud session; this fixture only measures layout.
+await page.evaluate(()=>document.getElementById('new-house-recipe').click());
+await page.locator('#house-add-ingredient').click();
+for(const width of [393,340,768]){
+ await page.setViewportSize({width,height:900});
+ const boxes=await page.locator('#house-recipe-form').evaluate(form=>{
+  const rect=el=>{const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height}};
+  const numbers=[...form.querySelectorAll('.recipe-numbers input')].map(rect);
+  const measures=[...form.querySelector('.house-ingredient .ingredient-measure').querySelectorAll('input,select')].map(rect);
+  const last=rect(form.querySelector('.house-ingredient:last-child'));
+  const add=rect(document.getElementById('house-add-ingredient'));
+  const bounds=rect(form);
+  return {numbers,measures,addGap:add.top-last.bottom,contained:[...numbers,...measures].every(r=>r.left>=bounds.left&&r.right<=bounds.right+.5)};
+ });
+ assert(boxes.numbers.every(r=>Math.abs(r.height-46)<.5),JSON.stringify({width,boxes}));
+ assert(Math.abs(boxes.numbers[0].top-boxes.numbers[1].top)<.5);
+ assert(Math.abs(boxes.numbers[1].top-boxes.numbers[2].top)<.5);
+ assert(Math.abs(boxes.numbers[3].top-boxes.numbers[4].top)<.5);
+ assert(boxes.measures.every(r=>Math.abs(r.height-46)<.5));
+ assert(Math.abs(boxes.measures[0].top-boxes.measures[1].top)<.5);
+ assert(boxes.addGap>=15.5);assert(boxes.contained);
+ console.log('PASS recipe editor geometry',width,JSON.stringify(boxes));
+}
+assert.deepEqual(errors,[]);
+await page.evaluate(()=>document.getElementById('house-recipe-editor').close());
 await browser.close();await new Promise(resolve=>server.close(resolve));
