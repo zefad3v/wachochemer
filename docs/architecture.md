@@ -51,3 +51,7 @@ Node prüft Fachlogik, PGlite SQL mit Auth-Fixtures und DOM-Tests simulierte Onl
 Stückmengen erkennen auch Knoblauchzehen, Limetten, Grössenangaben mit ss oder ß und nachgestellte Hinweise wie «gepresst». Mengenbereiche mit qualifizierten Löffelangaben wie «1 bis 3 grosse EL» bleiben skalierbar; der Löffelhinweis wird beim Zutatennamen bewahrt. Unbekannte Masseinheiten bleiben zur Kontrolle offen. Bereits gespeicherte Rezepte werden nicht automatisch verändert.
 
 Unbemessene, eindeutige Gewürzlisten wie «Salz (Pfeffer und Chili)» werden beim Import in einzelne Zutaten ohne erfundene Mengen aufgeteilt. Mengenangaben, Alternativen und beschreibende Klammerhinweise werden nicht automatisch verteilt. Bereits gespeicherte Rezepte behalten ihren Stand.
+
+## Rezepteditor: Feldhöhen und Abstände
+
+Einzeilige Eingaben und Auswahlen haben einheitlich 46 Pixel Höhe. Die Zahlenfelder richten sich trotz umgebrochener Beschriftungen am unteren Rand aus. Zutatenblöcke und die Aktion zum Hinzufügen verwenden explizite Abstände. Mehrzeilige Textfelder und umbrechende Schaltflächen behalten ihre benötigte Höhe.
