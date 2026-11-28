@@ -9,7 +9,7 @@ export function publicAddress(address){
  return isIP(address)===6 && /^[23]/i.test(address) && !blocked.check(address,'ipv6');
 }
 const MAX_BODY=4_000_000,MAX_WIRE=4_100_000;
-export function decodeHttp(bytes){
+export function decodeHttp(bytes,{requireFraming=false}={}){
  let offset=0,status,headers;
  while(true){
   let end=-1;for(let i=offset;i<Math.min(bytes.length-3,offset+65536);i++)if(bytes[i]===13&&bytes[i+1]===10&&bytes[i+2]===13&&bytes[i+3]===10){end=i;break;}
@@ -28,7 +28,12 @@ export function decodeHttp(bytes){
   while(true){
    let end=at;while(end<body.length-1&&!(body[end]===13&&body[end+1]===10))end++;
    const line=new TextDecoder().decode(body.subarray(at,end));if(!/^[\da-f]+(?:;[^\r\n]*)?$/i.test(line))throw Error('page');
-   const length=parseInt(line,16);at=end+2;if(length===0)break;
+   const length=parseInt(line,16);at=end+2;
+   if(length===0){
+    const trailers=new TextDecoder().decode(body.subarray(at));
+    if(!/^(?:[^:\r\n]+:[^\r\n]*\r\n)*\r\n$/.test(trailers))throw Error('page');
+    break;
+   }
    if(!Number.isSafeInteger(length)||length>MAX_BODY-size)throw Error('size');
    if(at+length+2>body.length||body[at+length]!==13||body[at+length+1]!==10)throw Error('page');
    chunks.push(body.subarray(at,at+length));size+=length;at+=length+2;
@@ -36,7 +41,7 @@ export function decodeHttp(bytes){
   body=new Uint8Array(size);let pos=0;for(const c of chunks){body.set(c,pos);pos+=c.length;}
  }else if(headers.has('content-length')){
   const length=Number(headers.get('content-length'));if(!Number.isSafeInteger(length)||length<0||length!==body.length)throw Error('page');
- }
+ }else if(requireFraming && ![204,205,304].includes(status))throw Error('page');
  if(body.length>MAX_BODY)throw Error('size');
  return {status,headers,body};
 }
@@ -51,13 +56,36 @@ export async function publicFetch(url,{signal}={}){
  try{
   conn=await Deno.connect({hostname:addresses[0].address,port:443});signal?.throwIfAborted();
   conn=await Deno.startTls(conn,{hostname:url.hostname,alpnProtocols:['http/1.1']});signal?.throwIfAborted();
-  const request=new TextEncoder().encode('GET '+url.pathname+url.search+' HTTP/1.1\r\nHost: '+url.host+'\r\nAccept: text/html\r\nAccept-Encoding: identity\r\nConnection: close\r\n\r\n');
+  const request=new TextEncoder().encode('GET '+url.pathname+url.search+' HTTP/1.1\r\nHost: '+url.host+'\r\nAccept: text/html\r\nUser-Agent: WaChochemer/1.0\r\nAccept-Encoding: gzip, deflate, identity\r\nConnection: close\r\n\r\n');
   let written=0;while(written<request.length)written+=await conn.write(request.subarray(written));
-  const parts=[];let size=0;
-  while(true){const buffer=new Uint8Array(32768);const n=await conn.read(buffer);if(n===null)break;size+=n;if(size>MAX_WIRE)throw Error('size');parts.push(buffer.subarray(0,n));}
+  const parts=[];let size=0,requireFraming=false;
+  while(true){
+   const buffer=new Uint8Array(32768);
+   let n;
+   try{n=await conn.read(buffer);}
+   catch(error){
+    // Some TLS peers close without close_notify. Only accept a fully framed HTTP response.
+    if(error?.name!=='UnexpectedEof')throw error;
+    requireFraming=true;
+    break;
+   }
+   if(n===null)break;
+   size+=n;if(size>MAX_WIRE)throw Error('size');
+   parts.push(buffer.subarray(0,n));
+  }
   const bytes=new Uint8Array(size);let pos=0;for(const part of parts){bytes.set(part,pos);pos+=part.length;}
-  const {status,headers,body}=decodeHttp(bytes);
-  if(headers.has('content-encoding')&&headers.get('content-encoding')!=='identity')throw Error('page');
-  return new Response([204,205,304].includes(status)?null:body,{status,headers});
+  const {status,headers,body}=decodeHttp(bytes,{requireFraming});
+  if([204,205,304].includes(status))return new Response(null,{status,headers});
+  if(headers.has('content-encoding')){
+   const encoding=headers.get('content-encoding').trim().toLowerCase();
+   if(!['gzip','deflate','identity'].includes(encoding))throw Error('page');
+   if(encoding!=='identity' && body.length){
+    const stream=new Blob([body]).stream().pipeThrough(new DecompressionStream(encoding));
+    headers.delete('content-encoding');
+    headers.delete('content-length');
+    return new Response(stream,{status,headers});
+   }
+  }
+  return new Response(body,{status,headers});
  }finally{signal?.removeEventListener('abort',close);close();}
 }

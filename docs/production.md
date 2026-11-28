@@ -61,3 +61,7 @@ Unbemessene, eindeutige Gewürzlisten wie «Salz (Pfeffer und Chili)» werden be
 ## Rezepteditor: Feldhöhen und Abstände
 
 Einzeilige Eingaben und Auswahlen haben einheitlich 46 Pixel Höhe. Die Zahlenfelder richten sich trotz umgebrochener Beschriftungen am unteren Rand aus. Zutatenblöcke und die Aktion zum Hinzufügen verwenden explizite Abstände. Mehrzeilige Textfelder und umbrechende Schaltflächen behalten ihre benötigte Höhe.
+
+## Rezeptimport: Swissmilk und Fehlermeldungen
+
+Die Importmeldung steht direkt unter dem Importbereich. Fehler sind orange hervorgehoben und Link sowie eingefügter Text bleiben bei einem Fehler erhalten. Beim KI-Import mit einem Link verwendet der Server zuerst vollständige strukturierte Rezeptdaten. OpenAI verarbeitet eingefügten Text oder den Seiteninhalt, falls strukturierte Daten fehlen. Die Transportprüfung enthält das Swissmilk-Rezept «Nudeln mit Krautstiel-Rahmsauce».

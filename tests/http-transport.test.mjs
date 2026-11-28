@@ -10,3 +10,12 @@ test('HTTP transport handles fixed length, chunked responses and redirects',()=>
 test('HTTP transport rejects truncated responses and oversized chunks',()=>{
  for(const response of ['HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nSo','HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nSo','HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\nffffff\r\n'])assert.throws(()=>decodeHttp(bytes(response)));
 });
+
+test('HTTP transport requires complete framing when TLS closes without notification',()=>{
+ const fixed='HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nSoup';
+ const chunked='HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nSoup\r\n0\r\n\r\n';
+ for(const response of [fixed,chunked])assert.equal(text(decodeHttp(bytes(response),{requireFraming:true}).body),'Soup');
+ assert.throws(()=>decodeHttp(bytes('HTTP/1.1 200 OK\r\n\r\nSoup'),{requireFraming:true}));
+ assert.throws(()=>decodeHttp(bytes(fixed.slice(0,-1)),{requireFraming:true}));
+ assert.throws(()=>decodeHttp(bytes(chunked.slice(0,-2)),{requireFraming:true}));
+});

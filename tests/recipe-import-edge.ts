@@ -32,6 +32,10 @@ Deno.test('Import checks access first, bounds AI cost, keeps the API key server 
     access=200;calls=[];
     const ordinary=await post('link','','https://fooby.ch/suppe');
     assert.equal((await ordinary.json()).draft.title,'Suppe');assert.equal(calls.length,2);
+    calls=[];
+    const structured=await post('ai','','https://fooby.ch/suppe');
+    assert.equal((await structured.json()).draft.title,'Suppe');
+    assert.equal(calls.length,2);
     const result=await post('ai','Kopierter Rezepttext');
     assert.deepEqual((await result.json()).draft,{...dish,image:''});
     Deno.env.delete('OPENAI_RECIPE_MODEL');
@@ -39,6 +43,7 @@ Deno.test('Import checks access first, bounds AI cost, keeps the API key server 
     assert.equal((await post('ai','Kopierter Rezepttext')).status,200);
     access=429;assert.equal((await post('ai','Kopierter Rezepttext')).status,429);
     access=200;Deno.env.delete('OPENAI_API_KEY');
+    assert.equal((await post('ai','','https://fooby.ch/suppe')).status,200);
     assert.equal((await (await post('ai','Kopierter Rezepttext')).json()).code,'ai_setup');
   } finally {
     globalThis.fetch=originalFetch;

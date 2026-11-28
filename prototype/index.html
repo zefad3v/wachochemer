@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="Wa chochemer hilft deinem Haushalt, Mahlzeiten zu planen, Rezepte zu sammeln und den Einkauf vorzubereiten.">
   <title>Wa chochemer</title>
-  <link rel="stylesheet" href="./styles.css?v=20261123-editor-spacing">
-  <script src="./app.js?v=20261123-editor-spacing" type="module"></script>
+  <link rel="stylesheet" href="./styles.css?v=20261128-import-feedback">
+  <script src="./app.js?v=20261128-import-feedback" type="module"></script>
 </head>
 <body>
 <section id="account-startup" class="account-gate" aria-labelledby="account-startup-title">
@@ -236,10 +236,11 @@
             <button type="button" id="house-read-link">Link importieren</button>
             <small>Für öffentliche HTTPS-Rezeptseiten mit strukturierten Rezeptdaten. Falls die Seite nicht eingelesen werden kann, füge den Rezepttext ein.</small>
             <label>Rezepttext für den KI-Import<textarea id="house-ai-text" maxlength="20000" rows="4"></textarea></label>
-            <small>Beim Klick auf «Mit KI importieren» wird der eingefügte Text oder der Inhalt der verlinkten Seite an OpenAI gesendet.</small>
+            <small>Der eingefügte Text wird an OpenAI gesendet. Bei einem Link geschieht dies nur, wenn die Seite keine vollständigen strukturierten Rezeptdaten liefert.</small>
             <button type="button" id="house-read-ai">Mit KI importieren</button>
           </div>
         </details>
+        <p id="house-import-status" class="recipe-editor-status" role="status" aria-live="polite"></p>
         <form id="house-recipe-form" class="editor-fields">
           <label>Titel<input name="title" required maxlength="160"></label>
           <label>Beschreibung<textarea name="description" rows="2" maxlength="2000"></textarea></label>
@@ -265,7 +266,7 @@
           <button type="button" id="house-revise">Bearbeiten</button><button type="button" class="main-action" id="house-save">Im Haushalt speichern</button>
         </div>
       </section>
-      <p id="house-editor-status" role="status" aria-live="polite"></p>
+      <p id="house-editor-status" class="recipe-editor-status" role="status" aria-live="polite"></p>
       <button id="house-delete" class="danger-action" type="button" hidden>Rezept endgültig löschen</button>
       <button id="house-reload-recipe" type="button" hidden>Aktuelle Version laden</button>
     </div>

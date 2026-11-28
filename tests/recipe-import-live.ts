@@ -8,3 +8,14 @@ Deno.test('public TLS transport imports Kochkarussell original page including ph
  assert.equal(recipe.baseServings,4);assert.equal(recipe.lines.length,12);assert.equal(recipe.steps.length,3);
  assert.equal(recipe.totalMinutes,30);assert.match(recipe.image,/^https:\/\/kochkarussell.com\//);
 });
+
+Deno.test('public TLS transport imports the Swissmilk Krautstiel recipe',async()=>{
+ const page=await fetchPage('https://www.swissmilk.ch/de/rezepte-kochideen/rezepte/LM201003_77/nudeln-mit-krautstiel-rahmsauce/');
+ const recipe=extractRecipe(parseHTML(page.html).document,(s:string)=>s.replace(/<[^>]*>/g,''));
+ assert.match(recipe.title,/Nudeln mit Krautstiel/);
+ assert.equal(recipe.baseServings,2);
+ assert.equal(recipe.lines.length,12);
+ assert.equal(recipe.steps.length,3);
+ assert.equal(recipe.totalMinutes,30);
+ assert.match(recipe.image,/^https:\/\/res\.cloudinary\.com\//);
+});
