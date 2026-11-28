@@ -17,7 +17,11 @@ const messages={
 };
 export function recipeEditor({account,household,findRow,findSource,onSaved}) {
   const dialog=el('house-recipe-editor'),form=el('house-recipe-form'), fields=form.elements;
-  const status=el('house-editor-status'),container=el('house-ingredients');
+  const status=el('house-editor-status'),importStatus=el('house-import-status'),container=el('house-ingredients');
+  function feedback(node,text='',error=false){
+    node.toggleAttribute('data-error',error);
+    node.textContent=text;
+  }
   let id,revision,target,preview,dirty=false,busy=false,generation=0;
   function ingredient(row) {
     const wrap=document.createElement('div');
@@ -58,7 +62,7 @@ export function recipeEditor({account,household,findRow,findSource,onSaved}) {
   function open(row=null) {
     generation++;busy=false;dirty=false;target=household();id=row?.id??crypto.randomUUID();revision=row?.revision??0;
     preview=null;edit(row?.draft??blank());el('house-import').hidden=!!row;el('house-import').open=false;
-    el('house-import-url').value='';el('house-ai-text').value='';status.textContent='';
+    el('house-import-url').value='';el('house-ai-text').value='';feedback(status);feedback(importStatus);
     el('house-reload-recipe').hidden=true;el('house-delete').hidden=!row;
     el('house-editor-title').textContent=row?'Rezept bearbeiten':'Rezept erfassen';
     setBusy(false);if(!dialog.open)dialog.showModal();
@@ -77,14 +81,14 @@ export function recipeEditor({account,household,findRow,findSource,onSaved}) {
   el('house-editor-close').onclick=close;
   form.addEventListener('input',()=>{dirty=true;});
   el('house-add-ingredient').onclick=()=>{dirty=true;ingredient(blankIngredient()).focus();};
-  async function job(action) {
+  async function job(action,notice=status) {
     if(busy || !target || target!==household())return;
     const turn=generation;setBusy(true);
     const active=()=>turn===generation && target===household() && dialog.open;
     try{await action(active);}catch(e){
       if(active()){
-        status.textContent=messages[e.code] || (e.code==='23505'?'Dieser Link ist bereits gespeichert. Bitte bearbeite das bestehende Rezept.':e.message);
-        status.scrollIntoView({block:'nearest'});
+        feedback(notice,messages[e.code] || (e.code==='23505'?'Dieser Link ist bereits gespeichert. Bitte bearbeite das bestehende Rezept.':e.message),true);
+        notice.scrollIntoView({block:'nearest'});
         if(e.code==='40001')el('house-reload-recipe').hidden=false;
       }
     }finally{if(active())setBusy(false);}
@@ -94,16 +98,16 @@ export function recipeEditor({account,household,findRow,findSource,onSaved}) {
     job(async active=>{
       const url=canonicalSource(el('house-import-url').value), text=el('house-ai-text').value.trim();
       if(!url && !(mode==='ai'&&text))throw Error('Füge einen Rezeptlink oder für den KI-Import einen Rezepttext ein.');
-      status.textContent='Rezept wird eingelesen …';
+      feedback(importStatus,'Rezept wird eingelesen …');
       const result=await account().importRecipe(target,{url,text:mode==='ai'?text:'',mode});
       if(!active())return;
       const d=result.draft;
       edit({...d,source:canonicalSource(result.source),ingredients:parseIngredientLines(d.lines)});
       dirty=true;el('house-import').open=false;
-      status.textContent='Prüfe Mengen, Einheiten, Portionen und Zubereitungsschritte.'+
-        (d.totalMinutes!=null && (d.prepMinutes==null||d.cookMinutes==null)?' Die Quelle nennt insgesamt '+d.totalMinutes+' Minuten.':'');
+      feedback(importStatus,'Prüfe Mengen, Einheiten, Portionen und Zubereitungsschritte.'+
+        (d.totalMinutes!=null && (d.prepMinutes==null||d.cookMinutes==null)?' Die Quelle nennt insgesamt '+d.totalMinutes+' Minuten.':''));
       fields.title.focus();
-    });
+    },importStatus);
   }
   el('house-read-link').onclick=()=>fromSource('link');
   el('house-read-ai').onclick=()=>fromSource('ai');
@@ -113,7 +117,7 @@ export function recipeEditor({account,household,findRow,findSource,onSaved}) {
   form.onsubmit=event=>{
     event.preventDefault();if(busy)return;
     try{
-      preview=read();status.textContent='';
+      preview=read();feedback(status);
       el('house-preview-name').textContent=preview.title;
       el('house-preview-description').textContent=preview.description;
       el('house-preview-meta').textContent=[preview.baseServings+' Portionen',preview.activeMinutes!=null?preview.activeMinutes+' Min. aktiv':'',preview.prepMinutes!=null?preview.prepMinutes+' Min. Zubereitung':'',preview.cookMinutes!=null?preview.cookMinutes+' Min. Kochzeit':'',preview.totalMinutes!=null?preview.totalMinutes+' Min. insgesamt':''].filter(Boolean).join(' · ');
@@ -123,7 +127,7 @@ export function recipeEditor({account,household,findRow,findSource,onSaved}) {
       list('house-preview-steps',preview.steps);
       el('house-editor-title').textContent='Rezept prüfen';el('house-editor-input').hidden=true;el('house-preview').hidden=false;
       dialog.scrollTop=0;el('house-revise').focus();
-    }catch(e){status.textContent=e.message;}
+    }catch(e){feedback(status,e.message,true);}
   };
   el('house-revise').onclick=()=>{
     el('house-editor-title').textContent='Rezept bearbeiten';el('house-preview').hidden=true;
@@ -135,7 +139,7 @@ export function recipeEditor({account,household,findRow,findSource,onSaved}) {
   };
   el('house-save').onclick=()=>job(async active=>{
     if(!preview)return;
-    status.textContent='Rezept wird gespeichert …';
+    feedback(status,'Rezept wird gespeichert …');
     if(!revision && preview.source){
       await account().refresh();if(!active())return;
       const existing=findSource(preview.source);
@@ -150,7 +154,7 @@ export function recipeEditor({account,household,findRow,findSource,onSaved}) {
   el('house-source-image').onclick=()=>job(async active=>{
     const url=canonicalSource(fields.source.value);
     if(!url)throw Error('Gib zuerst die Rezeptquelle ein.');
-    status.textContent='Rezeptbild wird geladen …';
+    feedback(status,'Rezeptbild wird geladen …');
     const result=await account().importRecipe(target,{url,text:'',mode:'link'});
     if(active()){
       if(!result.draft.image)throw Error('Die Quelle enthält kein Rezeptbild. Du kannst einen Bildlink eingeben.');
@@ -160,7 +164,7 @@ export function recipeEditor({account,household,findRow,findSource,onSaved}) {
   el('house-delete').onclick=()=>{
     if(busy||!revision||!confirm('Dieses Rezept endgültig aus dem Haushalt löschen?'))return;
     job(async active=>{
-      status.textContent='Rezept wird gelöscht …';
+      feedback(status,'Rezept wird gelöscht …');
       const result=await account().deleteRecipe(target,id,revision);
       if(active()){dirty=false;dialog.close();onSaved(null,result?.refreshed!==false);}
     });

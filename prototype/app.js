@@ -8,7 +8,7 @@ import {parseDecimal,decimalText} from "./locale-number.mjs";
 import {loadPlan,storePlan,restorePlan} from "../src/storage/meal-plan.mjs";
 import {buildTransferManifest,serializeManifest,manifestText} from "../src/integrations/bring.mjs";
 import {householdRecipe} from './household-recipes.mjs?v=20261122-spices';
-import {recipeEditor} from './recipe-editor.mjs?v=20261122-spices';
+import {recipeEditor} from './recipe-editor.mjs?v=20261128-import-feedback';
 import {mealLabels,mealKeyLabel,planDateLabel,unitLabels} from "../locales/format-de-CH.mjs";
 let publicRecipes=[],publicNames={},editor;
 let recipeChoiceLimit=8, recipeChoiceQuery="", lastWeekSwipeAt=0;

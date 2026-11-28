@@ -26,7 +26,7 @@ export async function fetchPage(input, fetcher = publicFetch) {
   for (let hop = 0; hop <= 4; hop++) {
     let res;
     try {res = await fetcher(url, {redirect:'manual', signal, headers:{Accept:'text/html'}});}
-    catch(error){throw Error(error.message==='source'?'source':'page');}
+    catch(error){throw Error(['source','size'].includes(error.message)?error.message:'page');}
     if ([301,302,303,307,308].includes(res.status)) {
       const location = res.headers.get('location');
       await res.body?.cancel();
@@ -38,7 +38,11 @@ export async function fetchPage(input, fetcher = publicFetch) {
       await res.body?.cancel();
       throw Error('page');
     }
-    return {html:await readLimited(res.body, 4_000_000), source:url.href};
+    try {
+      return {html:await readLimited(res.body, 4_000_000), source:url.href};
+    } catch(error) {
+      throw Error(error.message==='size'?'size':'page');
+    }
   }
   throw Error('page');
 }

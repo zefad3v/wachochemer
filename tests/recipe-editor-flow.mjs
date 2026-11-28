@@ -21,3 +21,28 @@ editor.open();for(const [name,value] of Object.entries({title:'Neu',servings:'5'
 const ingredient=el('house-ingredients').firstChild;ingredient.querySelector('.name').value='Butterflocken';ingredient.querySelector('.unit').value='unspecified';
 form.dispatchEvent(new w.Event('submit',{cancelable:true}));el('house-save').click();await settle();assert.equal(saves,2);assert.equal(el('house-recipe-editor').open,false);
 console.log('PASS recipe editor save, duplicate update, image recovery, double click and confirmed deletion');
+
+editor.open();
+const importSection=el('house-import'),importStatus=el('house-import-status');
+importSection.open=true;
+el('house-import-url').value=draft.source;
+el('house-ai-text').value='Kopiertes Rezept';
+account.importRecipe=async(_target,{mode})=>{
+  throw Object.assign(new Error('Import fehlgeschlagen'),{code:mode==='ai'?'ai_failed':'page'});
+};
+for (const button of ['house-read-link','house-read-ai']) {
+  el(button).click();
+  await settle();
+  assert.equal(importStatus.hasAttribute('data-error'),true);
+  assert.equal(importSection.open,true);
+  assert.equal(el('house-import-url').value,draft.source);
+  assert.equal(el('house-ai-text').value,'Kopiertes Rezept');
+  assert.equal(el('house-editor-status').textContent,'');
+}
+account.importRecipe=async()=>({source:draft.source,draft:{...draft,lines:['Butterflocken']}});
+el('house-read-link').click();
+await settle();
+assert.equal(importStatus.hasAttribute('data-error'),false);
+assert.equal(importSection.open,false);
+assert.equal(form.elements.title.value,draft.title);
+console.log('PASS import feedback location, error state and draft preservation');

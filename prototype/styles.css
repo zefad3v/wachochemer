@@ -570,14 +570,14 @@ html{overscroll-behavior-y:none}
 #house-recipe-editor .ingredient-footer { display:flex; align-items:center; justify-content:space-between }
 #house-recipe-editor .ingredient-footer label { display:flex; align-items:center }
 #house-recipe-editor .ingredient-footer input { width:auto }
-#house-preview, #house-editor-status { overflow-wrap:anywhere }
+#house-preview, .recipe-editor-status { overflow-wrap:anywhere }
 #house-preview li { margin-block:.45rem }
 #house-recipe-editor button:not(.main-action), #new-house-recipe {
   background:#304a39; color:#edf2e5; border:1px solid #708670; border-radius:12px; padding:.5rem .8rem;
 }
 #house-recipe-editor .main-action { border:0; border-radius:12px; padding:.65rem; background:#dfebbe; color:#203323; font-weight:650 }
 #house-recipe-editor button:disabled { opacity:.6 }
-#house-editor-status:empty { display:none }
+.recipe-editor-status:empty { display:none }
 
 /* Boolean choices use the same switch treatment throughout the app. */
 input[type="checkbox"][role="switch"] {
@@ -607,7 +607,8 @@ input[type="checkbox"][role="switch"]:disabled { opacity:.5; cursor:default }
 .archive-add{flex:none;width:48px;min-height:48px;padding:0;font-size:30px;line-height:1;border-radius:16px}
 #archive-status:empty{display:none}
 #house-delete{margin-top:24px;color:#f5b8aa;border-color:#a9786f}
-#house-editor-status:not(:empty){padding:12px;border:1px solid var(--line,#65785f);border-radius:12px}
+.recipe-editor-status:not(:empty){margin:0;padding:12px;border:1px solid var(--line,#65785f);border-radius:12px}
+.recipe-editor-status[data-error]{border-color:#ffad61;background:#442c1d;color:#ffe1c5}
 
 /* Equal control boxes keep Safari's search and add button aligned. */
 .archive-search-row{align-items:center}
